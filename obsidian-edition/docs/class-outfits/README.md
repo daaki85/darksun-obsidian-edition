@@ -30,6 +30,17 @@ The sheet shows Loader-rendered portraits at 2× on sand and at native size on a
 
 ![All eight human outfits, with male and female inventory portraits and their map references](human-inventory.png)
 
+### Importing a repainted figure
+
+A class can also be painted as one whole figure at native size (48×95 for the man, 44×88 for the woman). `python -m dsloader.inventoryart import GAME_DIR FIGURE CLASS PICTURE` turns it into the class's layer in `dsloader/inventory-garments.zip`. FIGURE is 0 for the man or 1 for the woman. CLASS is 1–8, in this order: Cleric, Druid, Fighter, Gladiator, Preserver, Psionicist, Ranger, Thief. The command does four things:
+
+- It keeps the stock face. On the woman that includes her hair and tiara. Add `--repaint-head` for a class whose hood covers the head.
+- It keeps every pixel that matches the stock.
+- It cuts back to the parchment wherever the picture leaves stock bare.
+- It moves every colour into the palette entries that no area changes (16–79 and 128–222, without 19 and 21).
+
+The inventory is drawn in the current area's palette. Entries 80–127 and 223–248 change from area to area, so a kilt painted tan in them shows grey-green in the slave pens. `python -m dsloader.inventoryart steady GAME_DIR` moves every layer that is already in the zip into the fixed colours.
+
 ## Dwarf outfits
 
 The five single classes are Cleric, Fighter, Gladiator, Psionicist, and Thief. The five two-class and two three-class outfits combine their identifying details. The Cleric/Fighter wears pale bone caps over cream, and the Fighter/Psionicist wears a narrow teal sash over leather. Each tile below pairs the female front view with the male rear view. [See all twelve class combinations](dwarves.md)

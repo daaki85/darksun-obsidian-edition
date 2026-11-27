@@ -35,6 +35,31 @@ class InventoryArtTests(unittest.TestCase):
         custom = {("BMP ", 20000): icons.encode([[42]])}
         self.assertEqual(inventoryart.chunks(custom), {})
 
+    def test_layers_use_only_colours_no_area_changes(self):
+        from dsloader.spritegear import REGIONAL
+        with ZipFile(inventoryart.ARCHIVE) as archive:
+            for name in archive.namelist():
+                _, _, rows = art.decode_frame(archive.read(name))
+                with self.subTest(layer=name):
+                    self.assertFalse({p for row in rows for p in row} & REGIONAL)
+
+    def test_whole_picture_becomes_layer_keeping_the_head(self):
+        from dsloader.spritegear import STEADY
+        colours = [(i, i, i) for i in range(256)]
+        stock = [[50, 60, 70], [50, 60, 70], [None, 60, None]]
+        picture = [[(200, 200, 200), (90, 90, 90), (70, 70, 70)],
+                   [(50, 50, 50), None, (100, 100, 100)],
+                   [None, (60, 60, 60), (61, 61, 61)]]
+        layer = inventoryart.layer_from_picture(picture, stock, colours, head=(0, 1, 0, 2))
+        self.assertEqual(layer[0][:2], [None, None])  # The head stays stock.
+        self.assertIsNone(layer[0][2])  # The stock colour is kept as it is.
+        self.assertEqual(layer[1][:2], [None, inventoryart.CLEAR])  # Unpainted stock goes.
+        self.assertIn(layer[1][2], STEADY)  # A new colour is drawn from the fixed ones.
+        self.assertEqual(layer[2][0], None)
+        self.assertIn(layer[2][2], STEADY)
+        with self.assertRaises(ValueError):
+            inventoryart.layer_from_picture(picture[:2], stock, colours)
+
     @unittest.skipUnless(os.getenv("DSUN_SL"), "needs the Shattered Lands inventory figures")
     def test_no_detached_pixels_on_retail_figures(self):
         art_data = art.GameArt(os.environ["DSUN_SL"])
