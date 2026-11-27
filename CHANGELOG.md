@@ -63,6 +63,12 @@ Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Changed: the small party figures in their class outfits** (branch `claude/small-party-figures`)
+- The inventory's party column drew each member's small figure from the game's own picture, read once at
+  start-up, so it kept the stock clothes (and two members of one figure looked alike). DSCLOG now has the
+  game draw each member's own walking picture from the Loader's copy, standing: their class outfit and
+  what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
+
 **Changed** (Wake of the Ravager)
 - Lowered 19 freestanding shelf pictures at 54 placements and 61 other furniture and storage pictures
   at 217 placements, including the open and closed states of three fixtures. Another 18 pictures lower the Forest

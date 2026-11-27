@@ -18,7 +18,7 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 ## Inventory portraits
 
-In Shattered Lands, both human inventory figures wear the selected character’s active class outfit. The twelve other figures use their retail full-length pictures. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
+In Shattered Lands, both human inventory figures wear the selected character’s active class outfit. The twelve other figures use their retail full-length pictures. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The small figures in the party column beside the portrait are each member's own map figure, standing, so they show the class outfit and what is worn on every race that has one. The full-length redraws here belong to the inventory screen.
 
 ### Human inventory fittings
 

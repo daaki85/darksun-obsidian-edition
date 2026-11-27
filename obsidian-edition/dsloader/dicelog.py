@@ -37,7 +37,7 @@ from .itemwatch import ItemWatch
 from .textlog import KIND_MESSAGE, KIND_PORTRAIT, KIND_SHOW_REPLIES, KIND_TEXT, Dialogue, DialogueEntry, TextBuffer
 from .tracker import PartyTracker
 
-HDR_SIG = b"DSCLOGve"
+HDR_SIG = b"DSCLOGvf"
 TSR_HDR_OFF = 20  # DSCLOG's header: where it is in DSCLOG's segment
 TSR_SEQ, TSR_SEED_OFF, TSR_NFILT = 8, 22, 32  # entries written; the seed's offset (and what follows); filters in use
 # ... the party's spell slots, for the game's USE screen (PROBE_USE)
@@ -2264,6 +2264,8 @@ class DiceLog:
         party pictures the Loader keeps dressed); as the game's own when switched off."""
         if self._made_dresser(now) is not None:
             self._dresser.update(True, now)
+            if self.tsr_hdr is not None:
+                self._dresser.write_small(self.tsr_hdr, self.game.creating())
 
     def _creation_figure(self, now: float) -> None:
         """The creation screen's figure in the outfit of the class chosen (creationfigure.py): each
