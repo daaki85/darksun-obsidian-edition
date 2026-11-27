@@ -105,7 +105,8 @@ Loader's **Options** tab ([each switch, its default and when it counts](PLAYER-G
   what they say to the scripts' broken checks, and the rules it got wrong
   ([The game's bugs, fixed](GAME-BUGS.md)).
 
-**What it changes on your computer:** the game's own files never ([Uninstalling](#uninstalling)
+**What it changes on your computer:** Shattered Lands' own files never; Wake of the Ravager's roster
+and saves are converted for the mod when you start it from the Loader, a copy of each kept ([Uninstalling](#uninstalling)
 says what the mod writes, and where).
 
 ## Requirements
@@ -251,7 +252,10 @@ as above, or the folder chosen on the Options tab) in the same engine as Shatter
 (DOSBox-X, or its own GOG DOSBox), with the mod's fixes, rules, in-game additions
 and the Loader's tabs ported to it ([what comes
 across](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)). Not found,
-the button says so and points to the Options tab's **Choose its folder...**.
+the button says so and points to the Options tab's **Choose its folder...**. **Each start converts
+the sequel's roster and saves** in its folder for the mod (each file kept first as `NAME.42H`); after
+that they load only from the Loader until you convert them back ([your sequel saves are
+converted](RAVAGER.md#your-sequel-saves-are-converted)).
 
 **Checking a save file:** drag a save file onto **`Show Save.bat`** to see the
 party it holds: `SAVE01.SAV` to `SAVE10.SAV` (page 1), or pages 2 to 4's
@@ -558,9 +562,16 @@ one: one made with 2.18.0 or later doesn't load in 2.17 or earlier (each release
 a save holds says so in [its release
 notes](https://github.com/daaki85/darksun-obsidian-edition/releases), with what follows an older save).
 
+Wake of the Ravager's saves are converted at each start from the Loader, and then load only from the
+Loader: [your sequel saves are converted](RAVAGER.md#your-sequel-saves-are-converted) says how to
+turn them back.
+
 ## Uninstalling
 
-Delete the Loader's folder. **What the mod changes on your computer:** the game's own files never;
+Delete the Loader's folder. If you played Wake of the Ravager from the Loader, **first convert its
+saves back** (it needs the Loader: [your sequel saves are
+converted](RAVAGER.md#your-sequel-saves-are-converted)), or they won't load in the sequel by itself.
+**What the mod changes on your computer:** Shattered Lands' own files never;
 the Loader runs a patched copy of the game from its own folder, and writes only there, but for your
 saves and characters:
 
@@ -576,6 +587,7 @@ saves and characters:
 | `dos` | the Loader's helpers, and the patched copy of the game (`DSUNLOG.EXE`) with copies of its data |
 | `layouts`, `.dsloader-search.json` | only from the Memory tools ([DEVELOPMENT-INTERNALS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-INTERNALS.md#mapping-memory)) |
 | the game folder | your saves (page 1 in the game's own `SAVE` files, pages 2 to 4 as `SAVB`, `SAVC` and `SAVD`, the quick saves and autosaves as `SAVQ`) and characters in `CHARSAVE.GFF` |
+| Wake of the Ravager's folder | its roster (`CHARSAVE.GFF`), `DARKRUN.GFF`, `DARKSAVE.GFF` and saves, converted for the mod at each start from the Loader, each kept first as `NAME.42H`; `CHARSAVE.GFF.BAK` from the first party transfer ([your sequel saves are converted](RAVAGER.md#your-sequel-saves-are-converted)) |
 
 Page 1's saves (`SAVE*`) and `CHARSAVE.GFF` load in the original game as long as they hold none of
 the new items ([back up your saves](#one-time-setup)); the extra pages (`SAVB*`, `SAVC*`, `SAVD*`, `SAVQ*`)
