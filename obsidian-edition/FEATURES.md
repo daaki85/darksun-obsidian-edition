@@ -1486,8 +1486,7 @@ outfit of their class (the mage in a plum mantle, the thief hooded, the psionici
 dwarves, elves, half-elves, half-giants, halflings and the mul in an outfit for their whole class
 combination. Each half-elf has 48 outfits, including the Cleric/Preserver’s cream and plum robe.
 The thri-kreen and combinations outside the outfit roster, such as an elf with Druid among her
-classes, keep the game's own figure. The outfits keep their colours in every area (the game's
-own palette for each area would turn their browns grey and their plums magenta). The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
+classes, keep the game's own figure. The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
 animated online](https://github.com/daaki85/darksun-obsidian-edition/blob/7a0b6200b0c218f7a27ccc4b0c3fece7cdf59fe4/obsidian-edition/docs/class-outfits/README.md).
 
 The game draws each race and sex the same whatever they carry; the Loader keeps the artist's
@@ -1508,7 +1507,8 @@ A thri-kreen shows only weapons and shields; two party members of the same race 
 their own. New outfits go into room the game's picture store already has, so gear can be changed as
 often as you like in one area (without that, 30 to 60 changes filled the store and figures vanished
 until the next area; [the game's own limit of 300 picture slots](GAME-BUGS.md#pictures-and-memory)
-is a bug mended apart).
+is a bug mended apart). The outfits and the gear keep their colours in every area (each area's own
+palette would turn the outfits' browns grey and their plums magenta).
 
 ![Gerakis on the slave pens' tiled floor, drawn with the gear he carries: a sword in his hand, leather straps across his chest](docs/gear.png)
 
