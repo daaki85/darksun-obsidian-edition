@@ -40,3 +40,13 @@ memory edit, never saved).
   is darker than the street's.
 
 **Water:** no new area.
+
+## Later the same day: the colours matched in Lab
+
+The 290-outfit comparison (project files `class-figures/outfit-colour-comparison/`) led to a change: the colour
+match now uses Lab distance instead of weighted RGB, which cuts the colour error by 10 to 20%. `ravhold.sh` was
+run again with the dice log. The outfits are the same, and the thri-kreen's yellows are closer to Shattered Lands'.
+The figures stand where they did in the control run (`RAV_SKIP=class_outfits`), within a pixel or two, with their
+shadows at their feet.
+
+![The ambush again, with the Lab match](img/2026-11-27-ravager-outfits-fight-lab.png)
