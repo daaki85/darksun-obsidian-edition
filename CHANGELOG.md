@@ -68,6 +68,13 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   branches; `outfit_layer` replaces three copies of one expression. All 88,090 outfit pictures a
   sweep over every figure, class mix, weapon and armour builds are the same, hash for hash.
 
+**Dev: the sequel's values rebound only where declared (the code audit's S1, first stage)**
+- `ravlog.apply_layout` rebound a name in any module holding Shattered Lands' value under it; now only
+  in its declared holders (`_layout_holders`: game.py, the dice log's signature, the mod's sheet bytes'
+  modules). The 16 copies other modules kept (`from .game import` or a constant of their own: kits,
+  spellbook, dicelog, champions, ring, itemgate) read `game.NAME` instead. `LayoutHolderTests` fails on
+  a new copy. Played in both games: the same lines as before.
+
 **Dev: one copy of the helpers' shared routines (the code audit's S5)**
 - The 65 routines DSCLOG and DSCLOG2 had the same, line for line (1,238 lines), are written once in
   `dos/shared_routines.inc`, each a macro its helper expands where the routine was, so a fix reaches

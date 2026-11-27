@@ -56,7 +56,7 @@ class NpcItemTests(unittest.TestCase):
         self.log = log = arena()
         self.gd = log.game
         self.m = m = log.guest.mem
-        struct.pack_into("<H", m, DS * 16 + ring.REGION, 0x29)  # (the pens)
+        struct.pack_into("<H", m, DS * 16 + game.REGION, 0x29)  # (the pens)
         for item in range(60, 70):
             struct.pack_into("<h", m, ITEMS + item * game.ITEM_SIZE + game.ITEM_NEXT, item + 1 if item < 69 else game.NO_ITEM)
         m[NAMES + 3 + KEY * 25:NAMES + 3 + KEY * 25 + 12] = b"Slavepen key"

@@ -1026,12 +1026,12 @@ class SaveTests(unittest.TestCase):
         log = make_game()
         set_effects(log, [])
         log.effect_changes(10.0)
-        set_effects(log, [(0x29, 2, dicelog.AFRAID_EFFECT)])
+        set_effects(log, [(0x29, 2, game.AFRAID_EFFECT)])
         self.assertIn("immune", log.effect_changes(20.0)[0])  # (a living one: the game's words)
         set_effects(log, [])
         log.effect_changes(21.0)
         self.make_undead(log, 2)
-        set_effects(log, [(0x29, 2, dicelog.AFRAID_EFFECT)])
+        set_effects(log, [(0x29, 2, game.AFRAID_EFFECT)])
         self.assertEqual(log.effect_changes(30.0), ["Jellybelly gives Afraid to Mountain Stalker: it flees "
                                                     "(the computer controls it; can't attack or cast spells)"])
 

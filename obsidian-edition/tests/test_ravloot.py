@@ -34,8 +34,9 @@ class LayoutTests(unittest.TestCase):
               dict(game.STATUS_NAMES), icons.fit)
         ravlog.apply_layout()
         for module in (ring, itemgate):
-            self.assertEqual((module.FREE_THINGS, module.THINGS_USED, module.FREE_ITEMS, module.REGION),
-                             (0x56EF, 0x55C6, 0x5AF3, 0x140C), module.__name__)
+            self.assertEqual((module.FREE_THINGS, module.THINGS_USED, module.FREE_ITEMS),
+                             (0x56EF, 0x55C6, 0x5AF3), module.__name__)
+        self.assertEqual(game.REGION, 0x140C)  # (both read it through game)
         self.assertEqual((loot.OPEN, loot.STATUS_GONE, game.MONEY_SEG, game.POWER_BYTES), (0x05D6, (4, 7), 0x3C13, 2))
         self.assertEqual((game.STATUS_NAMES[5], game.STATUS_NAMES[7]), ("Animated", "Dead"))
         self.assertIsNone(icons.fit(None, 0))  # (no Shattered Lands icons put on the sequel's items)
