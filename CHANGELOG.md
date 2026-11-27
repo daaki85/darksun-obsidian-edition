@@ -167,6 +167,11 @@ Releases, newest first (2.12.0 and older in the archive):
   Control swung once a round from 2 squares. The Loader's OBJEX copy gives it a range of 1, as Shattered
   Lands' double spear has (`ravager.RAV_RANGES`; `RAV_SKIP=melee_range` the control).
 
+**Fixed: the Loader's message for a missing DOSBox-X**
+- With DOSBox-X chosen and none found, the Loader said "no DOSBox-X program is:", a sentence cut
+  short. It now says no DOSBox-X program was found, names the mod's dosbox-x folder it looked in,
+  and says the release zip brings one (a source-code download doesn't).
+
 **Fixed: Wake of the Ravager's Justifier**
 - A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it
   at caster level 0 (his ranger level less 9, held at 0). Now he has none before 10th, as in Shattered

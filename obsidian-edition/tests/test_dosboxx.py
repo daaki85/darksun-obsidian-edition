@@ -176,6 +176,8 @@ class VersionTests(unittest.TestCase):
     def test_why_the_game_cant_start(self):
         with tempfile.TemporaryDirectory() as d:
             self.assertIn("no DOSBox-X program", dosboxx.problem({}))
+            self.assertIn(dosboxx.BUNDLED_DIR, dosboxx.problem({}))  # (where it looked, and that the release brings it)
+            self.assertIn("release zip", dosboxx.problem({}))
             self.assertIn("isn't there", dosboxx.problem({"dosbox_x_path": os.path.join(d, "gone")}))
             path = os.path.join(d, "dosbox-x")
             with open(path, "wb") as f:
