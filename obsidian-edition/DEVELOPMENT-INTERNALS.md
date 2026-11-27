@@ -435,6 +435,16 @@ above](#how-the-dice-log-works)); at most 251 bytes came in between two reads
 in the opening show, the busiest stretch measured. The most entries put in the
 ring in 2 seconds, measured, is 43 (the opening show), 16 in a fight.
 
+### The helpers' shared routines
+
+A routine DSCLOG and DSCLOG2 have the same, line for line, is written once, in
+`dos/shared_routines.inc` (included by both after `save_bands.inc`): a macro, `SHARED_name`, that each
+helper expands where the routine belongs (its section and place unchanged), with the routine's
+heading kept there. Change it there and both helpers get it; a routine that must differ comes out of
+the file into each helper. `tests/test_shared_routines.py` fails on a routine written the same in
+both sources but not shared, and on a shared one a helper no longer expands. (65 routines, 1,238
+lines, 2026-11-27: the code audit's S5; both programs built to the same bytes.)
+
 ### DSCLOG2's segment, tail and install
 
 Wake of the Ravager's helper (`dos/dsclog2.asm`) is built as three parts, each a section of its own
@@ -452,6 +462,13 @@ the segment within 2 KB (`MARGIN`) of 64 KB, a part not where its paragraphs say
 install label named after `cs:` in the segment's code (or a segment label in the install's), so a port
 written before a table moved fails there, not in the game. The tail and the install each have 64 KB
 of their own.
+
+**Upper memory** (the audit's R3, measured 2026-11-27): with UMBPLUS.COM, as the Loader starts the sequel,
+upper memory is one block, CA00h-EFFFh, and the game puts nothing there; the helper's block sits at CA0Ah
+(4,151 paragraphs with its PSP), the see-through figures' at the top (352), 83,392 bytes free between. The
+build fails (`UMB_NEED`, `UMB_KEPT` at the file's end) if the helper as loaded, or as kept with the
+see-through block, outgrows the block without UMBPLUS.COM (D00Ah on, 8,182 paragraphs: DSCLOG's
+`UMB_ROOM`).
 
 The tail holds (2026-11-27, claude/dsclog2-segment-room) the item names past 256 (`ITEM_NAMES`,
 +196), the USE screen's lines (`SLOTS_TEXT`, +148, and `U_LINE`), the Look box's whole description
