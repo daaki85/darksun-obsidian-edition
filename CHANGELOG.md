@@ -461,6 +461,11 @@ DOSBox-X).
   toward their base, walls kept): `sl_figures.py squash RGN032 0.66 furniture` on the stock files before
   the catalogue's import, 54 of its 60 pictures (Notaku's stall, 2371-2379, is the catalogue's own); the
   region's placements needed no change. In the same `ravager-figures.zip` (#253).
+- Codex's fixes after the stock comparison (catalogue 865a5e4, re-packed): the Tarrasque's attack run
+  uses the stock script's frames again (the old one vanished on one step), its side poses follow the
+  stock foot line, its walk steps through its poses square by square (played), and the fire drake is
+  the stock dragon's size (played). The mod's copy of the catalogue (`reports/ravager-figure-redraws/`)
+  brought up to the same revision.
 
 **New: Shattered Lands' screens and icons in the sequel**
 - `dsloader/ravui.py` puts Shattered Lands' 45 interface pictures and 221 icons (130 from another number:

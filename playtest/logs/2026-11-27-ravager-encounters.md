@@ -71,3 +71,20 @@ and the palette and changes of its cinematic (11012-11014). Build: obsidian-edit
 
 10. **The screen's lightning patches** in the Tarrasque's region (rectangles of the sky drawn over the
    floor as the view redraws) are in the game without the figures too.
+
+## Codex's fixes re-imported (catalogue 865a5e4, evening)
+
+11. **Re-packed** from the installation files at 865a5e4 (squash, `import_catalogue.py`, `ravfigures pack`):
+    only the Tarrasque's halves (BMP, CBMP, SCMD 11001/11002) and the fire drake (11006) changed. The
+    Tarrasque's attack run (steps 38-49) now uses the stock script's frames and flags (43: base frame 9;
+    44-49: combat 3, 3, 4, 4, 5, 5), with offsets within a few pixels of stock's.
+12. **The walk** (`ravjump.py 0x44 33 43`, Down x7, the cinematic, then its turns read live): the side walk
+    steps through its three poses square by square (script steps 0Ch, 0Dh, 0Eh in turn, a dozen strides),
+    and the toward walk through its six. [The walk](img/2026-11-27-tarrasque-walk-fixed.png) No vanish in
+    about 500 grabs of its turns over four runs.
+13. **Not seen: a swing.** In four runs the elementals and skeletons crowded round the party at the foot
+    of the steps and the Tarrasque stood (step 0Fh) every turn; a member written beside it (a test-only
+    edit) didn't draw an attack either. Step 44 and the side hit's damage number weren't seen in the game.
+14. **The fire drake** (`0x3E 36 9`) is now the stock dragon's height over the party.
+    [Fire drakes](img/2026-11-27-fire-drake-resized.png) Once, grey-blue rock with magenta edges showed
+    on the cave floor left of the party; not in the next run of the same build, nor in the stock control.
