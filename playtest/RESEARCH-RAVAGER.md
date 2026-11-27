@@ -405,3 +405,8 @@ wait was empty; the mod's MSG_SHOWN waits the options' time, now ended by a clic
 **A message box to order**: in the Tyr ambush, a click on game (14,188) (inside the closed room at the
 street's lower left) on a party turn says NO PATH FROM HERE. **Where a busy loop spins**: a ring in
 DSCLOG2 that the timer fills with the interrupted CS:IP (its frame's return address) found 69BDDh at once.
+
+**The combat log panel's clicks** (2026-11-27, logs/2026-11-27-ravager-log-clicks.md): the press must be
+taken in the mouse driver's event handler (DSCLOG2's MOUSE_EVENT, PANEL_EVENT), as SL's is: in the main
+loop's pointer call it is seen only while the button is down, and the game's handler walks the party to it
+anyway. Click the panel's header at game y 126 (docked), not window y / 2.
