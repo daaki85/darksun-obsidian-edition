@@ -4,7 +4,7 @@ scenes, the Tarrasque and the three drakes, put into the Loader's copies of the 
 
 DATA (ravager-figures.zip, beside this module) holds every chunk the catalogue's import changes, by file:
 OBJEX.GFF's pictures (BMP), combat pictures (CBMP) and scripts (SCMD); RESOURCE.GFF's Tarrasque, its
-cinematic and the drakes; RGN03A.GFF's dining-room table (ETAB 58: the Mines3 dining room's furniture,
+cinematic, the drakes and the Elderbrain tank; RGN03A.GFF's dining-room table (ETAB 58: the Mines3 dining room's furniture,
 placed again for its smaller pictures). manifest.json names them, and the 32 objects (OJFF) moved to another
 picture (the greater elementals' own, and the people given a figure of their own) as "object, the game's
 picture, the new one". The empty temple throne takes the drawing offset for its lowered bowl.
@@ -172,7 +172,7 @@ def object_chunks(chunks: gff.Chunks, data: Optional[dict] = None) -> gff.Chunks
 
 
 def resource_chunks(chunks: gff.Chunks, data: Optional[dict] = None) -> gff.Chunks:
-    """The chunks DATA gives RESOURCE.GFF's copy (the Tarrasque, its cinematic, the drakes): _for's."""
+    """The chunks DATA gives RESOURCE.GFF's copy (the Tarrasque, its cinematic, the drakes and the Elderbrain encounter): _for's."""
     return _for("RESOURCE.GFF", chunks, data or load())
 
 

@@ -260,7 +260,8 @@ bigger character sheets) as it goes in (a game already running lists it from its
   size and look (the Shattered Lands party figures, a mul or an elf of the sequel on the same body as
   Shattered Lands', its elementals Shattered Lands' own). The Loader puts them into its copies of the
   sequel's files each start (nothing in the sequel's folder changes), with the Mines' dining room laid
-  out again for its smaller furniture, and Tyr's tables, chairs, beds and other furniture lowered to
+  out again for its smaller furniture. Five soup bowls sit in front of the seated mind flayers, and the
+  redrawn Elderbrain appears in its tank and when the glass breaks. Tyr's tables, chairs, beds and other furniture are lowered to
   two-thirds of their height for Shattered Lands' steeper view. The same treatment now reaches 19
   freestanding shelf pictures used in Tyr, the Veiled Alliance headquarters, the Yuan-ti area, Mines 3
   and both inhabited volcano levels. Another 61 pictures lower loose furniture and storage in nine regions,

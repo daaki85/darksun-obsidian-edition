@@ -37,7 +37,7 @@ class FigureFileTests(unittest.TestCase):
         self.assertEqual(set(files), set(ravfigures.FILES))
         self.assertEqual(len(self.data["objects"]), 32)
         self.assertEqual(set(files["RGN03A.GFF"]), {("ETAB", 58)})
-        self.assertEqual({k[1] for k in files["RESOURCE.GFF"]}, {11001, 11002, 11005, 11006, 11007, 11012, 11013, 11014})
+        self.assertEqual({k[1] for k in files["RESOURCE.GFF"]}, {11001, 11002, 11005, 11006, 11007, 11008, 11012, 11013, 11014, 11016})
         pictures = {k[1] for k in files["OBJEX.GFF"] if k[0] == "BMP "}
         self.assertGreaterEqual(len(pictures), 260)
         self.assertTrue(self.data["source"])
@@ -91,6 +91,17 @@ class FigureFileTests(unittest.TestCase):
         result = ravfigures.region_chunks("rgn033.gff", stock)
         self.assertEqual(list(placed.iter_unpack(result[key])), [(599, 1278, 0, 32, 9606)] + records[1:])
         self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
+    def test_mines_bowls_sit_within_reach_of_each_seated_diner(self):
+        room = self.data["files"]["RGN03A.GFF"][("ETAB", 58)]
+        seats = {obj: (x, y, z) for x, y, z, _, obj in struct.iter_unpack("<HHBBh", room)}
+        for seat in range(5):
+            diner_x, diner_y, diner_z = seats[5166 + seat]
+            bowl_x, bowl_y, bowl_z = seats[10379 + seat]
+            self.assertLessEqual(abs(bowl_x - diner_x), 1)
+            # Further back, the animated hands hide the whole bowl while eating.
+            self.assertIn(diner_y - bowl_y, (0, 1))
+            self.assertEqual(diner_z - bowl_z, 5)
 
     def test_headquarters_stacks_share_their_front_floor_line(self):
         placed = struct.Struct("<HHBBh")
@@ -240,6 +251,22 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual(actual[:rise], [[None] * width] * rise, pic)
             self.assertEqual(actual[rise:height - depth + rise], original[:-depth], pic)
             self.assertEqual(actual[-len(offsets):], [original[-1 - row] for row in reversed(offsets)], pic)
+
+    def test_elderbrain_encounter_keeps_each_frame_outline(self):
+        with open(os.path.join(WOTR, "RESOURCE.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        revised = ravfigures.resource_chunks(stock)
+        for picture, count in ((11008, 1), (11016, 29)):
+            key = ("BMP ", picture)
+            self.assertEqual(frame_count(stock[key]), count)
+            self.assertEqual(frame_count(revised[key]), count)
+            for frame in range(count):
+                with self.subTest(picture=picture, frame=frame):
+                    before = sequelicons.decode(stock[key], frame)
+                    after = sequelicons.decode(revised[key], frame)
+                    self.assertNotEqual(after, before)
+                    self.assertEqual([[p is None for p in row] for row in after],
+                                     [[p is None for p in row] for row in before])
 
     def test_every_replaced_chunk_is_the_games(self):
         data = ravfigures.load()

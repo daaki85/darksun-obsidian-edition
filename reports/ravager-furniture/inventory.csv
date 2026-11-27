@@ -49,10 +49,10 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1014,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1015,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1016,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
-1032,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1033,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1034,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1035,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1032,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1033,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1034,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1035,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
 1112,Mines 3 loot chest,Both poses lowered to match the identical Pyramid chest drawing,,03A:1
 1115,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,03A:1
 1116,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,0FF:1
@@ -196,18 +196,18 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3172,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
 3173,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
 3174,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
-3231,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3231,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:5
 3246,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:6
 3247,"Tables, counters and benches",Lowered and placements reviewed,,034:1
 3248,"Tables, counters and benches",Lowered and placements reviewed,,034:2
 3249,"Tables, counters and benches",Lowered and placements reviewed,,034:2
 3250,Pyramid chest,Both stored poses share the artwork of Mines 3 picture 1112. Retain the Pyramid drawing offsets,,034:1
-3275,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:2
+3275,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:2
 3276,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:1
-3277,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
-3279,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:4
-3280,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:4
-3287,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3277,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:5
+3279,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:4
+3280,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:4
+3287,Mines dining-room assembly,Five bowls moved forward eight pixels. Checked in play while eating and after slump,3231-dining-room.zip,03A:5
 3356,Freestanding shelves,Lowered and placements reviewed,,03E:1
 3364,Barrels and crates,Lowered and placements reviewed,,03A:1
 3414,Freestanding shelves,Lowered and placements reviewed,,03A:2
@@ -217,7 +217,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3503,"Tables, counters and benches",Lowered and placements reviewed,,033:2
 3504,"Tables, counters and benches",Lowered and placements reviewed,,032:2
 3505,"Tables, counters and benches",Lowered and placements reviewed,,033:2 045:1
-3511,"Tank, platform and mine openings",Reviewed at current scale,3511-elderbrain.zip,03A:1
+3511,"Tank, platform and mine openings",Approved still retained. Live tank and destruction verified using RESOURCE 11008 and 11016,3511-elderbrain.zip,03A:1
 3525,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
 3527,"Tables, desks and benches",Retain floor display at current depth,,03D:1
 3528,"Tables, desks and benches",Retain floor display at current depth,,03D:1

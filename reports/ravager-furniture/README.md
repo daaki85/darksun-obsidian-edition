@@ -4,7 +4,7 @@
 
 All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added two more pictures, the empty throne summoned from Limbo into El’s Temple and the loot chest in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining and tank destruction sequences have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Repairing the split beds and the Alliance storeroom
 
@@ -144,7 +144,7 @@ In DOSBox, all six lowered braziers stood on the same floor points as their stoc
 
 ![Tantris seated and the vacated throne in stock Ravager, the previous PR and the repaired build](el-temple-throne-transition.png)
 
-The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. Their destruction sequence remains on the Mines 3 playtest list.
+The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. The later Mines 3 playtest identified the separate composite pictures used during destruction.
 
 ## Earlier figure work
 
@@ -161,7 +161,7 @@ The figures and their furniture can share one picture. Other scenes use a separa
 | Pavis and Tantris | The bodies remain distinct above the lowered rims. Pavis's empty basin keeps its low profile. Keep the existing poses. |
 | Sultan, Fletch, Utella, Generoe and Melantha | The cushion, seats, loom and giant's bed belong with the figures. Melantha's set has its own approved 82% bed scale. Preserve those individual decisions when comparing neighboring furniture. |
 | Notaku's stall | The live Tyr view shows a strip of teal shop floor between Notaku and the joined front halves. His feet, the mortar and the glassware read separately. Retain the approved counter height. |
-| Mines 3 | The dining seats line up with the smaller table and place settings after the existing ETAB change. Check the seated, eating and slumped states together in-game. The Elderbrain tank and its platform also need one assembled check through destruction. |
+| Mines 3 | The live dining encounter needed five bowl placements corrected. The Elderbrain tank needed two additional encounter pictures. Both sequences have since been played through. |
 | Captives and mine openings | Kovar's supports, the captive's rack and the mine opening frame their figures. Review attachment to the surroundings whenever an adjoining prop changes. |
 
 ## Live check in Tyr
@@ -208,6 +208,20 @@ The DOSBox close-ups below show the party opening the Mines chest on both builds
 
 ![Pyramid chest default and staged raised pose in DOSBox, with the Mines 3 loot and second-use messages](chests-live.png)
 
+## Mines 3 dining room and Elderbrain
+
+The whole maps show where the two encounters sit and where to find the Gedron table used for scale. The close-ups below show what the game draws as the encounters run.
+
+![Whole maps of stock and revised Mines 3 and the Gedron dining reference](mine-encounter-maps.png)
+
+The earlier figure redraw already supplied the smaller table, chairs and all five diners. In play, their hands hid every red bowl during the meal. Moving the bowls eight pixels toward the front of the table makes all five visible. When the diners slump, they cover their own bowls as they do in stock Ravager.
+
+![Stock Ravager, previous mod and corrected dining room while eating and after the slump, with a Gedron table for scale](mine-dining-live.png)
+
+The previous build still showed stock tank art in play. The Elderbrain encounter draws a separate intact tank and a 29-frame destruction sequence. Both now carry the approved redraw, including the darker fluid, broken glass and ejected brain. The native reward appeared after the flash. [Playtest conditions and script details](../../playtest/logs/2026-11-27-ravager-mines-diners-and-elderbrain.md)
+
+![Elderbrain intact, shattering and thrown clear in the previous and revised mod](mine-elderbrain-live.png)
+
 ## Region work queue
 
 The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements, including repeats. The last column names the next review for that region.
@@ -222,7 +236,7 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
-| 03A Mines 3 | 219 | 8 | 12 | Check the weapon display, throne, dining sequence and tank destruction in play |
+| 03A Mines 3 | 219 | 8 | 12 | Dining sequence, tank destruction, throne and loot chest checked in play. Check the weapon display and captive’s rack |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
