@@ -372,3 +372,11 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
 - **Resting**: only at a fire ring (the Look icon on it), or a room at an inn (Tyr's Harbinger's Roost,
   25 cp, southeast of the start). The Mines of Tyr level 1 have a fire ring in the room past exit C
   (the owner's map, 2026-11-20: by the dying miner).
+
+**The inventory's full-length picture** (2026-11-27, logs/2026-11-27-ravager-inventory-portraits.md): the
+same engine as Shattered Lands' with other numbers: the selected creature's figure is its +10h (SL's +18h),
+its picture preloaded from slot 15h (SL's 12h): "mov ax,[es:bx+10h] / add ax,15h" at 75DD0h (SL's 6D5A3h;
+two more such lines, 6B053h and 6DBC8h, are the creation screen's); the preloaded pictures' loader is
+7B827h (SL's 73034h), its way out with the picture at 7B89Eh. The sequel's own figures (BMP 20000-20013,
+76 by 106) are drawn over a parchment the screen draws, so Shattered Lands' 48 by 95 ones sit on it
+as in Shattered Lands. `ravinvfig.py` sets a member's figure and classes for a look.

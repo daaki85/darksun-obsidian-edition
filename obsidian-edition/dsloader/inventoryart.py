@@ -67,6 +67,25 @@ def chunks(resources):
     return result
 
 
+def rav_chunks(sequel, sl_dir, game_dir):
+    """The same pictures for Wake of the Ravager's inventory (DSCLOG2's INV_FIGURE and INV_LOAD, at the same
+    keys): made from the Shattered Lands figures in SL_DIR, each colour the nearest of those no region of the
+    sequel (GAME_DIR) changes (ravitems.stable_colours). The sequel's own figures are left where no picture
+    is (another race's man, the mul, the thri-kreen, a class without one). None without both folders."""
+    from . import gff, ravitems
+    path = sl_dir and art._find(sl_dir, "RESOURCE.GFF")
+    if not path or not game_dir:
+        return {}
+    gameart = art.GameArt(sl_dir)
+    palettes = ravitems.region_palettes(game_dir)
+    if not gameart.colours or not palettes or ("PAL ", 1000) not in sequel:
+        return {}
+    with open(path, "rb") as f:
+        sl = gff.read_gff(f.read())
+    stable = ravitems.stable_colours(sequel, palettes)
+    return {key: ravitems.picture(chunk, gameart.colours, stable) for key, chunk in chunks(sl).items()}
+
+
 def _steady():
     from .spritegear import REGIONAL, STEADY
     return REGIONAL, STEADY

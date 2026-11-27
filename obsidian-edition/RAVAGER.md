@@ -270,6 +270,12 @@ bigger character sheets) as it goes in (a game already running lists it from its
   buttons stay the sequel's, since they sit on its own talk boxes. Without a Shattered Lands folder the
   sequel's own are used. The box "Shattered Lands' screens and icons in Wake of the Ravager", in the Options
   tab's Wake of the Ravager section, turns it off (from the sequel's next start).
+- **Class pictures on the inventory**: as in Shattered Lands, a human shows a full-length picture in the
+  active class's clothes (eight classes, the man and the woman), and a dwarf, elf, half-elf, half-giant or
+  halfling woman who is a Gladiator a Gladiator's. They are Shattered Lands' figures, dressed as there,
+  taken from your Shattered Lands folder each start and put in the sequel's colours that no area changes;
+  everyone else (the other races' men, the mul, the thri-kreen, a class without a picture) keeps the
+  sequel's own full-length picture. Without a Shattered Lands folder the sequel's own are used throughout.
 - **Talk portraits at Shattered Lands' size**: the sequel's faces in its talk and message boxes were 72 by
   72 in a box 72 high, the text starting a quarter of the way across. The Loader's copy draws them as
   Shattered Lands does: a 32 by 32 face in a 48-pixel stone frame at the box's top left, the box 58 high
@@ -361,10 +367,9 @@ greys, which is why [its interface art](#the-mod-in-the-sequel) is matched to th
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
 and the sequel does not yet, each checked against the Loader's code (2026-11-27):
 
-- **[What the party wears](FEATURES.md#what-the-party-wears)**: class outfits on the map, the creation-screen class preview,
-  and the class-specific full-length inventory pictures (the humans', and the other races' Gladiator
-  women). The sequel keeps its own figures, [drawn in Shattered Lands'
-  style](#the-mod-in-the-sequel).
+- **[What the party wears](FEATURES.md#what-the-party-wears)**: class outfits on the map and the creation-screen
+  class preview. The sequel keeps its own figures, [drawn in Shattered Lands' style](#the-mod-in-the-sequel)
+  (its inventory's class pictures are Shattered Lands', above).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
 - **Controls**: [scrolling the map](FEATURES.md#scrolling-the-map) with the mouse wheel held down (the
