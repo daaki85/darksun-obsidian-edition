@@ -40,6 +40,11 @@ LINING = {
 }
 
 
+# The woman's free arm turns the pointed nape out over the near shoulder
+# in rear strike 2. The lower rows are outside the usual short collar cut.
+STRIKE_NAPE = ((2, 7), (2, 7), (3, 7), (5, 7), (5, 6), (6, 6))
+
+
 def base_class(role):
     members = role.split("/")
     return next(name for name in BASE_ORDER if name in members)
@@ -204,6 +209,8 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_
     values = sorted(light(single[pad + (height - 1 - level if pose == 28 else level)][x])
                     for level, panel in panels.items() for x in panel)
     dye = DYES[accent]
+    green_pleat = role == "Ranger/Thief" and not female and pose in (2, 11, 12, 13, 14)
+    falling_nape = role == "Cleric/Thief" and female and pose == 19
     if not female and base == "Cleric" and accent == "Preserver":
         # The narrower turned edge on his robe needs plum through the mids.
         dye = (174, 174, 175, 175, 58, 74, 59)
@@ -211,6 +218,7 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_
         dye = (88, 88, 89, 89, 90, 91, 93)
     for level, panel in panels.items():
         y = pad + (height - 1 - level if pose == 28 else level)
+        nape_left, nape_right = STRIKE_NAPE[level-16] if falling_nape and 16 <= level <= 21 else (0, -1)
         for x in panel:
             belt_depth = level - belt
             if waist_detail:
@@ -264,6 +272,10 @@ def draw_pair(study, key, pose, role, *, baldric=False, far_lining=False, above_
                     out[y][x] = 155 if dx < -0.25 else 199
                 else:
                     out[y][x] = 168  # Worn bone toggle at the top of the leather tab.
+            elif green_pleat or nape_left <= x-pad <= nape_right:
+                # Keep the source fold shades continuous with the hood.
+                # Re-ranking them by the other garments collapsed the shadow.
+                out[y][x] = HOOD_DYES[accent].get(color, dye[rank])
             else:
                 out[y][x] = dye[rank]
     return out, pad

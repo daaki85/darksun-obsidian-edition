@@ -6,6 +6,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 import mulfront
+from limbstrokes import exposed_skin
 import mulstudy as fit
 from elfreview import TERRAIN, dwarf, elf, label, loop
 from outfitdetail import RAMPS, reference_folds
@@ -202,7 +203,7 @@ def thief_hood(pose):
 
 
 def draw(game, pose, swatches):
-    rows = fit.fitted_rows(game, pose)
+    rows, skin_detail = fit.clothing_layers(game, pose)
     body = rows["Body base"]
     h, w = len(body), len(body[0])-2*fit.PAD
     cb, f = divmod(pose, 15)
@@ -358,6 +359,10 @@ def draw(game, pose, swatches):
                             teal -= 1.35
                         elif y > edge+2 and round(offset + .45*(y-ry)) == -1:
                             teal += 1.1
+                        if pose == 11 and (x, y) == (3, 14):
+                            # The rolled end catches light above the hip as the
+                            # arm swings past, even in the copper skin's shadow.
+                            teal = max(teal, 4)
                         out["Psionicist"][py][i] = shade(TEAL, teal)
                     if y == belt:
                         buckle = 96 if abs(x-knee) < 1 else 90
@@ -435,6 +440,13 @@ def draw(game, pose, swatches):
                     if pose in REAR:
                         # Turn the hanging cowl over the upper back. The
                         # shadow and adjacent lit seam travel with its tip.
+                        # The lower crown rounds away into a recessed fold.
+                        # The leaf hood needs a full light and shadow step:
+                        # several intermediate greens coincide in the map palette.
+                        rolled = max(0, min(1, across))
+                        crease = rolled - (.7 - .055*min(4, y-hy-3))
+                        light += 4.2*(.5-rolled) + 3.1*max(0, 1-abs(rolled-.28)/.28)
+                        light -= 2.6*max(0, 1-abs(crease)/.23)
                         turn = y - (sy+2.5-.42*abs(x-hx-3))
                         light += 4.0*max(0, 1-abs(turn+1)) - 4.5*max(0, 1-abs(turn)/1.6)
                 if (x, y+1) not in hood or (x+1, y) not in hood:
@@ -442,7 +454,7 @@ def draw(game, pose, swatches):
                 out["Thief"][py][i] = shade(RAMPS["slate"], light)
     if pose in mulfront.FRONT or pose in mulfront.TURNS:
         out.update(mulfront.dress(pose, body, protected, limbs, bow, hood))
-    return rows | out
+    return exposed_skin(rows | out, skin_detail)
 
 
 def fit_comparison(game, pose, rows, sand, previous):

@@ -1603,7 +1603,8 @@ def armed(rows: Rows, model: int, frame: int, combat: bool, weapons: Dict[str, T
                             out[y][x] = _RobeCloth(out[y][x])
                         robe = points, binding, colours
                     else:
-                        shine_armour(armor_canvas, cells, piece, armor_parts, pad, colours, cuffs, exposed)
+                        shine_armour(armor_canvas, cells, piece, armor_parts, pad, colours, cuffs, exposed,
+                                     fitted_greaves=costume is not None)
     if model != sp.KREEN:
         for item in armour:
             if item & (MAGIC_ARMOUR - 1) == game.BRACERS_TYPE:
@@ -2176,7 +2177,7 @@ def finish_robe(rows, robe):
     return rows
 
 
-def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=(), exposed=()):
+def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=(), exposed=(), *, fitted_greaves=False):
     """Place cycling highlights on separated folds of *each* visible armour piece."""
     if not cells:
         return
@@ -2224,7 +2225,7 @@ def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=(), exposed=()):
         highlights(ordered[cut:], count-half)
 
     shins = set(exposed)
-    for region in groups:
+    for i, region in enumerate(groups):
         if region:
             count = min(5, max(1, (len(region)+8)//14))
             if count == 1 and len(region) >= 4:
@@ -2234,6 +2235,13 @@ def shine_armour(rows, cells, piece, parts, pad, colours, cuffs=(), exposed=()):
             mark = len(chosen)
             highlights(region, count)
             calf = shins.intersection(region)
+            if calf and fitted_greaves and anchors:
+                # The uppermost calf pixels can still touch the hem. Light the
+                # visible shin towards its own boot, even on a raised foot.
+                boot_y = anchors[i][1]
+                depths = [abs(y - boot_y) for x, y in calf]
+                middle = (min(depths) + max(depths)) / 2
+                calf = {(x, y) for x, y in calf if abs(y - boot_y) <= middle}
             if calf and calf.isdisjoint(chosen[mark:]):
                 # The lit skirt can occupy most of the leg slot. Keep a reflection
                 # on the real greave where it emerges from under the hem.
