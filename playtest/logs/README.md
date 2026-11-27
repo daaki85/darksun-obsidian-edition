@@ -233,6 +233,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-sl-interface.md) | Wake of the Ravager with Shattered Lands' screens and icons (ravui): the USE screen and the inventory, with and without |
 | [2026-11-27](2026-11-27-loader-pictures.md) | The Loader pictures retaken with the new bar |
 | [2026-11-27](2026-11-27-ravager-furniture.md) | Ravager furniture in Tyr, Notaku’s stall and the northern chairs |
+| [2026-11-27](2026-11-27-ravager-grouped-furniture.md) | Forest dining sets, Alliance vase and Mines 3 throne, DOS region reads and built map comparisons |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
 
 ## files/

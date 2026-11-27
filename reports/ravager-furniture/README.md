@@ -22,7 +22,17 @@ The gold box marks the Mines 1 storeroom in the first two maps. In the enlarged 
 
 ![Mines 1, Forest and Volcano 1 rooms before and after with Shattered Lands references](loose-furniture.png)
 
-The candidate review also turned up sets that need different treatment. Squashing the Forest dining tables and stools in place opens a gap on the far side of the table. A Veiled Alliance crate has a separate vase resting on its top edge. The tall Mines 3 throne comprises two separately placed pictures. These sets need coordinated placement. The three round Volcano 2 floor displays (3527–3529) keep their depth against the paving.
+The three round Volcano 2 floor displays (3527–3529) keep their depth against the paving.
+
+## Furniture assembled from separate objects
+
+The third pass lowers 18 pictures at 41 placements. The Forest has eight tables and 30 associated pieces. Fourteen stools and benches move closer to their tables so that the far seats tuck under the tabletop. In the Veiled Alliance headquarters, the vase drops seven pixels to meet the newly lowered crate. The same vase drawing appears at nine other locations, which retain their original positions. In Mines 3 the throne back drops ten pixels to meet the seat. The earlier figure redraw supplies the rest of the Mines 3 dining-room layout.
+
+The whole Forest is shown at one quarter of game-map resolution. The box marks the room enlarged in the first row of the detail sheet. Gedron is shown at the same scale. In the detail sheet, compare the space behind the far chair, the bottom edge of the vase, and the join between the two sections of the throne. The right column shows a Gedron table, an upper castle chest, and the throne in Gedron. The Ravager panels use the previous furniture pass on the left and the Loader's built object and region files on the right. These are map renders with the first stored pose of each picture.
+
+![Whole Forest before and after, alongside Gedron in Shattered Lands](forest-whole-map.png)
+
+![Forest dining room, Alliance crate and Mines throne before and after alongside Shattered Lands furnishings](grouped-furniture.png)
 
 ## Earlier figure work
 
@@ -54,15 +64,15 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
-| 001 Forest | 252 | 0 | 18 | Adjust dining table and stool spacing as a group |
+| 001 Forest | 252 | 0 | 56 | Check dining sets in play |
 | 032 Tyr | 246 | 1 | 42 | Check remaining indoor storage states in play |
-| 033 Veiled Alliance | 195 | 21 | 60 | Test vase-bearing crate and damaged beds with separate props |
+| 033 Veiled Alliance | 195 | 21 | 61 | Check the lowered crate in play and review damaged beds with separate props |
 | 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
 | 036 Yuan-ti | 104 | 3 | 0 | Check surrounding vessels against the three shelves |
 | 037 Temple | 62 | 0 | 0 | Use Pavis and Tantris as references for nearby fixtures |
 | 038 Mines 1 | 108 | 0 | 12 | Check worktable, crates and Sicky's neighboring furnishings in play |
 | 039 Mines 2 | 160 | 0 | 0 | Check mining equipment and its animated states against the two miner pictures |
-| 03A Mines 3 | 219 | 8 | 7 | Check dining sequence, tank destruction and other chairs in-game |
+| 03A Mines 3 | 219 | 8 | 9 | Check throne, dining sequence and tank destruction in play |
 | 03B Jann | 173 | 0 | 0 | Compare freestanding camp furniture against Utella and the seated Sultan |
 | 03C Mosaic | 89 | 0 | 0 | Compare stocked counter 703 with Fletch's chair and Ikibod's stall |
 | 03D Volcano 2 | 143 | 15 | 22 | Compare room placements in-game |
@@ -75,4 +85,4 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 045 Under Tyr | 135 | 0 | 14 | Check loose stools and crates beside the patient cots in-game |
 | 0FF Limbo | 690 | 0 | 0 | Trace holding-area furniture and scripted actors to their gameplay use, including Snaggle |
 
-The [picture inventory](inventory.csv) records both furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
+The [picture inventory](inventory.csv) records all three furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.

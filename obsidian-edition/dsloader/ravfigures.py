@@ -34,8 +34,8 @@ from . import gff
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ravager-figures.zip")
 SKIP = "figures"  # (ravager's SKIP name: the copies without them, RAV_SKIP's control)
 MANIFEST = "manifest.json"
-FILES = ("OBJEX.GFF", "RESOURCE.GFF", "RGN03A.GFF")
-REGIONS = {"RGN03A.GFF": "RGN03A2.GFF"}  # (a region file the figures change: its copy's name in the dos folder)
+FILES = ("OBJEX.GFF", "RESOURCE.GFF", "RGN03A.GFF")  # Files with imported catalogue chunks.
+REGIONS = {"RGN001.GFF": "RGN0012.GFF", "RGN033.GFF": "RGN0332.GFF", "RGN03A.GFF": "RGN03A2.GFF"}
 PICTURE = 12  # (OJFF: the object's picture's number, a word)
 KINDS = ("BMP ", "CBMP", "SCMD", "ETAB")  # (the chunks DATA may hold)
 CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see above)
@@ -51,6 +51,21 @@ SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 
                     2590, 2591, 2704, 2789, 2790, 2824, 2840, 3246, 3276, 3627, 3628, 3629)
 OPENABLE = (631, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
+
+# Each assembly uses the same floor line for the pictures and their attached pieces.
+# The four placement fields are stock object, x, y and the new y. Other placements
+# of the same object (especially vase 9606) keep their own coordinates.
+ASSEMBLIES = {
+    "RGN001.GFF": (tuple(range(567, 582)), (
+        (9026, 1897, 121, 131), (9022, 1234, 177, 189), (9026, 1166, 133, 143),
+        (9046, 1706, 132, 142), (9027, 1723, 148, 153), (9026, 1245, 90, 100),
+        (9038, 1225, 118, 119), (9038, 1265, 118, 119), (9044, 537, 180, 187),
+        (9044, 536, 195, 197), (9038, 587, 196, 197), (9026, 646, 168, 179),
+        (9038, 623, 194, 196), (9038, 674, 195, 196),
+    )),
+    "RGN033.GFF": ((2224,), ((9606, 599, 1261, 1268),)),
+    "RGN03A.GFF": ((2785, 2786), ((10347, 223, 737, 747),)),
+}
 
 
 class FigureError(Exception):
@@ -71,7 +86,7 @@ _loaded: Optional[dict] = None
 
 def load(path: str = DATA) -> dict:
     """{"files": {FILE: {key: chunk}}, "added": {FILE: keys the game's file lacks}, "objects": [(object, old
-    picture, new picture)], "source": str}."""
+    picture, new picture)], "source": str, "placements": {region: [[object, x, y, new_y], ...]}}."""
     global _loaded
     if _loaded is not None and path == DATA:
         return _loaded
@@ -82,7 +97,8 @@ def load(path: str = DATA) -> dict:
     except (OSError, KeyError, ValueError, zipfile.BadZipFile) as e:
         raise FigureError(f"{os.path.basename(path)}: {e}")
     added = {f: {_key(n) for n in names} for f, names in man.get("added", {}).items()}
-    out = {"files": files, "added": added, "objects": [tuple(o) for o in man["objects"]], "source": man.get("source", "")}
+    out = {"files": files, "added": added, "objects": [tuple(o) for o in man["objects"]], "source": man.get("source", ""),
+           "placements": man.get("placements", {})}
     if path == DATA:
         _loaded = out
     return out
@@ -124,8 +140,26 @@ def resource_chunks(chunks: gff.Chunks, data: Optional[dict] = None) -> gff.Chun
 
 
 def region_chunks(name: str, chunks: gff.Chunks, data: Optional[dict] = None) -> gff.Chunks:
-    """The chunks DATA gives the region file NAME's copy: _for's."""
-    return _for(name.upper(), chunks, data or load())
+    """Merge placement edits with the catalogue scene, or the player's ETAB where it supplies none."""
+    name = name.upper()
+    data = data or load()
+    out = _for(name, chunks, data)
+    moves = data.get("placements", {}).get(name)
+    if not moves:
+        return out
+    key = ("ETAB", int(name[3:6], 16))
+    original = out.get(key, chunks.get(key))
+    if original is None or len(original) % 8:
+        return out
+    targets = {(obj, x, y): new_y for obj, x, y, new_y in moves}
+    table = bytearray(original)
+    for index, (x, y, height, flags, obj) in enumerate(struct.iter_unpack("<HHBBh", original)):
+        new_y = targets.get((obj, x, y))
+        if new_y is not None and height == 0:
+            struct.pack_into("<H", table, index * 8 + 2, new_y)
+    if table != original:
+        out[key] = bytes(table)
+    return out
 
 
 # --- making DATA (not at play: from the catalogue's import) ---
@@ -178,6 +212,7 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
     files: Dict[str, Dict[str, bytes]] = {}
     added: Dict[str, List[str]] = {}
     objects = []
+    placements = {}
     for f in FILES:
         try:
             with open(os.path.join(imported, f), "rb") as h:
@@ -198,6 +233,15 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                     continue
                 if script not in old or number in OPENABLE:
                     new[key] = lowered_furniture(old[key])
+            # Package positions only when every piece still uses this group's artwork.
+            for region, (pictures, moves) in ASSEMBLIES.items():
+                keys = [("BMP ", pic) for pic in pictures]
+                if any(k not in old or k not in new or ("SCMD", k[1]) in new for k in keys):
+                    continue
+                lowered = {k: lowered_furniture(old[k]) for k in keys}
+                if all(new[k] in (old[k], lowered[k]) for k in keys):
+                    new.update(lowered)
+                    placements[region] = moves
         for k, v in sorted(new.items()):
             if old.get(k) == v:
                 continue
@@ -212,7 +256,8 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                     added.setdefault(f, []).append(_name(*k))
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-        man = {"source": source, "files": {f: sorted(c) for f, c in files.items()}, "added": added, "objects": objects}
+        man = {"source": source, "files": {f: sorted(c) for f, c in files.items()}, "added": added, "objects": objects,
+               "placements": placements}
         z.writestr(MANIFEST, json.dumps(man, indent=1))
         for f, c in files.items():
             for n in sorted(c):

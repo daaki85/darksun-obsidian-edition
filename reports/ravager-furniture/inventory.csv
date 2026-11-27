@@ -1,4 +1,5 @@
 Picture,Family to inspect,Review status,Catalogue package (when listed),Region:placement count
+458,Vase,Alliance crate placement lowered 7 px; vase artwork retained,,001:1 033:7 038:1 03D:1
 515,"Tables, counters and benches",Lowered and placements reviewed,,038:1
 517,"Tables, counters and benches",Lowered and placements reviewed,,034:1 045:1
 522,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:4 033:5 045:1
@@ -10,21 +11,21 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 544,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:4 03E:1
 545,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
 546,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
-567,"Tables, desks and benches",Review table and stool spacing together,,001:2
-568,"Tables, desks and benches",Review table and stool spacing together,,001:1
-569,"Tables, desks and benches",Review table and stool spacing together,,001:2
-570,"Tables, desks and benches",Review table and stool spacing together,,001:2
-571,"Tables, desks and benches",Review table and stool spacing together,,001:1
-572,"Tables, desks and benches",Review table and stool spacing together,,001:3
-573,"Tables, desks and benches",Review table and stool spacing together,,001:4
-574,"Tables, desks and benches",Review table and stool spacing together,,001:1
-575,"Tables, desks and benches",Review table and stool spacing together,,001:6
-576,"Tables, desks and benches",Review table and stool spacing together,,001:2
-577,"Tables, desks and benches",Review table and stool spacing together,,001:2
-578,"Tables, desks and benches",Review table and stool spacing together,,001:2
-579,"Tables, desks and benches",Review table and stool spacing together,,001:4
-580,"Tables, desks and benches",Review table and stool spacing together,,001:4
-581,"Tables, desks and benches",Review table and stool spacing together,,001:2
+567,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+568,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
+569,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+570,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+571,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
+572,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:3
+573,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
+574,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
+575,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:6
+576,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+577,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+578,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+579,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
+580,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
+581,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
 626,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 628,"Tables, counters and benches",Lowered and placements reviewed,,001:1 033:2
@@ -75,7 +76,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2221,Barrels and crates,Lowered and placements reviewed,,045:1
 2222,Barrels and crates,Lowered and placements reviewed,,038:1
 2223,Barrels and crates,Lowered and placements reviewed,,038:1 045:1
-2224,Barrels and crates,Review vase contact before lowering crate,,033:1
+2224,Barrels and crates,Lowered and reviewed with vase 458,,033:1
 2225,Barrels and crates,Lowered and placements reviewed,,032:1 033:1 03D:1 045:2
 2354,Barrels and crates,Lowered and placements reviewed,,034:1
 2356,Barrels and crates,Lowered and placements reviewed,,032:1
@@ -112,8 +113,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2704,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:6
 2783,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
 2784,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
-2785,"Chairs, stools and beds",Review both halves of the assembled throne,,03A:1
-2786,"Chairs, stools and beds",Review both halves of the assembled throne,,03A:1
+2785,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
+2786,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
 2789,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
 2790,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
 2793,"Tables, counters and benches",Lowered and placements reviewed,,03A:1

@@ -1086,6 +1086,7 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   6541 at square 85, 13: after the jump the view stays the Roost's; the camera DS:1408h written and USE opened
   and closed redraws it, the rock rises as the earth drake, but a fight there hangs: the party isn't set up), 0x44 (the Tarrasque: the area 31-36, 46
   runs GPL 124, the cinematic and the fight).
+  The Forest jump can leave the camera behind. The overhead map opens with O, and moving the pointer to the edge scrolls the scenery. Check the room landmarks before treating a capture as evidence for a furniture placement.
 - **A figure's frame live** (2026-11-27, logs/2026-11-27-ravager-encounters.md): a map record (DS:67BBh + 25h n)
   holds at +12h the frame being drawn with its width and height (a byte each) and at +18h the step of its SCMD
   script (the frame shown is the previous step's): poll it beside window grabs to tie a glitch to a step. The
@@ -2287,7 +2288,7 @@ show the game's own behaviour beside the mod's. The names are read once, all tog
 | A script fix | any key of `ravager.SCRIPT_FIXES` | the fix | `GPLDAT2.GFF` | the game's script |
 | An object part | `mod_types`, `new_items`, `new_spells` (the spellbooks only, `ravgear.BOOKS`: the spells stay), `item_shine`, `weights`, `spell_arrows`, `melee_range` | that part of the objects, all the named parts in one write of the copy | `OBJEX2.GFF` | e.g. `weights`: the sequel's items weigh 0 again |
 | `spell_arrows`, also | the same name | the arrows' icons and names too | `RESOURC2.GFF` as well | no arrow buttons, no arrow objects |
-| The redrawn figures | `figures` | Codex's redraws (`ravfigures`): the pictures, the moved objects, the Tarrasque and drakes, the dining room | `OBJEX2.GFF`, `RESOURC2.GFF`, and no `RGN03A2.GFF` | the sequel's own figures. DSCLOG2's COPIED word (its header's +146) has bit 8 set once the game opened `RGN03A2.GFF` |
+| The redrawn figures | `figures` | Codex's redraws (`ravfigures`): the pictures, the moved objects, the Tarrasque and drakes, the dining room | `OBJEX2.GFF`, `RESOURC2.GFF`, and no Forest, Alliance or Mines 3 region copies | the sequel's own figures. DSCLOG2's COPIED word (header +146) uses bits 16, 32 and 8 for the Forest, Alliance and Mines 3 region copies respectively |
 | Shattered Lands' interface | `sl_interface` | its 45 screen pictures and 221 icons (`ravui`) | `RESOURC2.GFF` | the sequel's own screens and icons: `BMP 10000` in the copy is the game's |
 
 Any other name stops the script with `RAV_SKIP: no such patch NAME`; `$WORK/rav.conf` starts with

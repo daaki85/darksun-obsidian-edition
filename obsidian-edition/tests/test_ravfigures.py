@@ -82,6 +82,16 @@ class FigureFileTests(unittest.TestCase):
         self.assertEqual(ravfigures.resource_chunks({}, self.data), {})
         self.assertEqual(ravfigures.region_chunks("RGN03A.GFF", {}, self.data), {})
 
+    def test_region_moves_only_the_selected_ground_placement_once(self):
+        placed = struct.Struct("<HHBBh")
+        key = ("ETAB", 51)
+        records = [(599, 1261, 0, 32, 9606), (521, 1263, 0, 32, 9606),
+                   (599, 1261, 2, 32, 9606), (599, 1261, 0, 32, -9606)]
+        stock = {key: b"".join(placed.pack(*row) for row in records)}
+        result = ravfigures.region_chunks("rgn033.gff", stock)
+        self.assertEqual(list(placed.iter_unpack(result[key])), [(599, 1268, 0, 32, 9606)] + records[1:])
+        self.assertEqual(ravfigures.region_chunks("RGN033.GFF", result), {})
+
     def test_openable_furniture_keeps_both_poses(self):
         closed = [[1, 1], [2, 2], [3, 3]]
         opened = [[None, 7], [8, 8], [9, None]]
@@ -104,7 +114,8 @@ class GameFileTests(unittest.TestCase):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
         package = ravfigures.object_chunks(stock)
-        for pic in ravfigures.FURNITURE:
+        grouped = [pic for pictures, _ in ravfigures.ASSEMBLIES.values() for pic in pictures]
+        for pic in (*ravfigures.FURNITURE, *grouped):
             key = ("BMP ", pic)
             states = 2 if pic in ravfigures.OPENABLE else 1
             self.assertEqual(("SCMD", pic) in stock, states == 2, pic)

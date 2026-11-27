@@ -1944,8 +1944,7 @@ def regions_fixed(name: str):
 
 
 def write_regions(game_dir: str, dos_dir: str, skip=frozenset()) -> List[str]:
-    """The copies of the region files the redrawn figures change (ravfigures.REGIONS: RGN03A.GFF's
-    dining room) in DOS_DIR, which DSCLOG2 opens in their place; with ravfigures.SKIP in SKIP, or a region
+    """The region copies with revised furniture placements (ravfigures.REGIONS) in DOS_DIR, which DSCLOG2 opens in their place; with ravfigures.SKIP in SKIP, or a region
     the figures leave as it is, no copy (an older one taken away), the game's own file read."""
     done: List[str] = []
     for name, copy in ravfigures.REGIONS.items():
