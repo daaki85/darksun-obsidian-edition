@@ -1090,6 +1090,8 @@ class RavGameData(game.GameData):
     spell_names: List[str] = []  # (set by RavDiceLog.attach: spell_table's)
 
     def spell_name(self, spell: int) -> str:
+        if spell in game.POISON_POWERS:  # (the monsters' poison, a Poisoner's: the records' "Mons273" and on)
+            return game.POISON_POWERS[spell]
         if 0 <= spell < len(self.spell_names) and self.spell_names[spell]:
             return self.spell_names[spell]
         return super().spell_name(spell)

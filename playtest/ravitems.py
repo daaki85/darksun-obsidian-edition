@@ -4,7 +4,9 @@
 # 15, 16 (where the street's thieves had their armour at the fight's start) moved to the party's worn
 # chest 9, arm 0 and legs 6, which the acid check's armour loop takes. --fine (a test edit, never saved):
 # every bow (the sequel's type 18) named the Fine Bow (ravager.FINE_BOW_NAME: DSCLOG2's FINE_HIT); each
-# item's name number (+14h) is shown too. Run from playtest/.
+# item's name number (+14h) is shown too. --unhand (a test edit, never saved): the right hand's item (slot 3)
+# moved to backpack cell 30. --bow15 (a test edit, never saved): every bow +15, so Computer Control shoots
+# with it rather than close in (as the 2026-11-24 spell arrows' play had it). Run from playtest/.
 import sys, os, struct, argparse
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -18,8 +20,10 @@ def entry(n): b = g.read(fig + 3*n, 3); return b[0], struct.unpack('<H', b[1:])[
 cr, it, ty = far(0x19C9), far(0x19C1), far(0x19CD)
 WORN = '--worn' in sys.argv
 FINE = '--fine' in sys.argv
+UNHAND = '--unhand' in sys.argv
+BOW15 = '--bow15' in sys.argv
 from dsloader import ravager
-for a in [a for a in sys.argv[1:] if a not in ('--worn', '--fine')]:
+for a in [a for a in sys.argv[1:] if a not in ('--worn', '--fine', '--unhand', '--bow15')]:
     k, c = entry(int(a))
     if k != 2: print(a, 'not a creature (kind %d)' % k); continue
     rec = g.read(cr + c*0x31, 0x31)
@@ -33,6 +37,10 @@ for a in [a for a in sys.argv[1:] if a not in ('--worn', '--fine')]:
             slot = r[0x13]
             if WORN and slot in (14, 15, 16):
                 slot = {14: 9, 15: 0, 16: 6}[slot]; g.write(it + i*0x17 + 0x13, bytes([slot]))
+            if UNHAND and slot == 3:
+                slot = 30; g.write(it + i*0x17 + 0x13, bytes([slot]))
+            if BOW15 and t == 18:
+                g.write(it + i*0x17 + 0x16, bytes([15])); r = g.read(it + i*0x17, 0x17)
             if FINE and t == 18:
                 g.write(it + i*0x17 + 0x14, struct.pack('<H', ravager.FINE_BOW_NAME)); r = g.read(it + i*0x17, 0x17)
             print('  item', i, 'type', t, 'slot', slot, 'name', struct.unpack_from('<H', r, 0x14)[0], 'plus', struct.unpack('b', r[0x16:0x17])[0],

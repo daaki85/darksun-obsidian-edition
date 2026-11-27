@@ -249,6 +249,9 @@ class LoaderTests(unittest.TestCase):
         try:
             self.assertEqual(game.FINE_BOW_NAME, ravager.FINE_BOW_NAME)
             self.assertEqual(game.POISON_DAMAGE[kits.POISON_POWER], 10)
+            names = type("G", (), {"spell_names": ["Mons%d" % n for n in range(320)]})()
+            self.assertEqual(ravlog.RavGameData.spell_name(names, 273), "Poison (10 damage)")  # (not "Mons273")
+            self.assertEqual(ravlog.RavGameData.spell_name(names, 272), "Mons272")
         finally:
             ravlog.restore_layout()
         self.assertEqual(kits.POISON_POWER, 176)
