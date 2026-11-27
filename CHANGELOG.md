@@ -390,6 +390,9 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 - The sequel's kits, the patch notes and the links brought in step with #218 to #254: the patch notes'
   Wake of the Ravager section links to RAVAGER.md and has the figures and the Effects screen's lines;
   this section's entries each name their pull request (#257).
+- The Player's Guide's weapon tables (damage, the clerics' spheres, mundane and magic weapons, who wields which
+  magic weapon) and the backstab table in How the game works list Wake of the Ravager's weapon kinds, their
+  metal, obsidian and bone ones and their 13 magic ones (#257).
 
 **Dev**
 - DOSBox-X: `dsloader/dosboxx.py`, `process.FileMemory`; `tests/test_dosboxx.py`,
