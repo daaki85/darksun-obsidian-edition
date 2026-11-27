@@ -453,6 +453,13 @@ install label named after `cs:` in the segment's code (or a segment label in the
 written before a table moved fails there, not in the game. The tail and the install each have 64 KB
 of their own.
 
+**Upper memory** (the audit's R3, measured 2026-11-27): with UMBPLUS.COM, as the Loader starts the sequel,
+upper memory is one block, CA00h-EFFFh, and the game puts nothing there; the helper's block sits at CA0Ah
+(4,151 paragraphs with its PSP), the see-through figures' at the top (352), 83,392 bytes free between. The
+build fails (`UMB_NEED`, `UMB_KEPT` at the file's end) if the helper as loaded, or as kept with the
+see-through block, outgrows the block without UMBPLUS.COM (D00Ah on, 8,182 paragraphs: DSCLOG's
+`UMB_ROOM`).
+
 The tail holds (2026-11-27, claude/dsclog2-segment-room) the item names past 256 (`ITEM_NAMES`,
 +196), the USE screen's lines (`SLOTS_TEXT`, +148, and `U_LINE`), the Look box's whole description
 (`LOOK_FULL`, +158; `SHOW_TAIL` tells `SHOW_WINDOW` its segment), the labels' slots (`LBL_SLOTS`,
