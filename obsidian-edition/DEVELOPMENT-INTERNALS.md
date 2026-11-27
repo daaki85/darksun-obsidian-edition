@@ -246,7 +246,7 @@ the one place for the sizes; the sections after them name the symbols only.
 | 1 MB-1 MB+64 KB | 64 KB | the HMA (A20 on): DSCLOG's [far block](#the-far-block), 65,484 bytes, 36 free |
 | above | 31 MB (`memsize=32`) | XMS: the game's memory layer (VMEM) |
 
-**Under DOSBox-X** ([the other engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x);
+**Under DOSBox-X** ([the default engine](DEVELOPMENT-SCREENS.md#the-engine-gogs-dosbox-or-dosbox-x);
 2026.10.01, with the Loader's configuration for it) the same things are in nearly the same places,
 and DSCLOG is unchanged. Measured with `playtest/memaudit.py` in the slave pens with the map open,
 beside 0.74 ([the experiment's log](https://github.com/daaki85/darksun-obsidian-edition/blob/main/playtest/logs/2026-11-18-dosbox-x.md),

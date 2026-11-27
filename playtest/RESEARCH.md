@@ -717,7 +717,7 @@ logs/2026-11-16-spell-grid.md):
 
 ## DOSBox-X: what the engine is like inside
 
-For a test of the other engine ([a game in DOSBox-X](PLAYTESTING.md#a-game-in-dosbox-x) has the
+For a test of the DOSBox-X engine ([a game in DOSBox-X](PLAYTESTING.md#a-game-in-dosbox-x) has the
 kit's side; `dsloader/dosboxx.py` the configuration and why each line is there).
 
 - **The memory file** is the guest's RAM, offset = guest address, 33,554,432 bytes (`memsize=32`),

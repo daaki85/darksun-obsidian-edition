@@ -992,7 +992,7 @@ Why DOSBox-X:
   DOSBox 0.74 it does that through DOSBox's process, which on Linux needs root or a system setting
   (`kernel.yama.ptrace_scope=0`), and GOG's DOSBox is a Windows program there besides. DOSBox-X
   can keep the emulated PC's memory in a file, and the Loader follows the game through that file:
-  no root, no setting, and **Start the game** works on Linux with only the game's folder (GOG's
+  no root, no setting, and **Play Shattered Lands** works on Linux with only the game's folder (GOG's
   `DOSBOX` folder isn't needed with this engine).
 - **Music without a synthesizer set up outside.** DOSBox-X has a synthesizer of its own
   (FluidSynth). Give it a soundfont, a `.sf2` file of instrument sounds that you have, with
