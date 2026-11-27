@@ -11,6 +11,7 @@
 # RAV_CHARGES_OFF=1: the charges' pass off (DiceLog.count_charges, as before its port: the charge routine's 2d4 behind the
 # overlay manager's stub not known, its label "Armor: 7 left" with it), a control.
 # RAV_STEALTH_ROLL=N: every hiding and moving silently roll N (stealth.py; 1 to hide every time, for a test).
+# RAV_DEFILER_CHANCE=N: each defiler's chance of a scroll N% (defilerscrolls: 5; 100 for a test).
 # RAV_PICK_ROLL=N: every picking pockets d100 N, the pick's and the getaway's (pickpocket.attempt: 1 a success,
 # 100 caught).
 # RAV_NO_PAN=1: the view not scrolled to an enemy chosen with Tab off the screen (targeting.Targeting._show a no-op: the
@@ -57,6 +58,9 @@ if os.environ.get('RAV_PICK_ROLL'):  # (every picking pockets d100, the pick's a
     _attempt = pickpocket.attempt
     pickpocket.attempt = lambda *a, n=int(os.environ['RAV_PICK_ROLL']), **k: _attempt(*a, roll=lambda: n, **k)
     print('picking pockets: every d100 %s' % os.environ['RAV_PICK_ROLL'], flush=True)
+if os.environ.get('RAV_DEFILER_CHANCE'):  # (each defiler's chance of a scroll, in percent: 100 to see one at once)
+    log.defilers.chance = int(os.environ['RAV_DEFILER_CHANCE'])
+    print('defilers\' scrolls: %s%% a defiler' % os.environ['RAV_DEFILER_CHANCE'], flush=True)
 if os.environ.get('RAV_NO_PAN'):  # (a control: DSCLOG2's PAN_X and PAN_Y never added to)
     from dsloader import targeting
     targeting.Targeting._show = staticmethod(lambda gd, tsr_hdr, thing: False)

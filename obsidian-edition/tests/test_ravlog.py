@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, dicelog, game, itemwatch, kits, ravager, ravlog, ravspells, tracker  # noqa: E402
+from dsloader import aging, defilerscrolls, dicelog, game, itemwatch, kits, ravager, ravlog, ravspells, tracker  # noqa: E402
 
 
 class FakeGuest:
@@ -438,6 +438,34 @@ class PassTests(unittest.TestCase):
             ravlog.restore_layout()
         self.assertIn(62, itemwatch.USED_UP)
         self.assertEqual(itemwatch.BROKEN, frozenset((93, 107)))
+
+    def test_the_sequels_defiler_scrolls(self):
+        """Defilers' scrolls run in the sequel (PASS's item_watches step) with its names: its defiler objects,
+        a spellbook of its book object teaching the spell (its +2 and power the spell + 1, 3000 a level), its
+        wizard spells of levels 1 to 9 and the new ones; Shattered Lands' back after."""
+        self.assertIn("item_watches", [step.name for step in ravlog.RavDiceLog.PASS])
+        ravlog.apply_layout()
+        try:
+            self.assertEqual(defilerscrolls.DEFILER_OBJECTS, ravlog.RAV_DEFILER_OBJECTS)
+            rec = defilerscrolls.scroll(40, 6)
+            self.assertEqual(len(rec), ravager.ITEM_SIZE)
+            self.assertTrue(defilerscrolls.is_ours(rec))
+            self.assertEqual(struct.unpack_from("<hHHHHH", rec, 0), (-31002, 41, game.NO_ITEM, 18000, game.NO_ITEM, 77))
+            self.assertEqual(struct.unpack_from("<H", rec, 0x10)[0], 41)
+            self.assertEqual((rec[0x13], struct.unpack_from("<H", rec, ravager.ITEM_NAME)[0]), (0xFF, 4))
+            levels = lambda spell: 9 if spell == 100 else 6 if spell == 40 else 0 if spell > 0x72 and spell < 320 else 1
+            pool = defilerscrolls.spells(levels, True)
+            self.assertIn(100, pool)
+            self.assertIn(40, pool)
+            self.assertIn(325, pool)
+            self.assertNotIn(0x73, pool)
+            self.assertNotIn(320, defilerscrolls.spells(levels, False))
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual(defilerscrolls.MOST_LEVEL, 5)
+        self.assertIsNone(defilerscrolls.MAKE)
+        self.assertIn(258, defilerscrolls.DEFILER_OBJECTS)
+        self.assertEqual(struct.unpack_from("<h", defilerscrolls.scroll(3, 1), 0)[0], -defilerscrolls.SCROLL_OBJECT)
 
     def test_an_older_header_gets_no_arrows_words(self):
         """SPELL ARROWS' words (+2098 up) are written only to a helper whose HDR_LEN (+30) reaches past them: an

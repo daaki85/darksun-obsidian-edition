@@ -921,7 +921,10 @@ one time in 20, dropped where it dies*. Rules: [learning preserver
 spells](PLAYER-GUIDE.md#learning-preserver-spells). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#defilers-scrolls).
 
-**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** the same, with the switch: its defilers are the Lord Warrior, El, Fermin,
+the Pyramid's Defilers, the Yuan-ti, Solurnis and Raenika, and the scroll is the sequel's kind that teaches, a
+Spellbook (right-clicked, its spell icon teaches it, as the sequel's own books), of any of its wizard spells (and
+the new ones with the new spells on), 3,000 a spell level.
 
 ### New items
 
