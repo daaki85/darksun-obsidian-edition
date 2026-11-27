@@ -73,7 +73,10 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Shattered Lands' weapons another material or kind (a bone Long Sword the sequel's obsidian one, the
   Great Axe +3 an obsidian axe, the Polearm +1 a double spear, Terror Blade a stone dagger, Bloodwrath a
   metal sword) the Loader makes it in its own material and kind instead. The sequel had no bone long
-  sword: the Loader adds Shattered Lands' to it. Its club and bow are wood and its sling leather, as in
+  sword: the Loader adds Shattered Lands' to it. Dragonsbane is metal in both games (SSI made the sequel's
+  obsidian), so Shattered Lands' Dragonsbane crosses as the sequel's own, and there is one of it.
+  A weapon's item box shows its damage against a large foe too, as Shattered Lands' does
+  (`1D8+4/1D12+4`; [creature size](FEATURES.md#creature-size)). Its club and bow are wood and its sling leather, as in
   Shattered Lands (SSI made them of no material), so an earth or water cleric, druid or ranger may use
   them there too.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
@@ -341,8 +344,8 @@ Grace. A game saved before gets them at Notaku's as the weapons (four of the six
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
 and the sequel does not yet, each checked against the Loader's code (2026-11-27):
 
-- **[What the party wears](FEATURES.md#what-the-party-wears)**: the class outfits, and the new character's
-  figure on the creation screen. The sequel keeps its own figures, [drawn in Shattered Lands'
+- **[What the party wears](FEATURES.md#what-the-party-wears)**: class outfits on the map, the creation-screen class preview,
+  and class-specific full-length human inventory pictures. The sequel keeps its own figures, [drawn in Shattered Lands'
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.

@@ -77,6 +77,9 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   spells, the creation screen, the screens and choosing an enemy; the level cap and first spells entries
   cut to the sequel's own facts. The detail stays on KITS, WEAPON-SPECS and PLAYER-GUIDE, linked.
 
+**Changed: Shattered Lands inventory portraits** (branch `claude/inventory-redraws`)
+- Both human figures have a separate fitting for each of the eight active classes. The Preserver wears the open plum mantle, the Gladiator has a single guard and diagonal strap, and the Fighter wears paired bone caps. [Human portraits and their map outfits](obsidian-edition/docs/class-outfits/README.md#human-inventory-fittings)
+
 **Docs: Wake of the Ravager's side of the features, creatures and dice log pages** (branch `claude/ravager-docs-side`)
 - CREATURES.md covers both games: the sequel's 198 creatures from its own data, each in the figure the mod
   draws (183 redrawn, marked), its size by the sequel's table and the cahulaks' answer as the sequel decides
@@ -101,6 +104,16 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   of the Ravager (starting and driving it; its pictures and screens; its records, kits and saves; the port
   audit's notes). The text moved as it was; `RESEARCH.md` is their index, so old links still land, and
   every link into a moved section points at its new page.
+
+**Fixed: one Dragonsbane, metal in both games; the sequel's item box shows the damage against large foes** (branch `claude/dragonsbane-metal`)
+- SSI made the sequel's Dragonsbane (object 675, +4) an obsidian long sword; Shattered Lands' is metal. The
+  user's call: "It is metal in Shattered Lands, then it should be metal in the sequel". The Loader's copy makes
+  it the sequel's metal long sword (type 97; `ravager.RAV_OBJECT_TYPES`, `RAV_SKIP=object_types` the control),
+  4 lb as in Shattered Lands, so SL's Dragonsbane crosses as the sequel's own again (one sword, not a second
+  Loader-made one). `test_item_weights.py` has no Dragonsbane exception left. Played: logs/2026-11-27-dragonsbane-metal.md.
+- The sequel's item box shows a weapon's damage against a large foe too, as Shattered Lands' (`1D8+4/1D12+4`):
+  DSCLOG's SIZE_LINE and SIZE_PRE ported (DSCLOG2 sites 249, 250 in the line routine 7AF9Eh; Shillelagh's line
+  1D6+1/2D4 as SL's). Tests: `test_ravsizeline.py` (emulated).
 
 **Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
 - A party taken across lost five backported weapons' material: the metal great sword, lotulis and

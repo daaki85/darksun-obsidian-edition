@@ -199,7 +199,7 @@ class GameTests(unittest.TestCase):
             self.assertEqual(again.counterparts, sequel.counterparts)
             copy, done = ravager.objects_fixed(open(os.path.join(WOTR, "OBJEX.GFF"), "rb").read(), frozenset(),
                                                ravager.read_added(d))
-            self.assertEqual(done, ["mod_types", "transfer_items", "weights", "melee_range", "materials", "item_shine", "figures",
+            self.assertEqual(done, ["mod_types", "object_types", "transfer_items", "weights", "melee_range", "materials", "item_shine", "figures",
                                     "wide_sheets"])  # (the monsters' sheets 48h too)
             chunks = gff.read_gff(copy)
             self.assertIn(("RDFF", 22427 if ("OJFF", 22427) in sequel.objects else 22419), chunks)
@@ -224,6 +224,7 @@ class GameTests(unittest.TestCase):
         sequel = rt.load_sequel(WOTR)
         table = ravager.mod_types_table(ravager.materialled_table(sequel.objects[ravager.TYPES_CHUNK]))
         sequel = sequel._replace(counterparts=rt.weapon_pairs(sequel, sl_objects, sl_table, table))
+        self.assertEqual(sequel.counterparts.get(2605), 675)  # (SL's Dragonsbane the sequel's own, metal now)
         types = ravitems.type_map(sequel.counterparts, sl_objects, sequel.objects)
         kinds, weapons = ravitems.sl_kinds(), 0
         for key in sorted(sl_objects):

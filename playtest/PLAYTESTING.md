@@ -922,6 +922,8 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 
 ## Inventory, looting, selling and shops
 
+- **Class portraits.** From the PENS save, press I and select each party face. Cermak wears his active Preserver outfit. Compare Gerakis, K’ratchek and Cilla with their retail half-giant, thri-kreen and elf inventory pictures. The DOS helper reads the portrait from the prepared RESOURCE.GFF, so this check also works with the host dice log detached. To compare human fittings, capture the central parchment after each party selection and again after returning to the first member. In a 320 × 240 DOSBox window, horizontal pixels are native and the 200 game rows stretch to 240. Use that vertical scale when aligning a capture with the Loader’s decoded picture.
+
 - **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
   backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
   right-clicks after that cycle the map's pointer (`pointer.py walk` puts the arrow back). Click

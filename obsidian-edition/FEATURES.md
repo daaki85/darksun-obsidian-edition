@@ -542,7 +542,7 @@ The game keeps no sizes; the mod gives each creature the size [the creatures' ta
 lists. A **large** target (a half-giant, a large monster, anyone Enlarged) takes AD&D's dice against
 large creatures (a long sword 1d12 for 1d8), and Hold Person, Charm Person and Charm Person or
 Mammal (on a person) don't take on it (`Guard is too big for Hold Person -> unaffected`). A weapon's
-item box shows both dice (`1D8-1/1D12-1`). The pick does the
+item box shows both dice (`1D8-1/1D12-1`), in Wake of the Ravager too. The pick does the
 footman's pick's 1d6+1, where the game had the horseman's 1d4+1.
 
 ![A Bone Long Sword's item box: "Bone", "Long Sword", "1D8-1/1D12-1", "Hit -1"](docs/large-dice.png)
@@ -1367,6 +1367,8 @@ The thri-kreen and combinations outside the outfit roster, such as an elf with D
 classes, keep the game's own figure. The creation screen's small figure wears the outfit
 of the class (or classes) picked, and changes as the class, race or sex does. The outfits were drawn for the mod on the game's own figures and poses: [every outfit,
 animated online](https://github.com/daaki85/darksun-obsidian-edition/blob/7a0b6200b0c218f7a27ccc4b0c3fece7cdf59fe4/obsidian-edition/docs/class-outfits/README.md).
+
+In the Shattered Lands inventory, selecting a human shows a full-length portrait in the active class outfit. Both human figures have eight outfits. Other races use their original inventory pictures. [Human inventory gallery](https://github.com/daaki85/darksun-obsidian-edition/blob/f8d71c445b6726971c20dd918a50d26ed22a56cc/obsidian-edition/docs/class-outfits/README.md#human-inventory-fittings)
 
 The game draws each race and sex the same whatever they carry; the Loader keeps the outfit (or, outside
 the outfits, the artist's picture) and adds the gear, frame by frame, walking and fighting, changing as
