@@ -46,6 +46,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `foepos.py` | each combatant past the party: its name, HP and figure on screen (feet x, y - 10) |
 | `foeset.py` | foeset.py [COMBATANT [race=R] [cls=A,B,C] [lv=A,B,C] [mr=N] [hp=N] [int=N] [name=S] [eff=ID[:SPELL[:AMOUNT]]] ...]: memory only, never save after (2026-11-09, logs/2026-11-09-group-3.md). |
 | `follow.py OBJECT [ROUNDS]` | keep the party within a few squares of a map object that walks (an escort). |
+| `framegrab.sh DIR SECONDS` | the game window grabbed (import -window) as fast as it goes, about 36 a second, into DIR/f00000.png on, for SECONDS; |
 | `framerate.py SECONDS [X1 X2 Y]` | walks the party back and forth between screen points (X1,Y) and (X2,Y) for SECONDS and reports the frame rate, a second at a time and in all. |
 | `gamekeys.py [dis START [LEN]]` | the keys the game itself acts on with the map up, read from DSUN.EXE ($DS_GAME): the root's table at 1BC5Bh (26 keys, then their handlers), the map overlay's at 71C1Bh (overlay 4272h: 33 keys) and that overlay's jump... |
 | `gearpoll.py` | watches the Loader's creation gear reach the roster, for 110 s. |
@@ -89,6 +90,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `outfitlive.py MEMBER [classes=C1,C2,C3] [slot=SLOT]` | checks the Loader's class outfit live: sets party member MEMBER's three class bytes (sheet +21h, the creation codes: 1 cleric, 6 druid, 9 fighter, 10 gladiator, 11 preserver, 12 psionicist, 13 ranger, 17 thief)... |
 | `pacerec.sh on\|off OUT.mkv` | a recording for docs/steady-pace.gif: pens-after-arena, steady pace on or off, the party walked east and back, recorded at 70 frames a second from the X display (the DOSBox window at 0,0, 320x240) |
 | `panel.sh hide\|show` | the combat log panel (bottom right) hidden or shown, by its frame's pixel at 140,150 in the 320x240 window grab (140,125 in the 320x200 capture; |
+| `panelcopies.py DIR` | frames of framegrab.sh (320x240) with copies of the combat log's docked panel left on the map: its stone and well colours counted left of it (x 0-133, rows 130-239) and above it (x 136-319, rows 100-140), more than... |
 | `party.py` | each party member's classes and levels, the gladiator flag, the scores the game uses now (the creature record's), and every item with its slot, +0Eh and +0Fh (ability bytes) |
 | `passmiss.sh` | in a fight, the party's turns passed through each member's END menu (memberpos.py, E) until a foe misses (the dice log's "-> miss"), then the view dragged and shots taken (missdrag.png, missafter.png). |
 | `passn.sh N` | pass N party turns, passuntil.sh's way (a click on the member's figure, the END menu checked by its grey pixels, E). |

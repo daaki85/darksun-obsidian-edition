@@ -62,6 +62,17 @@ Releases, newest first (2.12.0 and older in the archive):
 Pull requests #146 to #216 (merged 2026-11-25 and 2026-11-26), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
 
+**Fixed: the combat log's panel copied across the map as the view moves; autosave switched without a restart** (branch `claude/panel-scroll-autosave`)
+- When the view moved to whose turn it is, or followed a figure walking, copies of the docked panel
+  (its header in a row, "Needs Needs Needs") stayed beside it until the main loop's next pass. DSCLOG
+  now catches the game's moves of the view as they end (`PANEL_FOLLOW`, `CENTRE_THING`, `CENTRE_XY`:
+  sites 125-127) and draws again just where the panel was copied to. Played in Pehtucl's ambush, frames
+  grabbed through two rounds: copies in runs of up to 49 frames before, 2 at most after. The files with
+  copies (`COPIES`) moved to DSCLOG's tail to make room.
+- With no Loader window (the dice log on its own, or the game started without one), a change to
+  `settings.json`'s `autosave` or `quick_save` is taken within a second, with no restart
+  (`DiceLog.follow_switches`; the window's Options tab already did this). Test: `test_dicelog`.
+
 **New: the sequel's figures in Shattered Lands' style** (branch `claude/ravager-figure-import`)
 - The approved redraws of Wake of the Ravager's figures (Codex's catalogue, the owner's private
   installation files, b447d39; 275 OBJEX pictures, 32 objects moved to their own figure, the Tarrasque,

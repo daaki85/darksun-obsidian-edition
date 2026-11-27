@@ -238,6 +238,12 @@ SAVE_BASE_SITE = NS_IMAGE + 123
 # (the creation screen's figure first drawn once the Loader has written it in the class's outfit:
 # DSCLOG's FIG_OPEN, creationfigure.py)
 FIG_OPEN_SITE = NS_IMAGE + 124
+# (the view moved by the game's following a figure, drawn by its scroll: drawn again round the
+# combat log's panel at once, DSCLOG's PANEL_FOLLOW)
+FOLLOW_SITE = NS_IMAGE + 125
+FOLLOW_SITES = (0x1B296, 0x1CA52, 0x1E457)  # ("add sp,8" after each 2191:0648 call)
+# (the view centred, on a thing and on (x, y), the same: DSCLOG's CENTRE_THING, CENTRE_XY)
+CENTRE_THING_SITE, CENTRE_XY_SITE = NS_IMAGE + 126, NS_IMAGE + 127
 # the monster kinds' table (DSUN.EXE, the load segment's 3E45h: monsters.MONSTER_KINDS_SEG): a kind's
 # properties (a dword), its resistance class (a byte), a class's damage kinds (four words) and percents
 KINDS_FILE = 0x5400 + 0x3E45 * 16
@@ -872,6 +878,14 @@ PATCHES = (
     # screen to show is set and the VGA not yet told; the combat log's panel put on it first, if it
     # is on the screen shown now (DSCLOG's FLIP_SITE: else the panel went from the screen at a flip)
     Patch("panel_flip", 0x14444, bytes.fromhex("b800a0833e8e1100"), _site(FLIP_SITE, 8)),
+    # the view moved by the game's following a figure (2191:0BE3) and drawn by scrolling (2191:0648),
+    # the panel copied along: drawn again round it at once (DSCLOG's PANEL_FOLLOW)
+    *(Patch(f"panel_follow_{n}", at, bytes.fromhex("83c408"), _site(FOLLOW_SITE, 3))
+      for n, at in enumerate(FOLLOW_SITES, 1)),
+    # ... and centred, on a thing (191F:01FF) or on (x, y) (191F:0281), at each routine's end: "mov
+    # word [11B6h],0" (DSCLOG's CENTRE_THING, CENTRE_XY)
+    Patch("panel_centre_thing", 0x1E869, bytes.fromhex("c706b6110000"), _site(CENTRE_THING_SITE, 6)),
+    Patch("panel_centre_xy", 0x1E8DC, bytes.fromhex("c706b6110000"), _site(CENTRE_XY_SITE, 6)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)
     Patch("stab_roll", 0x58A29, bytes.fromhex("837e1601"), _site(STAB_SITE, 4)),
