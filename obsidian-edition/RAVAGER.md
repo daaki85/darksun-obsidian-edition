@@ -284,7 +284,9 @@ bigger character sheets) as it goes in (a game already running lists it from its
   the woman), the dwarf, elf, half-elf, half-giant, halfling and mul in a picture for each class and
   multiclass, and the thri-kreen in one picture for all its builds. They are Shattered Lands' figures,
   dressed as there, taken from your Shattered Lands folder each start and put in the sequel's colours that
-  no area changes. Without a Shattered Lands folder the sequel's own pictures are used throughout.
+  no area changes. The creation screen's full-length picture is the same, for the classes being picked,
+  changing with a class, the race or the sex. Without a Shattered Lands folder the sequel's own pictures are
+  used throughout.
 - **Talk portraits at Shattered Lands' size**: the sequel's faces in its talk and message boxes were 72 by
   72 in a box 72 high, the text starting a quarter of the way across. The Loader's copy draws them as
   Shattered Lands does: a 32 by 32 face in a 48-pixel stone frame at the box's top left, the box 58 high

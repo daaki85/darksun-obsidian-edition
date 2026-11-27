@@ -3085,6 +3085,17 @@ probe_cr_hp:
         sti
         pushad
         push es
+        call cr_changed         ; (a new character's class only now shown: its picture, CR_DRAW)
+        jz .drawn
+        push word [cs:t_cs]     ; (the way back, as a far call's, with BP)
+        push word [cs:t_ip]
+        push bp
+        mov bp, sp
+        call cr_draw
+        pop bp
+        pop word [cs:t_ip]      ; (as the overlay manager has left it)
+        pop word [cs:t_cs]
+.drawn:
         les bx, [CR_CREATURE]
         mov cl, [es:bx + CREATURE_THAC0]
         call cr_kit_thac0
@@ -4439,6 +4450,111 @@ inv_figure:
 .stock: add ax, INV_PRELOAD
         iret
 
+; CR_FIGURE (site 253, "creation_portrait"): "mov ax,[es:bx+10h] / add ax,15h" (6B04Fh, a race or portrait
+; clicked; 6DBC4h, the screen opening; SL's 632BFh, 65F9Ch): the creation screen's full-length picture of
+; the creature being made (ES:BX) made the inventory's for the classes of the sheet being made (CR_KEY).
+cr_figure:
+        call cr_key
+        pushad
+        push es
+        call cr_look
+        mov [cs:cr_seen], eax           ; (what is drawn: CR_REDRAW draws it again when it changes)
+        pop es
+        popad
+        iret
+
+; CR_LOOK: EAX the classes of the sheet being made, the figure in its top byte. BX, EDX, ES changed.
+cr_look:
+        les bx, [WP_CREATION]
+        call sheet_classes_cr
+        les bx, [CR_CREATURE]
+        movzx edx, byte [es:bx + 0x10]
+        shl edx, 24
+        or eax, edx
+        ret
+
+; CR_KEY: AX the picture for the creation screen's figure (ES:BX its creature): INV_FIGURE's key for the
+; classes of the sheet being made (WP_CREATION: numbered 1-8, the class groups; a human's one class), else
+; INV_PRELOAD + the figure. All other registers kept.
+cr_key:
+        mov ax, [es:bx + 0x10]
+        cmp ax, INV_ART_FIGURES
+        jae .stock
+        push bx
+        push cx
+        push dx
+        push si
+        push es
+        mov dx, ax
+        mov cx, 3
+        cmp ax, 2
+        jae .key
+        mov cx, 1                       ; (a human: its one class)
+.key:   shl dx, 8
+        add dx, INV_ART_BASE
+        les bx, [WP_CREATION]
+        xor si, si
+.next:  movzx ax, byte [es:bx + si + SH_CLASSES]
+        dec ax
+        cmp ax, 7
+        ja .skip
+        bts dx, ax
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop es
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
+.stock: add ax, INV_PRELOAD
+        ret
+
+; CR_CHANGED: (KP_CLASS, after every click on the creation screen; CR_HP, as a new character's class is
+; first shown) ZF clear if the classes or the figure being made have changed since the full-length picture
+; was drawn (CR_FIGURE; the game draws it after a race's or a portrait's click, not after a class's), and
+; then taken as drawn. EAX, BX, EDX, ES changed.
+cr_changed:
+        call cr_look
+        cmp eax, [cs:cr_seen]
+        je .ret
+        mov [cs:cr_seen], eax
+.ret:   ret
+
+; CR_DRAW: the full-length picture drawn again, as after a race's click: its box's backdrop put back (the
+; root's 0C8h:3B30h, with the words at 1120h) and the picture drawn (the overlay's 5F0h:98h, CR_KEY's).
+; Called in a frame the overlay manager can fix up (BP pushed last, the far way back below it): the draw
+; may load its overlay over the creation screen's. DS the game's; AX, BX, ES changed.
+CR_BACK_SEG  equ 0x1D40 - 0x47E0        ; (0C8h's segment less DS's: 3B30h the backdrop put back)
+CR_BACK_PUT  equ 0x3B30
+CR_BACK      equ 0x1120                 ; (DS: the picture's box's saved backdrop, two words)
+CR_DRAW_SEG  equ 0x471F - 0x47E0        ; (5F0h's stub segment less DS's: 98h a preloaded picture drawn)
+CR_DRAW      equ 0x98
+cr_draw:
+        push word [CR_BACK]
+        push word [CR_BACK + 2]
+        mov ax, ds
+        add ax, CR_BACK_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_BACK_PUT
+        call far [cs:cr_call]
+        add sp, 4
+        push dword 0x3C
+        push word 0x32                  ; (its place, as the game pushes it)
+        les bx, [CR_CREATURE]
+        call cr_key
+        push ax
+        mov ax, ds
+        add ax, CR_DRAW_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_DRAW
+        call far [cs:cr_call]
+        add sp, 8
+        ret
+cr_seen dd 0xFFFFFFFF
+cr_call dd 0
+
 ; INV_LOAD (site 252, "inventory_load"): "mov dword [bp-4],0" (7B831h, SL's 7303Eh), the preloaded
 ; picture SI's loader starting: an INV_FIGURE key is read from the GFF as the game reads a chunk, and
 ; given back by the loader's own way out; with none (a figure or class without one), the figure's own
@@ -4737,6 +4853,7 @@ site_table:
         dw size_pre                         ; 250 SITE_SIZE_PRE (7B1B2h: ... about to be drawn: Shillelagh's 1D6+1)
         dw inv_figure                       ; 251 SITE_INV_FIGURE (75DD0h: the inventory's full-length picture: the class's)
         dw inv_load                         ; 252 SITE_INV_LOAD (7B831h: a preloaded picture's loader: the class's from the GFF)
+        dw cr_figure                        ; 253 SITE_CR_FIGURE (6B04Fh, 6DBC4h: the creation screen's full-length picture: the class's)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -15956,6 +16073,25 @@ kp_shown:
 ; class's own opened for another, or back to the disciplines for one with no kits. Then the two
 ; instructions.
 kp_class:
+        sti
+        pushad
+        push es
+        call cr_changed
+        jz .drawn
+        mov bx, sp              ; the frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]  ; the way back, pushed as a far call's, with BP
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call cr_draw            ; (another class: its picture, CR_DRAW)
+        pop bp
+        pop ax                  ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.drawn: pop es
+        popad
         push eax
         push es
         push bx
@@ -18617,7 +18753,11 @@ fig_of:
         mov [cs:fg_bottom], ax
         cmp byte [es:si + 4], 0xFF      ; (none, or planar: FFh "PLNR" / "PLAN")
         je .no
-        call fig_box
+        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        cmp ax, [cs:fg_bottom]
+        jae .feet
+        mov [cs:fg_bottom], ax
+.feet:  call fig_box
         jc .no
         add si, 4
 .row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
@@ -18860,6 +19000,11 @@ fig_record:
         mov [cs:fk_bottom], al
         cmp byte [es:si + 4], 0xFF      ; (none, or planar)
         je .ret
+        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        cmp al, [cs:fk_bottom]
+        jae .feet
+        mov [cs:fk_bottom], al
+.feet:
         mov ax, [cs:sc_next]
         inc word [cs:sc_next]
         cmp word [cs:sc_next], SC_SLOTS
@@ -18921,6 +19066,12 @@ fig_record:
 fk_frame  db 0
 fk_w      db 0
 fk_bottom db 0
+
+; FEET_ROW: AX the lowest row frame ES:SI (width, height, then its rows of runs) draws anything on, its last
+; (FFFFh: none): the figure's feet, which FIG_OF and FIG_RECORD take when higher than the frame's bottom edge
+; (the redrawn figures' frames have a margin all round, ten rows under the party's and up to 22 under the big
+; creatures', so their shadows fell that far below them, the figures floating). Keeps the rest.
+        SHARED_feet_row
 
 ; FIG_BOX: CF set if none of the shadow of the frame (FG_W, FG_BOTTOM) at FG_X, FG_Y can be where the
 ; floor was drawn (the clip); FG_FEET the feet's row on the screen. Registers kept but AX.
