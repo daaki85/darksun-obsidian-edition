@@ -190,6 +190,17 @@ back up, and an ability score changing, as in Shattered Lands.
   Control swung once a round from 2 squares. The Loader's OBJEX copy gives it a range of 1, as Shattered
   Lands' double spear has (`ravager.RAV_RANGES`; `RAV_SKIP=melee_range` the control).
 
+**Fixed: the code audit's bugs (2026-11-27)**
+- Shattered Lands started from the Loader's window after a game of Wake of the Ravager started without
+  its new items, people and icons (and a changed GPLDATA copy): the sequel's record layout was still on
+  while Shattered Lands' copies were written. It is put back first now.
+- In the sequel, dice the dice log held to learn which spell they belonged to waited for the next roll
+  instead of being shown after a second, as in Shattered Lands.
+- A thief who failed more than four locks at one level in a region could try the latest one again: the
+  four kept were the highest thing numbers, not the four failed last.
+- `playtest/ravstart.sh`: several object parts in `RAV_SKIP` each rewrote OBJEX2.GFF from the game's
+  file, so only the last was left out; now one write leaves them all out (and `spell_arrows` RESOURC2.GFF's too).
+
 **Fixed: Wake of the Ravager's Justifier**
 - A Justifier of 8th or 9th ranger level had the plain ranger's first priest slot there and cast with it
   at caster level 0 (his ranger level less 9, held at 0). Now he has none before 10th, as in Shattered

@@ -143,17 +143,19 @@ class LoaderTests(unittest.TestCase):
         log.tsr_hdr = seg_base + hdr
         log.game = ravlog.RavGameData(log.guest, self.DS, 0)
         rows = [[], [(0x32, 140)], [], []]
-        real = locks.barred
-        locks.barred = lambda gd, tried: rows
+        real, asked = locks.barred, []
+        log.picked_at = {"o12@3,4": 7}
+        locks.barred = lambda gd, tried, when=None: asked.append(when) or rows
         try:
             log._locks_pass()
         finally:
             locks.barred = real
+        self.assertEqual(asked, [{"o12@3,4": 7}])  # (the times each was tried: the four failed last kept)
         at = tail * 16 + off
         self.assertEqual(bytes(g.mem[at:at + 64]), locks.table(rows))
         self.assertEqual(log.guest.dropped, 0)
         writes = g.writes
-        locks.barred = lambda gd, tried: rows
+        locks.barred = lambda gd, tried, when=None: rows
         try:
             log._locks_pass()  # (unchanged: not written again)
         finally:
@@ -184,7 +186,7 @@ class LoaderTests(unittest.TestCase):
             log.tsr_hdr = seg_base + hdr
             log.game = ravlog.RavGameData(log.guest, self.DS, 0)
             real = locks.barred
-            locks.barred = lambda gd, tried: [[], [(0x32, 140)], [], []]
+            locks.barred = lambda gd, tried, when=None: [[], [(0x32, 140)], [], []]
             try:
                 log._locks_pass()
             finally:

@@ -401,6 +401,17 @@ class PassTests(unittest.TestCase):
             self.assertEqual(g.writes, writes, hdr_len)
             self.assertEqual(log.header_holds(ravlog.AR_ROW + 2), bool(writes))
 
+    def test_after_rolls_flushes_dice_no_spell_claimed(self):
+        """Dice held to learn which spell they belong to (PendingDice) are said once PENDING_SECONDS
+        pass, as in Shattered Lands' pass, not kept until the next roll forces them out (2026-11-27's
+        code audit: the sequel's pass had no flush)."""
+        log = ravlog.RavDiceLog(FakeGuest())
+        log._pending.append(dicelog.PendingDice("2d4 = 1 + 3 = 4", 1.0))
+        self.assertNotIn("Dice: 2d4 = 1 + 3 = 4", log._after_rolls(False, 1.5))  # (still waiting)
+        self.assertIn("Dice: 2d4 = 1 + 3 = 4", log._after_rolls(False, 1.0 + dicelog.PENDING_SECONDS))
+        self.assertEqual(log._pending, [])
+
+
     def test_slots_written_to_the_helper(self):
         """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148, an offset in its tail,
         whose segment is the header's +1834), a member's in each SLOTS_SIZE bytes, and nowhere else."""

@@ -1971,6 +1971,7 @@ class RavDiceLog(dicelog.DiceLog):
             out += self._step(lambda: self._quick_pass(loading, now))  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
             if not loading:
                 self._step(self._journal_sync)  # (the Journal tab: the sequel's own chain)
+        out += self._step(lambda: self.flush(now))  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
         return out
 
     @contextmanager
@@ -2287,7 +2288,7 @@ class RavDiceLog(dicelog.DiceLog):
         at = self._tail_at(LOCK_OFF)
         if at is None:  # (a helper without LOCK_SITE)
             return
-        data = (at, locks.table(locks.barred(self.game, self.picked)))
+        data = (at, locks.table(locks.barred(self.game, self.picked, self.picked_at)))
         if data != self._locks_written:
             before = self.guest.writable
             self.guest.writable = before + [(at, len(data[1]))]

@@ -140,6 +140,20 @@ class LaunchTests(unittest.TestCase):
             self.assertIn("has no DSUN.EXE", str(raised.exception))
             self.assertIn("has no DSUN.EXE", launch.prepare_patched_game(game, {}))
 
+    def test_shattered_lands_layout_back_before_its_copies(self):
+        """A sequel's game played from this Loader leaves the sequel's layout on (ravlog.apply_layout)
+        until a dice log is made for Shattered Lands, after its copies: prepare_patched_game puts
+        Shattered Lands' back first (2026-11-27's code audit: the copies made with the sequel's item
+        offsets left out the new items, people and icons)."""
+        from dsloader import game, ravlog
+        sl = game.ITEM_PLUS, game.SHEET_SIZE
+        ravlog.apply_layout()
+        self.addCleanup(ravlog.restore_layout)
+        self.assertNotEqual((game.ITEM_PLUS, game.SHEET_SIZE), sl)
+        with tempfile.TemporaryDirectory() as d:
+            launch.prepare_patched_game(d, {})
+        self.assertEqual((game.ITEM_PLUS, game.SHEET_SIZE), sl)
+
     def test_settings_not_the_loaders_kept_aside(self):
         """A settings.json that is JSON but not an object (a list, a number) is read as none and
         kept aside as settings.json.bad, as an unreadable one is, so the next save loses nothing."""
