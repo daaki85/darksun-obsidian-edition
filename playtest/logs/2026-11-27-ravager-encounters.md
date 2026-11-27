@@ -82,9 +82,15 @@ and the palette and changes of its cinematic (11012-11014). Build: obsidian-edit
     steps through its three poses square by square (script steps 0Ch, 0Dh, 0Eh in turn, a dozen strides),
     and the toward walk through its six. [The walk](img/2026-11-27-tarrasque-walk-fixed.png) No vanish in
     about 500 grabs of its turns over four runs.
-13. **Not seen: a swing.** In four runs the elementals and skeletons crowded round the party at the foot
-    of the steps and the Tarrasque stood (step 0Fh) every turn; a member written beside it (a test-only
-    edit) didn't draw an attack either. Step 44 and the side hit's damage number weren't seen in the game.
+13. **The swing** (a fifth run): in four runs the elementals and skeletons crowded round the party at the foot
+    of the steps and the Tarrasque stood (step 0Fh) every turn. With the party written beside it at the
+    fight's start (map records 0-3 at foot 1464-1480, 456-472, right of its 1416, 456; a test-only edit,
+    never saved) it attacked from the side every turn: 22 swings, the side attack run (script steps 38-43,
+    the record's +18h 27h-2Bh, then 08h), three hits and swallows ("Ar'anda is swallowed!"). In 762 grabs of
+    its turns it was never missing, the swallow included. [Swallow](img/2026-11-27-tarrasque-swallow.png)
+    The damage numbers show where the one hit stands: at its claws for a member in front of it (21), on its
+    flank for members the edit had put inside its outline (29, 28). [Side hits](img/2026-11-27-tarrasque-side-hits.png)
+    Step 44 (the attack run 44-49, the other facing) didn't come up from this side.
 14. **The fire drake** (`0x3E 36 9`) is now the stock dragon's height over the party.
     [Fire drakes](img/2026-11-27-fire-drake-resized.png) Once, grey-blue rock with magenta edges showed
     on the cave floor left of the party; not in the next run of the same build, nor in the stock control.
