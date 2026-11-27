@@ -2,6 +2,9 @@
 
 python prototypes/outfitdetail.py GAME_DIR SOURCE_ARCHIVE OUTPUT_ARCHIVE
 
+For a color-only revision to a fitted archive, add --keep-cloak-dyes to
+retain the equipped cloak surfaces.
+
 Each archive keeps its pre-detail paint so a second export starts from the same
 pixels. Equipment masks, body edits, registration and retail art are independent.
 """
@@ -14,6 +17,7 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import outfits
+import humanfolds
 import thiefhood
 from elfcloak import SWING_EDGES, lifted_hem, paint_swing
 from dsloader import art, classoutfits as co, sprites
@@ -296,6 +300,53 @@ PLUM_MANTLE = {19: 112, 22: 58, 23: 115, 113: 174, 114: 58, 115: 74,
 
 
 def finish_class_color(model, role, paint, regions, folds, heads):
+    if model in co.ELVES and role == "Gladiator":
+        # The source's shifting hide ramp can stabilize to the pink of the
+        # skin. Keep the retail fold pattern, in region-stable oiled browns.
+        leather = {208: 208, 88: 129, 204: 129, 89: 204, 90: 204, 207: 207,
+                   91: 207, 92: 195, 93: 207, 94: 205, 95: 195, 96: 205,
+                   97: 205, 98: 195, 99: 205, 100: 194, 205: 205}
+        guard, buckle = [], []
+        cuffs = {(x, y) for y, row in enumerate(regions) for x, bits in enumerate(row)
+                 if bits and bits & co.FOREARM}
+        margin = (len(paint[0]) - len(regions[0])) // 2
+        for y, row in enumerate(regions):
+            for rx, bits in enumerate(row):
+                if not bits or bits & BLOCKED or heads[y][rx] is not None:
+                    continue
+                x = rx + margin
+                color = paint[y][x]
+                if bits & co.ARMS and color in (204, 168, 186):
+                    guard.append((x, y, color))
+                elif bits & SHELL:
+                    if color in (170, 171):
+                        buckle.append((x, y, color))
+                        paint[y][x] = 205
+                    elif color in leather:
+                        shade = leather[color]
+                        # Beside a wrist, palette 129 also registers as a
+                        # finger over sheathed gear. Keep the kilt in dark hide.
+                        if (shade == 129 and bits & co.LEGS
+                                and any((rx + dx, y + dy) in cuffs for dx, dy in CROSS)):
+                            shade = 204
+                        paint[y][x] = shade
+        if guard:
+            # Only one reflected metal edge. A guard turned away from the
+            # light keeps its darker bronze underside even if only a cell shows.
+            for x, y, color in guard:
+                paint[y][x] = {204: 204, 168: 205, 186: 168}[color]
+            priority = {186: 0, 168: 1, 204: 2}
+            x, y, color = min(guard, key=lambda p: (priority[p[2]], p[1], p[0]))
+            if color != 204:
+                paint[y][x] = 186 if color == 186 else 168
+        if buckle:
+            x, y, color = buckle[0]
+            # On the far side only the leather keeper shows. If the near
+            # guard turns away, a small bronze face catches light at the hip.
+            if color == 171:
+                bright_guard = any(c != 204 for _, _, c in guard)
+                paint[y][x] = 194 if bright_guard else 168
+        return
     if model in co.DWARVES and role == "Psionicist/Thief":
         # The approved teal crown includes the foreground head layer. Apply
         # the four off-hue texture threads to painted pixels after dye relief.
@@ -331,7 +382,7 @@ def finish_class_color(model, role, paint, regions, folds, heads):
                 row[x] = pigments[color]
 
 
-def finish_archive(game, source, output):
+def finish_archive(game, source, output, *, keep_cloak_dyes=False):
     """Rebuild only the outfit paint. Retain the original paint for repeatable exports."""
     output = Path(output)
     palette = tuple(map(tuple, game.palette))
@@ -367,9 +418,12 @@ def finish_archive(game, source, output):
                         parts = game.fig(model).parts(cb, f)
                         waist = parts.waist
                         pose = f + 15 * cb
-                        # This wrap has pose-painted folds at the ribs and hips.
-                        # A second texture pass obscures the direction of those folds.
-                        if (model, role) != (2095, "Psionicist"):
+                        if model in co.DWARVES and role == "Gladiator":
+                            # Keep the fitted leather and shade its separate equipped cloak.
+                            from dwarfoutfits import gladiator_cloak_folds
+                            gladiator_cloak_folds(game, model, pose, rows, masks[1], waist, palette, swatches)
+                        elif (model, role) != (2095, "Psionicist"):
+                            # The human wrap already has pose-painted rib and hip folds.
                             shade_frame(rows, paint, *masks, model, role, waist if waist is not None else len(rows) // 2,
                                         palette, swatches, pose)
                         if not cb and f in (2, 11, 12, 13, 14):
@@ -383,10 +437,16 @@ def finish_archive(game, source, output):
                                 and f in thiefhood.ELF_CROWNS[model]):
                             thiefhood.elf_profile(model, role, f, rows, paint, folds)
                         finish_class_color(model, role, paint, masks[0], folds, masks[2])
+                        if model in (2095, 2099):
+                            humanfolds.finish(rows, paint, masks[0], masks[3], model, role, pose)
                         frames.append(paint)
                         dyes.append(folds)
                     data = sprites.encode_frames(frames)
-                    dst.writestr(ZipInfo(name + "-dye"), sprites.encode_frames(dyes), ZIP_DEFLATED)
+                    dye_name = name + "-dye"
+                    # A paint-only revision can retain the fitted equipment
+                    # surface, including any hand-painted pose corrections.
+                    dye_data = src.read(dye_name) if keep_cloak_dyes else sprites.encode_frames(dyes)
+                    dst.writestr(ZipInfo(dye_name), dye_data, ZIP_DEFLATED)
                     dst.writestr(ZipInfo(original), raw, ZIP_DEFLATED)
                 dst.writestr(ZipInfo(name), data, ZIP_DEFLATED)
         os.replace(temp_path, output)
@@ -398,5 +458,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("game_dir", "source", "output"):
         parser.add_argument(arg, type=Path)
+    parser.add_argument("--keep-cloak-dyes", action="store_true",
+                        help="retain the source archive's fitted cloak dyes in a paint-only export")
     args = parser.parse_args()
-    finish_archive(outfits.Game(args.game_dir), args.source, args.output)
+    finish_archive(outfits.Game(args.game_dir), args.source, args.output, keep_cloak_dyes=args.keep_cloak_dyes)

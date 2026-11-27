@@ -822,6 +822,17 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
   comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
   the inventory bar. Escape on Effects goes all the way back to the main menu.
+- **A kit's THAC0 in Wake of the Ravager** (logs/2026-11-27-ravager-scholar.md): the sequel writes a
+  member's THAC0 (+16h of its creature) only when the character is made and at a level up, never on
+  equip, so a THAC0 change is seen by making a new member or by levelling one in a fight (set it one XP
+  short with `ravlevel.py set`, then the fight route with Computer Control). `ravkits.py show` lists
+  DSCLOG2's counters (`scholar_thac0s` among them). A kit's extra spell window counts when it closes, not
+  while it is up. The creation screen's THAC0 line is drawn again at a roll (the die, 145,92) and at a
+  click at (40,162), the second without the game working the THAC0 out again
+  (logs/2026-11-27-ravager-dam-lines.md). **A kit or rule test in the sequel needs the dice log running**
+  (`ravdice.py`): `ravload.sh` alone leaves DSCLOG2's rules words 0 (`ravkits.py count`'s first line).
+  The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
+  (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
   over the screen (four rows of six icons, the Ravager kinds among them); a click on an icon (the
   gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK

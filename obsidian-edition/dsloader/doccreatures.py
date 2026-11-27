@@ -152,10 +152,17 @@ def table(rows: List[Creature]) -> str:
 RAV_FOLDER = "ravager"  # (their figures: docs/creatures/ravager/*.png)
 RAV_PARTY = frozenset(range(32000, 32004))  # (the sequel's own party, Terrannus, Thy-rohk, Gerrakis, Ar'Anda: not foes)
 RAV_CREATURE_KIND, RAV_SHEET_KIND = 2, 3  # (an object's records, dataitems: the creature's and its sheet's)
-RAV_PALETTE = ("RESOURCE.GFF", ("PAL ", 1000))  # (the sequel's map colours)
+RAV_PALETTE = ("RGN032.GFF", ("PAL ", 50))  # (the sequel's map colours in Tyr, as the figure catalogue draws them: RESOURCE.GFF's PAL 1000 leaves the colours each map sets, 32-95, magenta)
 # the creatures the sequel draws in their fights from RESOURCE.GFF's pictures, redrawn there too (ravfigures'
 # RESOURCE.GFF chunks: the Tarrasque's halves 11001-11002, whose object's own picture is blank)
-RAV_FIGHT_DRAWN = frozenset(("Tarrasque",))
+RAV_FIGHT_DRAWN = {"Tarrasque": 11001}  # (the name, and its fight's picture in RESOURCE.GFF)
+# the pictures the redrawing kept as the game has them, judged fit beside Shattered Lands' figures (Garzak's and
+# the psurlons', the Bit o'Tarrasque's, the dust devil's, Mordenk's Sword's): "the game's (kept)", not a gap
+RAV_KEPT = frozenset((849, 1736, 2395, 3238))
+# a picture's script (SCMD, as the game plays it): 36 slots, each the step an animation starts at (FFFFh none),
+# then 8-byte steps (byte 0 the frame, byte 2's 20h: from the combat picture, CBMP). Slot 16 stands facing us:
+# a redraw that keeps the game's frames and adds its own after them (Ptar's, the giants') points it at its own
+RAV_SLOTS, RAV_STEP, RAV_STANDING, RAV_COMBAT = 36, 8, 16, 0x20
 RAV_RACES = {**game.RACE_NAMES, 9: "undead", 14: "elemental", 15: "yuan-ti", 16: "illithid"}  # (the rest: "monster")
 class RavCreature(NamedTuple):
     obj: int
@@ -191,12 +198,45 @@ def rav_creatures(chunks, mod=None) -> List[RavCreature]:
             continue
         rec = mod.get(("OJFF", obj))
         picture = struct.unpack_from("<H", rec, PICTURE)[0] if rec is not None and len(rec) >= PICTURE + 2 else None
-        if picture is not None and not _size(_first(mod, picture)):
+        if picture is not None and not _size(rav_standing(mod, picture)):
             picture = None  # (none, or blank: the Tarrasque's, RAV_FIGHT_DRAWN)
         old = seen.get((name, race))
         if old is None or (old.picture is None and picture is not None):
             seen[(name, race)] = RavCreature(obj, name, race, picture)
     return sorted(seen.values(), key=lambda c: (not 1 <= c.race <= 8, c.name.lower(), c.race))
+
+
+def _rav_frame(chunk: bytes, index: int) -> Optional[List[List[Optional[int]]]]:
+    """Frame INDEX of a sequel's picture in any of its forms (art's, PLNR, PLAN), None a clear pixel."""
+    from . import wotrart
+    try:
+        offset, = struct.unpack_from("<I", chunk, 6 + 4 * index)
+        mark = chunk[offset + 4:offset + 9]
+        if mark == art.PLNR:
+            rows = wotrart.decode_plnr(chunk, index)
+        elif mark == docicons.PLAN:
+            rows = docicons.decode_plan(chunk, index)
+        else:
+            return art.decode_frame(chunk, index)[2]
+    except (ValueError, IndexError, struct.error):
+        return None
+    return [[p or None for p in row] for row in rows]
+
+
+def rav_standing(chunks, number: int) -> Optional[List[List[Optional[int]]]]:
+    """Picture NUMBER's figure standing, facing us, as the game draws it: the frame its script's standing
+    animation starts with (RAV_STANDING; from the combat picture where the step says so), or, with no script
+    (or none for standing), its first frame."""
+    frame, kind = 0, "BMP "
+    script = chunks.get(("SCMD", number))
+    if script and len(script) >= RAV_SLOTS * 2:
+        step = struct.unpack_from("<H", script, RAV_STANDING * 2)[0]
+        at = RAV_SLOTS * 2 + RAV_STEP * step
+        if step != 0xFFFF and at + RAV_STEP <= len(script):
+            frame, kind = script[at], ("CBMP" if script[at + 2] & RAV_COMBAT else "BMP ")
+    if (kind, number) not in chunks:
+        return None
+    return _rav_frame(chunks[(kind, number)], frame)
 
 
 def rav_race_name(race: int) -> str:
@@ -234,24 +274,28 @@ def rav_tangle(c: RavCreature) -> str:
     return "yes"
 
 
-def rav_redrawn(c: RavCreature, data: Optional[dict] = None) -> bool:
-    """C's figure is one of the redrawn (ravfigures: its picture replaced or the object moved to a new one)."""
+def rav_redrawn(c: RavCreature, chunks, mod, data: Optional[dict] = None) -> bool:
+    """C's figure is redrawn: the mod moved its object to a new picture (ravfigures), or draws it standing
+    otherwise than the game (CHUNKS, the game's OBJEX.GFF; MOD, the mod's), or it is one of RAV_FIGHT_DRAWN."""
     from . import ravfigures
-    data = data or ravfigures.load()
     if c.name in RAV_FIGHT_DRAWN:
         return True
     if c.picture is None:
         return False
-    return ("BMP ", c.picture) in data["files"].get("OBJEX.GFF", {}) or any(o == c.obj for o, _, _ in data["objects"])
+    data = data or ravfigures.load()
+    if any(o == c.obj for o, _, _ in data["objects"]):
+        return True
+    return rav_standing(mod, c.picture) != rav_standing(chunks, c.picture)
 
 
 RAV_INTRO = """## Wake of the Ravager
 
 Every creature [the sequel](RAVAGER.md) defines (its OBJEX.GFF), each with its figure as the mod draws it
-standing: the **Drawn** column says *redrawn* for the ones [redrawn in Shattered Lands'
-style](RAVAGER.md#the-mod-in-the-sequel) (the Loader puts them in each start) and *the game's* for the
-rest. The sequel's own party (Terrannus, Thy'rokh, Gerakis, Ar'Anda) is left out; a creature the sequel
-gives no figure says *none*. A name in two rows is two kinds of creature, each with its own figure, and a
+standing and facing you (the pose its animation script stands in, in Tyr's colours): the **Drawn** column
+says *redrawn* for the ones [redrawn in Shattered Lands' style](RAVAGER.md#the-mod-in-the-sequel) (the
+Loader puts them in each start), *the game's (kept)* for the few the redrawing looked at and kept as they
+are, and *the game's* for the rest. The sequel's own party (Terrannus, Thy'rokh, Gerakis, Ar'Anda) is left
+out; a creature the sequel gives no figure of its own (one only its scripts name) says *none*. A name in two rows is two kinds of creature, each with its own figure, and a
 name met in both games is a different creature in each (its own figure and numbers), so it is in each
 game's tables. Names are the sequel's own, cut short as it has them ("Grt Air Elem").
 
@@ -263,7 +307,19 @@ no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
 """
 
 
-def rav_table(rows: List[RavCreature], data: Optional[dict] = None) -> str:
+def rav_drawn(c: RavCreature, chunks, mod, data: Optional[dict] = None) -> str:
+    """The Drawn column: "redrawn", "the game's (kept)" (RAV_KEPT), "the game's", or "none" (no figure)."""
+    if c.name in RAV_FIGHT_DRAWN:
+        return "redrawn (its fight's figure; none on the map)"
+    if c.picture is None:
+        return "none"
+    if rav_redrawn(c, chunks, mod, data):
+        return "redrawn"
+    return "the game's (kept)" if c.picture in RAV_KEPT else "the game's"
+
+
+def rav_table(rows: List[RavCreature], chunks, mod, drawn: frozenset, data: Optional[dict] = None) -> str:
+    """The sequel's part of CREATURES.md: ROWS, a figure for each object in DRAWN (its PNG written)."""
     out = [RAV_INTRO.rstrip("\n")]
     slugs = rav_slugs(rows)
     for title, people in (("People", True), ("Monsters", False)):
@@ -274,12 +330,10 @@ def rav_table(rows: List[RavCreature], data: Optional[dict] = None) -> str:
         for c in rows:
             if (1 <= c.race <= 8) != people:
                 continue
-            figure = f"![](docs/creatures/{RAV_FOLDER}/{slugs[c.obj]}.png)" if c.picture is not None else "none"
-            drawn = "redrawn" if rav_redrawn(c, data) else ("the game's" if c.picture is not None else "none")
-            if c.name in RAV_FIGHT_DRAWN:
-                drawn = "redrawn (its fight's figure; none on the map)"
+            figure = f"![](docs/creatures/{RAV_FOLDER}/{slugs[c.obj]}.png)" if c.obj in drawn else "none"
             cells = [figure, c.name] + ([rav_race_name(c.race)] if people else [])
-            out.append("| " + " | ".join(cells + [rav_size_text(c), rav_tangle(c), drawn]) + " |")
+            out.append("| " + " | ".join(cells + [rav_size_text(c), rav_tangle(c), rav_drawn(c, chunks, mod, data)])
+                       + " |")
     return "\n".join(out) + "\n"
 
 
@@ -305,15 +359,22 @@ def write_ravager(rav_dir: str, root: str) -> Tuple[str, int]:
     os.makedirs(out_dir, exist_ok=True)
     for old in os.listdir(out_dir):
         os.remove(os.path.join(out_dir, old))
-    slugs = rav_slugs(rows)
+    from . import ravfigures
+    data = ravfigures.load()
+    resource = data["files"].get("RESOURCE.GFF", {})
+    slugs, drawn = rav_slugs(rows), set()
     for c in rows:
-        if c.picture is None:
+        if c.name in RAV_FIGHT_DRAWN:
+            figure = rav_standing(resource, RAV_FIGHT_DRAWN[c.name])
+        else:
+            figure = rav_standing(mod, c.picture) if c.picture is not None else None
+        if not _size(figure):
             continue
-        figure = _first(mod, c.picture)
         zoom = 1 if max((len(r) for r in figure), default=0) > BIG else docicons.ZOOM
         with open(os.path.join(out_dir, slugs[c.obj] + ".png"), "wb") as f:
             f.write(docicons.png(figure, palette, zoom))
-    return rav_table(rows), len(rows)
+        drawn.add(c.obj)
+    return rav_table(rows, chunks, mod, frozenset(drawn), data), len(rows)
 
 
 def write(game_dir: str, root: str, rav_dir: Optional[str] = None) -> int:

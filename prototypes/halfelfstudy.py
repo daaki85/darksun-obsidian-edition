@@ -40,6 +40,11 @@ BACK_STRAP = {
     18: (9, (7, 7, None, None, None, 7, 6, 5)),
     19: (15, (10, 10, 10, 9, 9, 8, 7)),
 }
+# The leather turns towards the light at these shoulder crests. The bright
+# steel belongs to the clasp at the hip; this reflection stays in the hide.
+STRAP_CREST = {1: 8, 7: 8, 8: 9, 9: 8, 10: 8, 18: 14, 19: 17}
+FRONT_STRAP = {0: (7, 11), 3: (7, 11), 4: (8, 10), 5: (8, 11), 6: (7, 11),
+               15: (9, 18), 16: (12, 11), 27: (8, 12)}
 # Brown creases across the foreshortened leather. Keep the dark outer edge.
 JERKIN_FOLDS = {
     0: ((9, 10, 91), (9, 11, 89), (10, 13, 89)),
@@ -363,6 +368,8 @@ class RegisteredOutfits:
         if female and role == "Gladiator" and pose in BACK_STRAP:
             body, pad = self.rows(key, pose, "Body base")
             start, edge = BACK_STRAP[pose]
+            crest = STRAP_CREST[pose]
+            belt_y = start + len(edge)
             for y, right in enumerate(edge, start):
                 if right is None:
                     continue
@@ -372,11 +379,38 @@ class RegisteredOutfits:
                     if skin not in outfits.SKINC or (back(x, y), y) in fields.regions[co.FOREARM]:
                         continue
                     if x == right:
-                        out[py][px] = 168 if y in (start, start + 4) else 95
+                        out[py][px] = 208 if y == belt_y - 1 else 204
                     elif x == right - 1:
-                        out[py][px] = 205 if y % 3 else 94
-                    elif out[py][px] in (88, 94, 95, 168, 185, 203, 205):
+                        out[py][px] = 205 if y < crest else 207
+                        if y == crest:
+                            out[py][px] = 194
+                    else:
+                        # Her shorter hair exposes the back. Clear the wider
+                        # human harness beside the newly fitted strap.
                         out[py][px] = skin
+            clasp_x = edge[-1] - 1 + pad
+            # The human clasp was attached three pixels farther around her
+            # waist. Restore the far belt edge, then attach it at this strap.
+            belt = out[belt_y + pad]
+            for px in range(clasp_x, min(len(belt), clasp_x + 8)):
+                if belt[px] in (214, 210):
+                    belt[px] = 207 if belt[px] == 214 else 204
+            belt[clasp_x:clasp_x + 2] = (214, 210)
+        elif female and role == "Gladiator" and pose in FRONT_STRAP:
+            x, y = FRONT_STRAP[pose]
+            row = out[y+MARGIN]
+            if row[x+MARGIN] in (204, 207):
+                row[x+MARGIN] = 205
+        elif female and role == "Gladiator" and pose in (2, 28):
+            # The narrowing cut removed the lit half of the donor clasp. Its
+            # shadow cheek survives at the same hip on both of these poses.
+            x, y = (5, 14) if pose == 2 else (10, 6)
+            out[y+MARGIN][x-1+MARGIN] = 214
+        elif not female and role == "Gladiator" and pose in (17, 24):
+            # His extra column doubled a single bronze buckle on these
+            # turning poses. Let the new pixel carry its leather keeper.
+            x, y = (15, 12) if pose == 17 else (9, 14)
+            out[y+MARGIN][x+MARGIN] = 205
         elif not female and role == "Fighter":
             for x, y, brown in JERKIN_FOLDS.get(pose, ()):
                 if out[y + MARGIN][x + MARGIN] in (88, 204, 208):
@@ -423,6 +457,14 @@ class RegisteredOutfits:
             for x, y, shade in CHEST_FOLDS.get(pose, ()):
                 if out[y + MARGIN][x + MARGIN] == 208:
                     out[y + MARGIN][x + MARGIN] = shade
+        if role == "Gladiator" and pose == 12:
+            # The nearer hand passes over the thigh on this step. Palette 129
+            # also means bare fingers to the hip weapon renderer. Keep the
+            # same dark leather value using the pigment reserved for hide.
+            px = MARGIN+(6 if female else 9)
+            row = out[MARGIN+17]
+            if row[px] == 129:
+                row[px] = 204
         if female and role == "Psionicist" and pose in TEAL_BACK_FOLD:
             for y, x in enumerate(TEAL_BACK_FOLD[pose], 7):
                 row = out[y + MARGIN]
@@ -637,15 +679,35 @@ class Study:
         self.floor = Image.open(TERRAIN).convert("RGB").crop((50, 150, 102, 194))
 
     @lru_cache(None)
-    def male_skin(self, pose):
+    def skin_and_protection(self, key, pose):
+        body, pad = self.registered.rows(key, pose, "Body base")
         cb, f = divmod(pose, 15)
-        fig = self.game.fig(FIGURES[1])
+        fig = self.game.fig(key)
         source = self.game.fr(fig.model + cb, f)
-        body, pad = self.registered.rows(FIGURES[1], pose, "Body base")
-        fields = co.frames("Fighter", cb, fig.model)[f]
-        protected = set(fields.head) | set(fields.regions[co.FOREARM]) | set(fields.regions[co.BOW])
+        fields = co.frames("Fighter" if key == FIGURES[1] else "Warrior", cb, fig.model)[f]
+        bow = set(fields.regions[co.BOW])
+        arms = set(fields.regions[co.FOREARM]) | bow
         back = figures.mover_back(fig.maker.cuts[bool(cb), f])
-        return halfelfbody.paint(pose, body, pad, source, back, protected, outfits.SKINC)
+        female = key == FIGURES[0]
+        if female:
+            changes = halfelfbody.female_back(pose, body, pad)
+        else:
+            changes = halfelfbody.paint(pose, body, pad, source, back, arms | set(fields.head), outfits.SKINC)
+        parts = fig.parts(cb, f)
+        stock = fig.rows(cb, f)
+        head_and_bow = set(parts.hair)
+        protected = set()
+        for y, row in enumerate(stock):
+            for x, color in enumerate(row):
+                point = back(x, y), y
+                if point in arms:
+                    protected.add((x, y))
+                if point in bow or (point in fields.head and color == body[y+pad][x+pad]):
+                    head_and_bow.add((x, y))
+        protected.update(head_and_bow)
+        changes = halfelfbody.body_planes(pose, body, pad, female, parts.facing, changes,
+                                          protected, head_and_bow)
+        return changes, protected
 
     @lru_cache(None)
     def rows(self, key, pose, role):
@@ -657,15 +719,22 @@ class Study:
             return rows, pad
         if "/" in role and "Thief" in role:
             rows = pairs.dye_hood(self.registered, key, pose, role, rows, pad)
-        return self.exposed_skin(key, pose, rows, pad)
+        rows, pad = self.exposed_skin(key, pose, rows, pad)
+        if role == "Gladiator":
+            body, _ = self.rows(key, pose, "Body base")
+            rows = [row[:] for row in rows]
+            _, protected = self.skin_and_protection(key, pose)
+            halfelfbody.leather_contact(pose, body, rows, pad, key == FIGURES[0], protected)
+        return rows, pad
 
     def exposed_skin(self, key, pose, rows, pad):
-        if key != FIGURES[1]:
+        changes, _ = self.skin_and_protection(key, pose)
+        if not changes:
             return rows, pad
         # Resolve cloth overlaps, belt positions and dyes on the registered
         # figure first. A skin highlight must never change a garment mask.
         out = [row[:] for row in rows]
-        for x, y, old, shade in self.male_skin(pose):
+        for x, y, old, shade in changes:
             if rows[y][x] == old:
                 out[y][x] = shade
         return out, pad

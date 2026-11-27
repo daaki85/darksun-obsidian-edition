@@ -31,7 +31,7 @@ def page(sequel: bool = False):
 
 # the sequel's rows: its figure (or "none"), name, race (people), size, the tangle column, how it's drawn
 RAV_ROW = re.compile(r"^\| (?:!\[\]\(docs/creatures/ravager/([a-z0-9-]+)\.png\)|none) \| ([^|]+?) \| (?:([a-z -]+) \| )?"
-                     r"([TSMLHG])( \?)? \| (yes|no: [^|]+?) \| (redrawn[^|]*|the game's|none) \|$")
+                     r"([TSMLHG])( \?)? \| (yes|no: [^|]+?) \| (redrawn[^|]*|the game's(?: \(kept\))?|none) \|$")
 
 
 def rav_rows():
@@ -130,9 +130,33 @@ class RavagerCreaturesTests(unittest.TestCase):
         self.assertLessEqual(set(sizes.RAV_NAMES), names)  # (no slip of a name in the sequel's table)
 
     def test_redrawn_marked(self):
-        """The redrawn figures are marked so, and most of the sequel's figures are."""
-        drawn = [d for *_, d in rav_rows()]
+        """The redrawn figures are marked so, and most of the sequel's figures are; the Tarrasque has its fight's
+        figure; a row with no figure says none."""
+        found = rav_rows()
+        drawn = [d for *_, d in found]
         self.assertGreater(sum(d.startswith("redrawn") for d in drawn), len(drawn) * 3 // 4)
+        self.assertTrue(all((f is None) == (d == "none") for f, *_, d in found))
+        self.assertTrue(any(f and name == "Tarrasque" for f, name, *_ in found))
+
+    def test_standing_frame(self):
+        """rav_standing draws the frame the picture's script stands in (slot 16's first step), from the combat
+        picture where that step says so, and the first frame with no script: a redraw that adds its frames after
+        the game's is drawn by its own."""
+        import struct
+        from dsloader import art
+        frames = [[[n + 1, None], [None, n + 1]] for n in range(3)]
+        def script(frame, flags=0):
+            slots = [0xFFFF] * doccreatures.RAV_SLOTS
+            slots[doccreatures.RAV_STANDING] = 1
+            return (struct.pack(f"<{doccreatures.RAV_SLOTS}H", *slots) + bytes(8)
+                    + bytes((frame, 0, flags, 0, 0, 0, 0, 0)))
+        chunks = {("BMP ", 7): art.plnr_frames(frames), ("CBMP", 7): art.plnr_frames(frames[::-1])}
+        self.assertEqual(doccreatures.rav_standing(chunks, 7), frames[0])
+        chunks[("SCMD", 7)] = script(2)
+        self.assertEqual(doccreatures.rav_standing(chunks, 7), frames[2])
+        chunks[("SCMD", 7)] = script(2, doccreatures.RAV_COMBAT)
+        self.assertEqual(doccreatures.rav_standing(chunks, 7), frames[0])
+        self.assertIsNone(doccreatures.rav_standing(chunks, 8))
 
 
 if __name__ == "__main__":

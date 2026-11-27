@@ -63,6 +63,13 @@ Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each e
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
 
+**Docs: the sequel's creature figures as the game draws them** (branch `claude/ravager-creature-figures`)
+- CREATURES.md's Wake of the Ravager figures are the pose each one's animation script stands in, not the
+  picture's first frame: a redraw that adds its frames after the game's (Ptar, the Beasthead Giant, the
+  village giants, Magnolia and the jann, the great elementals, the Magma Golem) showed the game's figure.
+  *Redrawn* now means the figure shown differs from the game's; the four the redrawing kept say *the game's
+  (kept)*; the Tarrasque shows its fight's figure; the colours are Tyr's map palette (no magenta).
+
 **Docs: a readable priest spells picture, a shorter Ravager page** (branch `claude/docs-review-trims`)
 - `new-priest-spells.png` shows the ten 6th-level priest spells' description boxes at full size, not ten
   whole USE screens shrunk to fit (1920x1600 to 592x840).
@@ -102,7 +109,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   4 lb as in Shattered Lands, so SL's Dragonsbane crosses as the sequel's own again (one sword, not a second
   Loader-made one). `test_item_weights.py` has no Dragonsbane exception left. Played: logs/2026-11-27-dragonsbane-metal.md.
 - The sequel's item box shows a weapon's damage against a large foe too, as Shattered Lands' (`1D8+4/1D12+4`):
-  DSCLOG's SIZE_LINE and SIZE_PRE ported (DSCLOG2 sites 248, 249 in the line routine 7AF9Eh; Shillelagh's line
+  DSCLOG's SIZE_LINE and SIZE_PRE ported (DSCLOG2 sites 249, 250 in the line routine 7AF9Eh; Shillelagh's line
   1D6+1/2D4 as SL's). Tests: `test_ravsizeline.py` (emulated).
 
 **Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
@@ -164,6 +171,18 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 **Dev**: `ravitems.region_palettes`, the sequel's region palettes read once for the four modules that read
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
+
+**New: the kits on Wake of the Ravager's DAM lines and creation THAC0** (branch `claude/sequel-dam-lines`)
+- The inventory's and View Character's DAM lines show the kits' part as Shattered Lands' do: a Ravager's 1 more
+  damage, a Brute's 2 with a two-handed weapon, a Ghetto Fighter's 1 with a dagger, and a Battle Mage's,
+  Crusader's or Mind Warrior's attacks with its chosen weapon (DSCLOG2's `DAM_KIT_MELEE`, `DAM_EXPERT`).
+- The creation screen's THAC0 line has a new Scholar's 1 worse as soon as the kit is chosen or taken back
+  (`CR_KIT_THAC0`); before, only after the next roll.
+
+**New: the Scholar kit in Wake of the Ravager** (#270)
+- A Scholar there is as in Shattered Lands: its THAC0 1 worse (from creation and every level up), one more
+  spell on CHOOSE A SPELL at each preserver level up, and, made new, one more 1st-level spell for each of its
+  preserver levels (DSCLOG2's `SCHOLAR_THAC0`, `SCHOLAR_LEVEL_UP`, `CR_SCHOLAR`).
 
 **New: Wake of the Ravager with the in-game rolls, no Loader window; Show Save for its saves** (#264)
 - **`Play Wake of the Ravager (in-game rolls).bat`** (`python -m dsloader play --ravager`) starts the sequel

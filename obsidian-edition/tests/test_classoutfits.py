@@ -122,6 +122,12 @@ class HalfElfEquipmentTests(unittest.TestCase):
             frame = classoutfits.frames("Cleric/Preserver", False, 307)[pose]
             self.assertIn(stitch, {(x, y) for x, y, _ in frame.equipped_cape})
 
+    def test_halfling_outer_cloak_stops_at_the_raised_arm(self):
+        frame = classoutfits.frames("Cleric/Thief", True, 2070)[5]  # rear strike 3
+        self.assertTrue(frame.equipped_cape)
+        for layer in (frame.cloak, frame.equipped_cape):
+            self.assertNotIn((13, 8), {(x, y) for x, y, _ in layer})
+
     def test_thief_cloak_follows_the_womans_shoulder_in_the_front_strike(self):
         for role in ("Thief", "Fighter/Psionicist/Thief"):
             frame = classoutfits.frames(role, True, 307)[1]
@@ -392,6 +398,18 @@ class HumanOutfitTests(unittest.TestCase):
                         body = {side + x for x, c in enumerate(source[y]) if c is not None}
                         self.assertLessEqual({x for x, c in enumerate(row) if c is not None}, body)
 
+    def test_front_wrap_keeps_a_lit_ridge_and_shadow_in_fixed_teal(self):
+        # These shoulder pixels used to merge to a single mid-teal at game size.
+        for model, x, y in ((2095, 4, 6), (2099, 5, 9)):
+            frame = classoutfits.frames("Psionicist", False, model)[0]
+            with self.subTest(model=model):
+                x, y = x + 6, y + 6  # Both human idle layers include a six-pixel margin.
+                lip = frame.image[y][x]
+                crease = frame.image[y+2][x+2]
+                self.assertIn(lip, (71, 72, 73))
+                self.assertIn(crease, (69, 70))
+                self.assertTrue({lip, crease}.isdisjoint(sg.REGIONAL))
+
     def test_psionicist_wrap_reaches_the_belt_in_the_turning_poses(self):
         # Follow the two central ribs in each pose, down the formerly bare midriff.
         for pose, x, y in ((1, 10, 11), (2, 3, 12), (5, 8, 10),
@@ -637,6 +655,19 @@ class DwarfOutfitTests(unittest.TestCase):
             self.assertEqual(classoutfits.for_sheet(sheet, 2053), expected)
             self.assertEqual(classoutfits.for_sheet(sheet, 2055), expected)
             self.assertIsNone(classoutfits.for_sheet(sheet, 2099))
+
+    def test_male_archer_keeps_the_bow_clear_of_his_wrist_and_calf(self):
+        for role in classoutfits.DWARF_ROLES.values():
+            with self.subTest(role=role):
+                front, rear = classoutfits.frames(role, True, 2055)[9:11]
+                # The front bow passes the grip and touches the raised thigh.
+                self.assertIn((12, 11), front.regions[classoutfits.BOW])
+                self.assertIn((5, 14), front.regions[classoutfits.BOW])
+                # The rear bow arcs overhead. The slate wrist and greave
+                # studs below it belonged to the original equipment.
+                self.assertIn((11, 1), rear.regions[classoutfits.BOW])
+                self.assertNotIn((8, 11), rear.regions[classoutfits.BOW])
+                self.assertNotIn((8, 18), rear.regions[classoutfits.BOW])
 
     def test_front_faces_stay_open_in_every_build(self):
         # These coordinates follow the original brow down through the cheek.
@@ -906,6 +937,27 @@ class ElfOutfitTests(unittest.TestCase):
                     self.assertIn((x, 14), {(a, b) for a, b, _ in frame.cloak})
                     self.assertIsNotNone(frame.image[14 + 4][x + 4])
                     self.assertNotIn((x, 14), frame.regions[classoutfits.CHEST])
+
+    @unittest.skipUnless(os.environ.get("DSUN_OBJECTS"), "needs the retail figure archive")
+    def test_green_cloak_covers_the_far_shoulder_in_profile_step_four(self):
+        self.addCleanup(sg.set_palette, list(sg._RGB))
+        dresser = sprites.Dresser.for_game(None, str(Path(os.environ["DSUN_OBJECTS"]).parent))
+        if dresser is None:
+            self.skipTest("needs the retail objects and palette in the game directory")
+        pictures = dresser.pics
+        left, top = sprites.room(False)
+        seam = ((2, 7), (3, 7), (2, 8), (3, 8), (3, 9), (4, 10))
+        green = {17, 53, 54, 55, 56, 57, 69, 188, 189}
+        for figure, model, role in ((304, 2061, "Ranger"), (306, 306, "Ranger/Thief")):
+            with self.subTest(figure=figure):
+                frame = classoutfits.frames(role, False, model)[14]
+                folds = {(x, y) for x, y, _ in frame.cloak}
+                self.assertTrue(set(seam) <= folds)
+                self.assertTrue(set(seam).isdisjoint(frame.head))
+                picture = pictures.build(figure, False, {}, (), role=role)
+                rows = art.decode_frame(picture, 14)[2]
+                for x, y in seam:
+                    self.assertIn(rows[y + top][x + left], green, (x, y))
 
     def test_profile_cloak_lifts_clear_of_the_elfs_bent_leg(self):
         for role in classoutfits.ELF_ROLES.values():

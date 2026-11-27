@@ -2,15 +2,35 @@
 
 from . import classoutfits as co, halfelf
 
+# Exposed calf on the stock pictures when no lower garment can take the dye.
+# These slivers belong to the retail figure and stay at its native coordinates
+# even when the independently painted class bodies are reshaded.
+RETAIL_CALVES = {
+    (2095, 2): ((7, 13), (8, 14), (8, 15), (9, 15), (9, 16), (8, 17)),
+    (2095, 15): ((11, 25), (12, 25), (11, 26), (12, 26)),
+    (2095, 16): ((7, 16), (8, 16)),
+    (2095, 21): ((20, 21), (21, 22), (21, 23)),
+    (2095, 23): ((11, 12), (12, 13)),
+    (2095, 27): ((13, 10), (14, 10), (13, 11), (14, 11), (15, 11), (16, 11),
+                 (14, 12), (15, 12), (16, 12)),
+    (2099, 21): ((13, 26), (14, 26)),
+    (2055, 17): ((14, 12), (15, 12)),
+    (2070, 2): ((11, 13), (12, 13), (3, 15), (3, 16), (4, 16), (5, 16)),
+    (2070, 4): ((10, 16), (11, 16), (12, 16)),
+    (2070, 12): ((3, 12), (2, 13), (2, 14), (11, 14), (11, 15)),
+    (2070, 14): ((3, 14), (2, 15)),
+    (2070, 17): ((7, 16), (7, 17)),
+}
+
 
 def visible(rows, model, frame, combat, own, costume, source, pad):
     """Follow exposed calf skin on the short-hem drawing, under the wearer's hem."""
     layer = (halfelf.MAN if model == 2061 else halfelf.WOMAN) if own else model
-    reference = co.frames("Fighter" if own else "Gladiator", combat, layer)[frame]
-    # On original party art, accept only calf pigment still identical to this
-    # short-hem reference; the original cloak and tall shoes differ there.
     if costume is None:
-        costume = reference
+        points = RETAIL_CALVES.get((layer, frame + 15 * combat), ())
+        return [(x, y) for x, y in points if y < len(rows) and x < len(rows[y])
+                and rows[y][x] in range(128, 154)]
+    reference = co.frames("Fighter" if own else "Gladiator", combat, layer)[frame]
     bare = reference.canvas(rows, pad)
     feet = (co.LEFT_FOOT, co.RIGHT_FOOT)
     blocked = set(costume.head) | set(costume.armor_trim)

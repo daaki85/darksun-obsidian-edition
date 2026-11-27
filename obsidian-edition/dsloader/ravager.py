@@ -648,6 +648,9 @@ PATCHES: Tuple[Patch, ...] = (
     *(Patch("xp_need_%x" % at, at - 3, bytes.fromhex("83c406666bc064"), _site(32, 7))
       for at in XP_READS),
     Patch("priest_thac0", 0x95391, bytes.fromhex("8946fe"), _site(33, 3)),
+    # A kit's THAC0 (SL's PROBE_THAC0, kits.thac0): the THAC0 routine's end, "mov ax,14h / sub ax,si" (953A1h,
+    # SL's 876BBh): DSCLOG2's SCHOLAR_THAC0 (site 248), a Scholar's 1 worse.
+    Patch("scholar_thac0", 0x953A1, bytes.fromhex("b814002bc6"), _site(248, 5)),
     # The level cap by XP (SL's level_up_cap, xp_view_cap, xp_next, thief_hd_*; game.RULE_LEVEL_10, always on,
     # with RAV_XP_CAP): the level up's "cmp byte es:[bx+1Eh],0Fh" (959A5h) and View Character's (6FB51h),
     # DSCLOG2's LV_UP and LV_VIEW (sites 110, 111: LEVEL_ROOM's share in place of the game's 15th); the level
@@ -880,9 +883,9 @@ PATCHES: Tuple[Patch, ...] = (
     # ... and in the same line routine, an item box's damage line against a large foe too (SL's SIZE_LINE and
     # SIZE_PRE, gamepatch's size_line and size_pre): "1D8+4/1D12+4" as Shattered Lands' box, after the line is
     # drawn ("inc word [bp-2]", 7B1CFh), and Shillelagh's 1D6+1 before ("push word [bp+14h]", 7B1B2h):
-    # DSCLOG2's SIZE_LINE and SIZE_PRE (sites 248, 249; the user's both-games rule, 2026-11-27).
-    Patch("size_line", 0x7B1CF, bytes.fromhex("ff46fe"), _site(248, 3)),
-    Patch("size_pre", 0x7B1B2, bytes.fromhex("ff7614"), _site(249, 3)),
+    # DSCLOG2's SIZE_LINE and SIZE_PRE (sites 249, 250; the user's both-games rule, 2026-11-27).
+    Patch("size_line", 0x7B1CF, bytes.fromhex("ff46fe"), _site(249, 3)),
+    Patch("size_pre", 0x7B1B2, bytes.fromhex("ff7614"), _site(250, 3)),
     # The Effects screen's lines (SL's PROBE_EF_ROWS, PROBE_EF_CLICK): the end of its routine that fills the
     # selected character's cells (8AC6Fh, SL's 7EDFAh: "pop di / pop si / leave" at 8AFA9h) and its handler for
     # them (8AB13h, SL's 7EC97h: "mov si,[bp+8]" at 8AB1Ah): DSCLOG2's EF_ROWS (site 73) lists the kits and

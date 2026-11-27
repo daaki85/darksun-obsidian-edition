@@ -3054,7 +3054,7 @@ v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 .bw      db 'BW  00 ', 0
 .sp      db 'SP  00 ', 0
 
-; ---- THE CREATION SCREEN'S THAC0: DSCLOG's CR_HP and CR_THAC0_DRAW, no kits ----
+; ---- THE CREATION SCREEN'S THAC0: DSCLOG's CR_HP and CR_THAC0_DRAW ----
 ; INT VEC_CR_HP replaces "add sp,10h" (3 bytes: INT + NOP) after the creation screen draws its hit
 ; points again (6B84Ch, a click on them; 6BC62h; SL's 63AC3h, 63EDAh) and after it draws PSP, which
 ; follows the hit points (6D6AEh at the die, a choice and the screen opening; 6B79Ch at a click on
@@ -3064,7 +3064,7 @@ v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 ; inventory's THAC0 with no weapon. The hit points' box (the 7th, DS:1224h) widened to x 243 (DONE's
 ; left 244: ravager.py's "cr_thac0_box"), so its saved background clears it. What differs from
 ; DSCLOG's: the sequel's records (the creature being made at DS:142Dh, 31h bytes: THAC0 +16h, STR
-; +19h, DEX +1Ah; the STR to-hit table at DS:0832h, SL's 7C2h) and no kits (the THAC0 is the game's).
+; +19h, DEX +1Ah; the STR to-hit table at DS:0832h, SL's 7C2h); a new character's kit by KIT_MADE (CR_KIT_THAC0).
 CR_CREATURE equ 0x142D          ; DS: far pointer to the creature being made (SL's 11A0h)
 CR_HP_BOX   equ 0x1224          ; DS: the hit points' box: x1, y1, x2, y2 (SL's F92h)
 CR_THAC0_X  equ 146             ; (RECALL's left edge, as DSCLOG's CR_AGE_X)
@@ -3080,6 +3080,7 @@ probe_cr_hp:
         push es
         les bx, [CR_CREATURE]
         mov cl, [es:bx + CREATURE_THAC0]
+        call cr_kit_thac0
         mov di, cr_thac0_text + 8       ; (after "THAC0: M")
         mov si, STR_HIT
         mov dl, [es:bx + CREATURE_STR]
@@ -3122,6 +3123,26 @@ cr_less:                        ; at CS:DI, CL less DS:SI's entry for score DL (
 .put:   jmp c_itoa
 cr_thac0_text db 'THAC0: M', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 cr_count dw 0                   ; THAC0s drawn (for a look in play)
+; CR_KIT_THAC0: CL (the creature's THAC0) with the kit chosen for a new character (KIT_MADE): a Scholar's 1
+; worse (kits.thac0, DSCLOG's CR_THAC0_BASE; a warrior THAC0 kit's is the chosen weapon's alone, WAR_HIT, so
+; not here). The game works the creature's THAC0 out again at a roll, through SCHOLAR_THAC0, which notes
+; whether the kit is in it (CR_THAC0_SCHOLAR, none when the screen opens: KP_OPEN): the line has the kit
+; chosen now, put in or taken out. An EDIT's creature has its kit in its own THAC0. Others kept.
+cr_kit_thac0:
+        cmp word [CR_EDITING], -1
+        jne .ret
+        push ax
+        call kit_made
+        cmp al, KIT_SCHOLAR
+        sete al
+        sub al, [cs:cr_thac0_scholar]
+        jz .out
+        add cl, al
+        inc word [cs:cr_kits]
+.out:   pop ax
+.ret:   ret
+cr_kits dw 0                    ; (THAC0s a kit changed, for a look in play)
+cr_thac0_scholar db 0           ; (1: the creature's THAC0 has a Scholar's in it)
 
 ; ---- THE RULES ----
 ; The rule changes, as DSCLOG's bits in its header's RULES (+170) and RULES_HI (+270); the Loader
@@ -4594,7 +4615,7 @@ site_table:
         dw avenger_area                     ; 207 SITE_AVENGER_AREA (7E7A6h: a spell's damage rolled: a Wilderness Avenger's Cause Wounds)
         dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
         dw sh_cast_level                    ; 209 SITE_SHINOBI_CAST_LEVEL (97DF1h: the caster level's class level: a Shinobi's thief level less 5)
-        dw sh_level_up                      ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Shinobi's at its thief level up)
+        dw scholar_level_up                 ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Scholar's one more, a Shinobi's at its thief level up)
         dw site_none                        ; 211 (none here: held for other work)
         dw site_none                        ; 212 (none here: held for other work)
         dw site_none                        ; 213 (none here: held for other work)
@@ -4609,8 +4630,9 @@ site_table:
         dw berserk_add                      ; 245 SITE_BERSERK_ADD (822A1h: an effect's add, no case of its own: Berserk keeps the side it had)
         dw berserk_end                      ; 246 SITE_BERSERK_END (827D6h: an effect's end, no case of its own: Berserk gives the side back)
         dw ef_charges                       ; 247 SITE_EF_CHARGES (8ABBDh: the Effects screen's line under the pointer: an effect's charges)
-        dw size_line                        ; 248 SITE_SIZE_LINE (7B1CFh: a weapon's damage line drawn: an item box's large dice)
-        dw size_pre                         ; 249 SITE_SIZE_PRE (7B1B2h: ... about to be drawn: Shillelagh's 1D6+1)
+        dw scholar_thac0                    ; 248 SITE_SCHOLAR_THAC0 (953A1h: the THAC0 routine's end: a Scholar's 1 worse)
+        dw size_line                        ; 249 SITE_SIZE_LINE (7B1CFh: a weapon's damage line drawn: an item box's large dice)
+        dw size_pre                         ; 250 SITE_SIZE_PRE (7B1B2h: ... about to be drawn: Shillelagh's 1D6+1)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -5643,6 +5665,54 @@ sh_place_level:
 ; LV_SHINOBI: the compare's flags, but ZF set for a Shinobi's thief class (SH_MEMBER) at thief level SH_FIRST
 ; or more, so that it learns one of its own (PICK_ANY's, PICK_PAGE's, PICK_LIST's and PICK_TOP's Shinobi
 ; parts). Counted (SH_UPS).
+; SCHOLAR_LEVEL_UP (site 210's entry): a party member SI gone up a new level ([BP-6] not 0) as a preserver
+; ([BP+8] 0Bh) with the Scholar kit awake picks one more spell, on the game's CHOOSE A SPELL (688h:66h, CR_ONE's
+; way: the way back in a frame the overlay manager can fix up, as CR_PICKS'), before the game's own (SL's
+; LV_SCHOLAR, kits: a Scholar learns one more spell at each preserver level). Counted (SCHOLAR_PICKS). Then
+; SH_LEVEL_UP, as for anyone.
+scholar_level_up:
+        cmp word [ss:bp + 8], 0x0B
+        jne sh_level_up
+        cmp byte [ss:bp - 6], 0
+        je sh_level_up
+        cmp si, 4
+        jae sh_level_up
+        push bx
+        push es
+        push ax
+        mov ax, si
+        call kit_sheet_ax
+        pop ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        pop es
+        pop bx
+        jne sh_level_up
+        call kp_if_frame        ; (interrupts as the caller had them)
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_SPELL_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        inc word [cs:scholar_picks]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        ; (on to SH_LEVEL_UP: the compare's flags, and the game's own pick)
 sh_level_up:
         push bp
         mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; [BP] the game's BP)
@@ -9795,6 +9865,42 @@ priest_thac0:
 thac0_most db 12, 19, 6, 9              ; (20 less the group's best THAC0: priest 8, warrior 1, wizard 14, rogue 11)
 thac0_cuts dw 0                         ; (THAC0 held at a group's best, for a look in play)
 ;
+; SCHOLAR_THAC0 (site 248, "scholar_thac0"): "mov ax,14h / sub ax,si" (953A1h; 5 bytes, SL's 876BBh:
+; DSCLOG's PROBE_THAC0) at the end of the THAC0 routine (SI the most any of the character's class groups
+; takes off 20, PRIEST_THAC0's above; [BP+6] its sheet's number), which every write of a creature's
+; THAC0 (+1Fh) uses: AX 20 less SI, and the kit's (kits.thac0): a Scholar's 1 worse, its kit awake.
+scholar_thac0:
+        mov ax, 20
+        sub ax, si
+        push bx
+        push es
+        push ax
+        mov ax, [bp + 6]
+        call kit_sheet_ax
+        pop ax
+        push dx
+        xor dl, dl
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .who
+        inc ax
+        inc word [cs:scholar_thac0s]
+        inc dl
+.who:   mov bx, ds              ; (the member on show, USE_WHO: on the creation screen the one being made,
+        add bx, USE_WHO_SEG     ;  its creature's THAC0 now with the kit or not, for CR_KIT_THAC0)
+        mov es, bx
+        mov bx, [bp + 6]
+        cmp bx, [es:USE_WHO_OFF]
+        jne .out
+        mov [cs:cr_thac0_scholar], dl
+.out:   pop dx
+        pop es
+        pop bx
+        iret
+scholar_thac0s dw 0                     ; (Scholars' THAC0s made worse, for a look in play)
+scholar_picks dw 0                      ; (Scholars' spells more at a level up: SCHOLAR_LEVEL_UP)
+scholar_made dw 0                       ; (... and a new Scholar's: CR_SCHOLAR)
+;
 ; ADND_SLOTS (site 34, "adnd_slots"): "nop / push cs / call 2A10h" (62893h; 5 bytes, SL's 5E240h),
 ; where the slot routine (62A10h) is asked one class's slots at a spell level: the arguments pushed
 ; (the class in the low byte, a near pointer in SS to its level and WIS, the spell level), AX the
@@ -11132,21 +11238,28 @@ die_sizes_end:
 ; line routine (7AF9Eh, SL's 7286Ah; its item DI, the type SI, the creature far at [BP-6], 0 for none)
 ; pushes the damage bonus, the dice's sides and their count, then the attacks a round (halves) it reads
 ; for the line's routine (7B1D9h): those three are under the site's return frame (+6 count, +8 sides, +0Ah
-; bonus from SP at entry). What SL's add and these don't: the kits' (KITS has them in the attack, not on the lines yet), a
-; thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
+; bonus from SP at entry). The kits' as the attack has them: KIT_MELEE's damage and a kit's expertise
+; (DAM_KIT_MELEE, DAM_EXPERT). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
 ; own, 628h:5Ch, not SL's effects), a weak material's damage on View Character (VIEW_MATERIAL).
 ; DAM_LINE (site 70 at 7B19Eh, "mov al,es:[bx+24h]", SL's 72A77h): the melee branch, ES:BX the sheet; AL
 ; the attacks a round (the game's "mov ah,0" follows).
 dam_line:
         mov al, [es:bx + 0x24]
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .hand
         push bp
         mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
         push dx
+        push ax
+        call dam_kit_melee      ; (a Ravager's, a Brute's, a Ghetto Fighter's)
+        add [bp + 0x0C], ax
+        pop ax
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .plain
         call spec_of_sheet
         cmp al, 2
-        jbe .bonus              ; (not a warrior: the game's)
+        ja .warrior
+        call dam_expert         ; (not a warrior: a kit's expertise)
+        jmp .bonus
+.warrior:
         cmp dl, SPEC_PLAIN
         jne .grand
         dec al
@@ -11156,9 +11269,9 @@ dam_line:
         add al, 2
 .bonus: lea bp, [bp + 0x0A]
         call dam_spec_bonus
-        pop dx
+.plain: pop dx
         pop bp
-.hand:  push ax
+        push ax
         movzx ax, al
         call dam_hand
         mov [cs:dam_halves], al
@@ -11214,6 +11327,32 @@ dam_hand:
         ret
 dam_halves db 0
 dam_count  dw 0                 ; (the DAM lines made so, for a look in play)
+; DAM_KIT_MELEE: AX what the kits of sheet ES:BX add to damage with item type SI on a DAM line, as the
+; attack has it (KIT_DAMAGE's KIT_MELEE: SL's PROBE_DAM_LINE and PROBE_VIEW_DAM), with the kits' rule; else 0.
+; Others kept.
+dam_kit_melee:
+        xor ax, ax
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        call kit_melee
+        add [cs:dam_kits], ax
+.ret:   ret
+; DAM_EXPERT: AL the attacks a round (halves) of one who isn't a warrior, DL its skill, ES:BX its sheet: a
+; kit's expertise (EXPERT_HALVES, as SPEC_ATTACKS' EXPERT_OF), the attack's own count of it kept. AH 0;
+; others kept.
+dam_expert:
+        movzx ax, al
+        push word [cs:kit_rates]
+        push ax
+        call expert_halves
+        pop word [cs:dam_expert_was]
+        cmp ax, [cs:dam_expert_was]
+        je .same
+        inc word [cs:dam_kits]
+.same:  pop word [cs:kit_rates]
+        ret
+dam_expert_was dw 0
+dam_kits   dw 0                 ; (the DAM lines a kit changed, for a look in play)
 ; MISSILE_LINE (site 71 at 7B124h, "mov al,es:[bx+7]", SL's 729FFh): the missile branch (and with no
 ; creature, an item box's, a melee weapon's too), ES:BX the type's record; AL the type's attacks a round.
 ; With a creature: a specialist's rate of fire (MISSILE_RATE) and the skill's damage, as SPEC_DAMAGE. With
@@ -11273,8 +11412,6 @@ view_dam:
         mov si, [es:bx + ITEM_TYPE]
         mov di, [bp - 0x0A]
         mov dl, SPEC_NONE
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .kind
         mov ax, ds
         add ax, USE_WHO_SEG
         mov es, ax
@@ -11284,6 +11421,12 @@ view_dam:
         imul ax, ax, SHEET_SIZE
         les bx, [SHEETS_PTR]
         add bx, ax
+        mov [cs:view_sheet], bx
+        mov [cs:view_sheet + 2], es
+        call dam_kit_melee      ; (a Ravager's, a Brute's, a Ghetto Fighter's)
+        add [bp - 0x0E], ax
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .kind
         call spec_of_sheet
 .kind:  imul bx, si, TYPE_SIZE
         les ax, [ITEM_TYPES_PTR]
@@ -11292,7 +11435,11 @@ view_dam:
         ja .bonus               ; (a missile weapon: its rate kept)
         mov ax, [bp - 6]
         cmp ax, 2
-        jbe .hand               ; (not a warrior: the game's)
+        ja .warrior
+        les bx, [cs:view_sheet]
+        call dam_expert         ; (not a warrior: a kit's expertise)
+        jmp .hand
+.warrior:
         cmp dl, SPEC_PLAIN
         jne .grand
         dec ax
@@ -11317,6 +11464,7 @@ view_dam:
 .out:   pop es
         popa
         iret
+view_sheet dd 0
 
 ; ---- The Effects screen's lines: DSCLOG's PROBE_EF_ROWS and PROBE_EF_CLICK ----
 ; EF_ROWS (site 73 at 8AFA9h, "pop di / pop si / leave", SL's 7F13Eh): the end of the Effects screen's
@@ -11767,6 +11915,7 @@ KIT_RAVAGER  equ 15
 KIT_CHAMPION equ 17
 KIT_TWIN_BLADE equ 18
 KIT_BRUTE    equ 19
+KIT_SCHOLAR  equ 21
 KIT_BATTLE_MAGE equ 22
 KIT_MIND_WARRIOR equ 26
 KIT_STALKER  equ 29
@@ -15102,7 +15251,7 @@ size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold
         mov byte [bp - 2], 101
         inc word [cs:spared_count]
 .ret:   ret
-; SIZE_LINE (site 248 at 7B1CFh, "inc word [bp-2]", 3 bytes; DSCLOG's SIZE_LINE, SL's 72AA7h) in the
+; SIZE_LINE (site 249 at 7B1CFh, "inc word [bp-2]", 3 bytes; DSCLOG's SIZE_LINE, SL's 72AA7h) in the
 ; routine writing a weapon's lines (7AF9Eh: an item box's, [BP-6] its creature 0; the inventory screen's and
 ; the Look box's, its creature's), its damage line just drawn from SS:[BP-2Eh] ("1D8+4"; SI the item type):
 ; an item box's line drawn again with the dice against a large target after it ("1D8+4/1D12+4", as
@@ -15260,7 +15409,7 @@ sz_parse:
         clc
         ret
 
-; SIZE_PRE (site 249 at 7B1B2h, "push word [bp+14h]", 3 bytes; DSCLOG's SIZE_PRE, SL's 72A8Ah) in the same
+; SIZE_PRE (site 250 at 7B1B2h, "push word [bp+14h]", 3 bytes; DSCLOG's SIZE_PRE, SL's 72A8Ah) in the same
 ; routine, its damage line made at SS:[BP-2Eh] and about to be drawn (SI the item type): Shillelagh's (the
 ; game's 2D4, AD&D's against a large target) made 1D6+1, AD&D's against a smaller one (SIZE_DICE's), the
 ; rate kept, in the item box, the inventory and the Look box; the box's then gets its "/2D4" (SIZE_LINE).
@@ -15530,6 +15679,7 @@ kp_open:
         mov byte [cs:kp_first], 1
         mov byte [cs:kit_keep], 0
         mov dword [cs:wp_classes_seen], 0xFFFFFFFF
+        mov byte [cs:cr_thac0_scholar], 0
         call psi_snap           ; (an EDIT's powers, for PSI_KEEP)
         iret
 
@@ -21219,6 +21369,7 @@ cr_spells:
         mov [cs:cr_left], di
         or di, di
         jz .ret
+        call cr_scholar         ; (a new Scholar: one more for each preserver level)
         inc word [cs:cr_members]
         mov cl, 1               ; (CL the level, CH its picks)
 .level: movzx di, cl
@@ -21241,6 +21392,28 @@ cr_spells:
 .fill:  call cr_fill
 .done:  mov byte [cs:cr_cap], 0
 .ret:   ret
+
+; CR_SCHOLAR: (CR_SPELLS', the spells given counted) a new member SI with the Scholar kit awake picks one
+; more 1st-level spell for each of its preserver levels (SL's PROBE_CR_SPELLS: KIT_MADE's CL), CR_DUE's and
+; CR_LEFT's. Counted (SCHOLAR_MADE). All registers kept.
+cr_scholar:
+        push ax
+        push bx
+        push es
+        mov ax, si
+        call kit_sheet_ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .out
+        call kit_level
+        movzx ax, al
+        add [cs:cr_due], al
+        add [cs:cr_left], ax
+        add [cs:scholar_made], ax
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 ; CR_ONE: CHOOSE A SPELL for member SI; CF set if it was left with no spell learnt. CX kept; DS the game's.
 cr_one:

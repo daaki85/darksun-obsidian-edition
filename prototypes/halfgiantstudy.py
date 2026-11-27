@@ -70,12 +70,55 @@ ARMS = {
     24: ((9, 12), (10, 16), (14, 19)), 25: ((10, 16), (10, 19), (13, 18)),
     27: ((4, 17), (2, 19), (5, 22)),
 }
+# Shoulder, elbow and wrist in the feet-down retail cel. Follow both arms
+# when visible, so that the flexed arm can cross in front of the rib cage.
+# A profile with a wholly hidden far arm has just one contour to shade.
+ARM_CENTRES = (
+    (((8, 10), (4, 13), (2, 18)), ((24, 10), (27, 14), (28, 18))),
+    (((10, 11), (7, 12), (4, 16)), ((21, 10), (24, 13), (24, 16))),
+    (((8, 10), (10, 15), (14, 19)),),
+    (((6, 10), (3, 13), (2, 18)), ((21, 10), (24, 13), (26, 18))),
+    (((6, 10), (3, 14), (2, 19)), ((21, 9), (23, 12), (24, 16))),
+    (((5, 9), (3, 13), (2, 18)), ((21, 9), (23, 12), (24, 16))),
+    (((5, 10), (3, 12), (2, 16)), ((20, 10), (22, 14), (24, 19))),
+    (((5, 11), (3, 14), (3, 17)), ((17, 11), (18, 14), (19, 17))),
+    (((5, 10), (3, 12), (2, 15)), ((16, 11), (19, 13), (21, 18))),
+    (((6, 11), (3, 14), (2, 17)), ((18, 10), (19, 13), (19, 16))),
+    (((9, 10), (5, 14), (2, 20)), ((18, 10), (20, 12), (20, 14))),
+    (((11, 11), (12, 16), (15, 20)),),
+    (((15, 10), (13, 13), (9, 16)), ((18, 9), (20, 11), (22, 11))),
+    (((9, 11), (7, 15), (5, 18)), ((11, 10), (13, 12), (15, 14))),
+    (((14, 11), (16, 15), (20, 18)),),
+    (((7, 12), (5, 16), (4, 20)), ((13, 10), (15, 7), (18, 4))),
+    (((12, 10), (9, 7), (6, 6)), ((23, 12), (26, 17), (29, 23))),
+    (((18, 14), (15, 18), (9, 21)), ((15, 7), (11, 4), (6, 2))),
+    (((12, 11), (11, 14), (15, 15)),),
+    (((6, 10), (6, 14), (4, 18)), ((10, 8), (12, 7), (13, 5))),
+    (((13, 11), (14, 15), (13, 17)), ((8, 11), (5, 11), (2, 11))),
+    (((10, 10), (8, 6), (4, 8)), ((22, 10), (25, 14), (28, 18))),
+    (((18, 11), (22, 14), (27, 15)),),
+    (((18, 10), (19, 14), (23, 17)), ((12, 7), (10, 5), (8, 4))),
+    (((9, 12), (11, 16), (15, 19)),),
+    (((10, 15), (11, 18), (14, 18)),),
+    (((11, 15), (8, 13), (3, 14)), ((21, 13), (25, 14), (29, 14))),
+    (((4, 16), (2, 18), (3, 21)), ((13, 7), (17, 4), (22, 2))),
+    (((7, 11), (4, 12), (2, 13)), ((18, 10), (20, 11), (22, 13))),
+)
+
 # Center and radii of the face/hair in the folded poses where the jaw
 # overlaps the chest. Upright poses keep the native jaw above the neckline.
 LOW_HEAD = {16: (16, 8, 5, 5), 17: (12, 12, 5, 5), 23: (21, 6, 4, 5),
             27: (7, 13, 5, 6), 28: (12, 6, 5, 5)}
 SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 151)
 TEAL = (208, 69, 69, 70, 70, 71, 71, 40, 72, 73)
+# These folds use fixed map colours. Regional leaf and hide midtones
+# converge when the Loader prepares costumes for the desert palette.
+CLOAK_LEAF = (208, 17, 188, 189, 53, 54, 55, 56, 57)
+WRAP_TEAL = (208, 69, 70, 71, 40, 72, 73)
+GLADIATOR_HIDE = (208, 204, 203, 207, 195, 179, 205, 196, 201, 168, 169)
+OILED_HIDE = (208, 129, 204, 204, 207, 195, 207, 205, 205, 194, 194)
+GUARD_BRONZE = (208, 204, 207, 195, 179, 205, 196, 201)
+GUARD_HIGHLIGHT = 169
 LINEN = (208, 204, 207, 205, 92, 194, 206, 97, 121, 61, 199, 123, 125, 62, 63)
 BONE = (207, 205, 194, 206, 121, 199, 62, 63)
 TEAL_BONE = (208, 69, 70, 71, 40, 72, 73, 199)
@@ -215,16 +258,18 @@ def rear_cloak_color(x, y, pose, texture):
     start = mix(left, hem_left, depth) + 1.3*loft
     end = mix(right, hem_right, depth) - 1.2*loft
     u = (x-start)/max(1, end-start)
-    # Upper light crosses the shoulder blades. Below them two narrow
-    # troughs frame the broad lit face of the hanging cloth.
+    # Upper light crosses the shoulder blades. Three uneven folds divide
+    # below the gathers, following the sideways swing toward the hem.
     shade = 7.5 - 3.3*abs(u-.30) + 1.4*math.cos(4*u+depth)
-    for crease, bend in ((.28, -.12), (.73, .09)):
+    for crease, bend in ((.28, -.12), (.54, .07), (.79, .09)):
         dist = (u-crease-bend*loft)*(end-start)
         shade -= 4.1*math.exp(-.48*dist*dist)
         shade += 2.3*math.exp(-.37*(dist+1.7)**2)
     across = round(x-start)
     grain = texture[round(y-neck) % 8][across % 8]
-    return shade + .68*grain
+    # Narrow ridges beside the troughs stay a distinct value when this
+    # outer layer is dyed for a worn cloak or a multiclass lining.
+    return .66*(shade + 1.05*grain)
 
 
 def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
@@ -241,6 +286,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
     rib_span = row_limits(top)
     cloak = stamp(RANGER_CLOAK[pose])
     cloak_span = row_limits(cloak)
+    hide_levels = {}
+    metal = {}
     for role in ROLES[2:]:
         skirt = robe if role == "Cleric" else jerkin if role == "Fighter" else wrap
         if role == "Psionicist" and female and pose in WOMAN_TEAL_HEM:
@@ -298,12 +345,12 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                         depth = (y-shoulder[1])/max(1, belt[1][1]-shoulder[1])
                         fold = 12*u + 1.4*depth + .65*math.sin(depth*2.4)
                         grain = texture[(y-shoulder[1]) % 8][int(16*u) % 8]
-                        shade = 6.8 + 2.8*math.cos(fold) + .65*grain - 1.4*u
+                        shade = 4.6 + 2.0*math.cos(fold) + .72*grain - 1.1*u
                     if (x,y+1) not in cloak or (x+1,y) not in cloak:
-                        shade -= 3.1
+                        shade -= 2
                     if visible is not None:
                         visible["cloak"].add(point)
-                    pieces[role][sy][sx] = pigment(RAMPS["leaf"], shade)
+                    pieces[role][sy][sx] = pigment(CLOAK_LEAF, shade)
                     continue
             if role == "Cleric" and point in sleeve and c is not None:
                 flesh = body[sy][sx]
@@ -320,6 +367,8 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
             if on_guard:
                 if role == "Fighter" and visible is not None:
                     visible["guard"][point] = cap[point]
+                if role == "Gladiator":
+                    metal[sx, sy] = cap[point]
                 pieces[role][sy][sx] = pigment(BONE if role == "Fighter" else BRONZE, cap[point])
                 continue
             if point in arm and c is not None:
@@ -357,10 +406,27 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 color = pigment(colors, shade)
                 if role == "Psionicist":
                     # The lower flap continues the wrap below the belt.
-                    color = pigment(TEAL, .56*shade+.45)
+                    color = pigment(WRAP_TEAL, .4*shade + .20*grain)
+                elif role == "Gladiator":
+                    # The overlapping skirt has a turned-under leather edge
+                    # against the thigh and a warm welt beside the lap seam.
+                    hide = .66*shade - .7
+                    if y == hem[x]:
+                        # The near lip catches light against the shadowed
+                        # thigh and turns underneath toward the far knee.
+                        hide = (7.5 if .18 < u < .50 else 1) + .25*grain
+                    elif x == hi:
+                        hide = 1 + .25*grain
+                    elif -.13 < fold < -.04 and y < hem[x]-1:
+                        hide += 1.7
+                    color = pigment(GLADIATOR_HIDE, hide)
                 if y-edge < 1.5:
-                    belt_light = 5 + 3*(y-edge < .55) - 4*shadow
-                    color = pigment(RAMPS["hide"], belt_light+.65*grain)
+                    if role == "Gladiator":
+                        belt_light = 4.8 + 2.6*(y-edge < .55) - 3*shadow
+                        color = pigment(GLADIATOR_HIDE, belt_light + .55*grain)
+                    else:
+                        belt_light = 5 + 3*(y-edge < .55) - 4*shadow
+                        color = pigment(RAMPS["hide"], belt_light+.65*grain)
                     if role == "Fighter" and abs(x-mid[0]+2) < 1:
                         color = 168
             elif role == "Gladiator":
@@ -375,7 +441,10 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 dist = x-center
                 if abs(dist) > (1.0 if pose in PROFILE else 1.25):
                     continue
-                color = pigment(RAMPS["hide"], (10 if dist < -.20 else 3)+.45*grain)
+                # A lit welt on the raised pin-side edge and dark leather
+                # beneath it keep the narrow strap distinct on warm skin.
+                shade = (7 + 1.6*(t < .26) if dist < -.20 else .8) + .45*grain
+                color = pigment(GLADIATOR_HIDE, shade)
             else:
                 # Keep the light on the ribcage in the underlying cel.
                 # Smooth leather changes plane more slowly than creased linen.
@@ -392,10 +461,24 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 if role == "Psionicist":
                     overlap = t - (.87-.72*u+.11*u*u)
                     turn = 2.0 if -.12 < overlap < 0 else -1.5 if 0 <= overlap < .10 else 0
-                    color = pigment(TEAL, .55*shade+turn+.5)
+                    # The wrap pulls diagonally toward the sash. A second,
+                    # shorter crease starts below the blade, opening toward
+                    # the near shoulder as the fitted panel widens.
+                    tuck = t - (.20 + .38*u)
+                    ridge = 0
+                    if .12 < u < .72:
+                        if -.11 < tuck < 0:
+                            ridge = 1.15
+                        elif 0 <= tuck < .12:
+                            ridge = -1.05
+                    color = pigment(WRAP_TEAL, .38*shade + .80*turn + .26*grain + ridge)
+            if role == "Gladiator":
+                hide_levels[sx, sy] = GLADIATOR_HIDE.index(color)
             pieces[role][sy][sx] = color
             if visible is not None and role in visible:
                 visible[role].add(point)
+
+    return hide_levels, metal
 
 
 # Horizontal swing and drop of the free leather end from its belt loop.
@@ -530,6 +613,103 @@ def clean_nape(pieces, model, pose, margin):
                     rows[y][x] = color
 
 
+# Relief painted over the fitted rib cage. Each row runs from the near
+# shoulder toward the far shoulder. Dividing at the actual waist lets the
+# blade, sternum and flank compress with the strikes. Small broken masses
+# leave a half-tone between the highlights and the occlusion shadows.
+TORSO_RELIEF = {
+    "front": (
+        "...++....-...", "..++H+.-..+..", ".+HH++.-.+H+.",
+        "..+++.-..++.-", "..--.=-..---.", "...=-+.--..--",
+        "..++H+.-..+--", "..+..--....-.", "...--..-..--.",
+        "...+H+..-....", "....++..-....",
+    ),
+    "rear": (
+        "...+H+.-.++..", "..+HH+-..+H+.", ".+HH+.-..+++.",
+        "..++..=...+--", "..+..-=..+--.", "...-=.-.+--..",
+        "..+H+.-..--..", "..++..-..+--.", "....--...++-.",
+        "...+H+..-....", "....+..--....",
+    ),
+    "profile": (
+        "..++H+..-....", "..+HH+...--..", "...++..--....",
+        "..++..--...+.", "..+..-=..++..", "...-=-..+H+..",
+        "..+++-..+--..", "..+.....--...", "..+H+..--....",
+        "...++..-.....", ".....--......",
+    ),
+}
+SKIN_RELIEF = {".": 0, "+": 2, "H": 4, "-": -2, "=": -4}
+
+
+def arm_planes(pose):
+    # Cross-sections run from the underside to the key light at upper left.
+    # The short undercut ends at the elbow; the smaller forearm light narrows
+    # independently toward the wrist, including when the arm is horizontal.
+    upper = ((-1, 1, 2), (-3, 2, 4), (-3, 1, 3), (-2, -2, 1))
+    lower = ((-2, -1, 2), (-3, 2, 3), (-2, 1, 3), (-1, 0, 1))
+    cells = {}
+    distance = {}
+    for joints in ARM_CENTRES[pose]:
+        for segment, ((ax, ay), (bx, by)) in enumerate(zip(joints, joints[1:])):
+            dx, dy = bx-ax, by-ay
+            length = math.hypot(dx, dy)
+            sign = 1 if dx > dy else -1
+            for y in range(min(ay, by)-2, max(ay, by)+3):
+                for x in range(min(ax, bx)-2, max(ax, bx)+3):
+                    t = ((x-ax)*dx+(y-ay)*dy)/(length*length)
+                    if not 0 <= t < 1:
+                        continue
+                    across = sign*((x-ax)*dy-(y-ay)*dx)/length
+                    width = 1.85-.6*t if segment else 1.75+.35*math.sin(math.pi*t)
+                    if abs(across) > min(width, distance.get((x, y), width)):
+                        continue
+                    distance[x, y] = abs(across)
+                    bank = 0 if across < -.30 else 2 if across > .50 else 1
+                    cells[x, y] = (lower if segment else upper)[int(4*t)][bank]
+    return cells
+
+
+def leg_relief(x, y, across, width, waist, soles, rear):
+    # Each thigh and knee follows its own sole. A visible gap gives the limb
+    # its real width; when the thighs overlap, divide at the two hip centres.
+    best = None
+    for i, (toe, bottom) in enumerate(soles):
+        hip, top = section(waist, (.23, .76)[i])
+        depth = (y-top)/max(1, bottom-top)
+        if not .12 < depth < .92:
+            continue
+        center = mix(hip, toe, depth)
+        dist = abs(x-center)
+        if dist < 4.5 and (best is None or dist < best[0]):
+            best = (dist, center, depth)
+    if best is None:
+        return 0
+    _, center, depth = best
+    plane = across if width < 9 else .5 + (x-center)/7
+    if depth < .48:
+        # The quadriceps narrows toward the inside of the knee.
+        crest = .24+.30*depth
+        if abs(plane-crest) < .14:
+            return 3
+        if .59 < plane < .84:
+            return -2
+    elif depth < .65:
+        # The knee catches a short light in front and folds into a crease
+        # behind. The outside of the joint rolls into the upper calf.
+        if .23 < plane < .55 and depth < .57:
+            return -2 if rear else 4
+        if .47 < plane < .85:
+            return -4
+    else:
+        # A fuller calf gives way to a thin shin/tendon light. End it before
+        # the sandal strap; the two feet reach this point on separate beats.
+        crest = .32 + .16*(depth-.65)/.27
+        if abs(plane-crest) < (.17 if depth < .78 else .12):
+            return 4 if depth < .78 else 3
+        if .59 < plane < .84 and depth < .86:
+            return -3
+    return 0
+
+
 def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
     combat, frame = divmod(pose, 15)
     fig = game.fig(model)
@@ -549,6 +729,10 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
     bow = game.bow(fig, native, fig.parts(combat, frame)) if 24 <= pose <= 26 else set()
     pieces = {role: [r[:] for r in source] for role in ROLES[1:]}
     locks_start, locks = PROFILE_LOCKS.get(pose, (0, ())) if model == 2074 else (0, ())
+    skin_relief = {}
+    locks_outline = fitted_panels(pose, model == 2074)[5]
+    native_hair = fig.parts(combat, frame).hair
+    torso = TORSO_RELIEF["rear" if pose in REAR else "profile" if pose in PROFILE else "front"]
     for sy, row in enumerate(source):
         lock = locks[sy-locks_start] if 0 <= sy-locks_start < len(locks) else None
         # Each contiguous leg/arm has its own light plane; a gap keeps its
@@ -619,6 +803,26 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
                         body = SKIN[min(len(SKIN)-1, SKIN.index(body)+2)]
                     elif abs(u-.54) < .07:
                         body = SKIN[max(0, SKIN.index(body)-2)]
+                if in_top and not near_arm and body in SKIN and sx not in (left, right):
+                    # Reflected light below the ribs rolls into a short flank
+                    # shadow. Keep the established outer limb and calf contour.
+                    flank = t - (.65 - .26*u)
+                    tone = SKIN.index(body)
+                    if .28 < u < .81 and 0 <= flank < .12:
+                        body = pigment(SKIN, tone - 2)
+                    elif .20 < u < .49 and -.12 < flank < 0:
+                        body = pigment(SKIN, tone + 1)
+                native_point = ((len(native[0])-1-(sx-margin), len(native)-1-sy)
+                                if reverse else (sx-margin, sy))
+                if (body in SKIN and left < sx < right and not near_arm
+                        and (x, y) not in locks_outline and native_point not in native_hair):
+                    relief = 0
+                    if in_top:
+                        relief = SKIN_RELIEF[torso[min(10, int(t*11))][min(12, int(u*13))]]
+                    elif y >= min(waist[1], waist[3]):
+                        relief = leg_relief(x, y, across, right-left+1, waist, soles, pose in REAR)
+                    if relief:
+                        skin_relief[sx, sy] = pigment(SKIN, SKIN.index(body)+relief)
                 foot = sandal(x, y, soles, across)
                 # In these two crossing profile steps the back foot lies
                 # directly beside the planted shin. Only its toes take a sole.
@@ -628,11 +832,103 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
                 pieces["Body base"][sy][sx] = body
                 for role in ROLES[2:]:
                     pieces[role][sy][sx] = body if foot is None else foot
+    # Raised arms and horizontal bow arms can sit above the neckline. Sample
+    # them on the completed body so the restored cuffs join the native biceps.
+    for (x, y), shift in arm_planes(pose).items():
+        sx, sy = x+dx, y+dy
+        if not (0 < sy < len(source)-1 and 0 < sx < len(source[sy])-1):
+            continue
+        old = pieces["Body base"][sy][sx]
+        if (not shift or old not in SKIN or (x, y) in locks_outline
+                or source[sy][sx-1] is None or source[sy][sx+1] is None):
+            continue
+        nx, ny = sx-margin, sy
+        if reverse:
+            nx, ny = len(native[0])-1-nx, len(native)-1-ny
+        if (nx, ny) in native_hair or (nx, ny) in bow:
+            continue
+        if pose in LOW_HEAD:
+            cx, cy, rx, ry = LOW_HEAD[pose]
+            if ((x-cx)/rx)**2+((y-cy)/ry)**2 <= 1:
+                continue
+        elif shoulder[0]+1 <= x <= shoulder[2]-1 and y <= min(shoulder[1], shoulder[3]):
+            continue
+        # The donor already lights exposed upper-arm skin. Use the stronger
+        # turn only over a removed retail cuff or a reconstructed shoulder.
+        if source[sy][sx] in SKIN and abs(shift) > 1:
+            shift += -1 if shift > 0 else 1
+        skin_relief[sx, sy] = pigment(SKIN, SKIN.index(old)+shift)
     if pose in NAPE:
         clean_nape(pieces, model, pose, margin)
     visible = ({"Cleric": set(), "Fighter": set(), "cloak": set(), "sleeve": set(), "guard": {}}
                if pairs else None)
-    dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
+    hide, metal = dress(pieces, source, model, pose, dx, dy, bow, texture, visible)
+    # The clothes already carry their own approved fold lighting. Apply the
+    # anatomical relief only where a cel still exposes the underlying skin.
+    light = [(.299*r + .587*g + .114*b) for r, g, b in game.palette]
+    gladiator = pieces["Gladiator"]
+    # Small unsupported peaks on the rebuilt flesh can compete with a buckle
+    # at game size. Ease only the tiny bright peaks, leaving the longer
+    # joint and tendon lights that describe the bent limb intact.
+    body = pieces["Body base"]
+    before_quiet = skin_relief.copy()
+    for (sx, sy), color in before_quiet.items():
+        if color not in (148, 149, 151):
+            continue
+        support = sum(before_quiet.get((x, y), body[y][x]) in (147, 148, 149, 151)
+                      for x, y in ((sx-1, sy), (sx+1, sy), (sx, sy-1), (sx, sy+1))
+                      if 0 <= y < len(body) and 0 <= x < len(body[y]))
+        if support <= 1:
+            skin_relief[sx, sy] = pigment(SKIN, SKIN.index(color)-2)
+    for (sx, sy), color in skin_relief.items():
+        old_skin = pieces["Body base"][sy][sx]
+        # Preserve the small lit plane beside a dark welt when the deeper
+        # flank shadow would join its value. The same plane belongs to the
+        # undressed torso and travels with it beneath the other outfits.
+        if gladiator[sy][sx] == old_skin:
+            leather = (gladiator[yy][xx] for xx, yy in
+                       ((sx-1, sy), (sx+1, sy), (sx, sy-1), (sx, sy+1))
+                       if 0 <= yy < len(gladiator) and 0 <= xx < len(gladiator[yy]))
+            if any(p in GLADIATOR_HIDE and abs(light[color]-light[p]) <
+                   min(40, abs(light[old_skin]-light[p])) for p in leather):
+                continue
+        for rows in pieces.values():
+            if rows[sy][sx] == old_skin:
+                rows[sy][sx] = color
+    if panels is not None:
+        # These pigments identify the registered armour surfaces, including
+        # skin beside a leather fold that uses the same deep umber.
+        panels["gladiator_seams"] = upright(gladiator) if reverse else [row[:] for row in gladiator]
+    # Finish the materials only after the fitted skin and garment have been
+    # established. The existing welt supplies the turn of the oiled leather.
+    for (sx, sy), level in hide.items():
+        lower_lip = ((sx, sy+1) not in hide and sy+1 < len(gladiator)
+                     and gladiator[sy+1][sx] in SKIN)
+        rank = min(2, level) if lower_lip and level < 7 else level
+        # The leather and the native heel share a deep brown. Keep separate
+        # materials distinct when that shade is also the flesh underneath.
+        tone = OILED_HIDE[rank]
+        # Only the lip against the skin needs contact shading. On a dark
+        # thigh the turned edge catches a little reflected brown instead.
+        touching = [light[gladiator[y][x]] for x, y in ((sx+1, sy), (sx, sy+1))
+                    if 0 <= y < len(gladiator) and 0 <= x < len(gladiator[y])
+                    and (x, y) not in hide and (x, y) not in metal and gladiator[y][x] in SKIN]
+        if touching:
+            under = sum(touching)/len(touching)
+            if abs(under-light[tone]) < 26:
+                if under >= 62:
+                    tone = 208
+                elif level >= 4:
+                    tone = 194 if level >= 8 else 205
+        gladiator[sy][sx] = 204 if tone == 129 and body[sy][sx] == 129 else tone
+    for (sx, sy), level in metal.items():
+        gladiator[sy][sx] = GUARD_BRONZE[level]
+    if metal:
+        # Pick the turn toward the light within the visible painted shell.
+        # A pin-sized glimpse under the hair takes a dull edge in shadow.
+        tip = min(metal, key=lambda point: (-metal[point], point[1], point[0]))
+        if metal[tip] >= 3 and len(metal) >= 3:
+            gladiator[tip[1]][tip[0]] = GUARD_HIGHLIGHT
     if pairs:
         dress_pairs(pieces, visible, model, pose, dx, dy)
         if panels is not None:

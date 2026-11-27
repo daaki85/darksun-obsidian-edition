@@ -4,7 +4,7 @@ The Loader draws class outfits ([What the party wears](../../FEATURES.md#what-th
 
 [Female human](#female-human) · [Male human](#male-human) · [Female dwarf](#female-dwarf) · [Male dwarf](#male-dwarf) · [Elf outfits](#elf-outfits) · [Half-elf outfit galleries](half-elves.md) · [Half-giant art study](half-giants.md) · [Halfling art study](halflings.md) · [Mul art study](muls.md) · [Thri-kreen · original figure](thri-kreen.md) · [Equipment](#equipment)
 
-[Compare all eight body bases with the Gladiator and Fighter in every pose](body-texture.md)
+Inspect the revised cloth folds, bare bodies, and Gladiator outfits on sand and paving. [Current comparison for all 13 clothed figures](material-folds.md) · [Earlier eight-body comparison with the Fighter](body-texture.md)
 
 [Compare the revised cloth with the retail Priest, Thief, Mage and Warrior](cloth-detail.md) · [Watch the before-and-after walk on arena sand](cloth-detail.gif)
 

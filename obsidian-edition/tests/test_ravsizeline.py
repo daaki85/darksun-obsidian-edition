@@ -1,4 +1,4 @@
-"""DSCLOG2's SIZE_LINE and SIZE_PRE (sites 248, 249: DSCLOG's, Shattered Lands' item box), run in an emulated
+"""DSCLOG2's SIZE_LINE and SIZE_PRE (sites 249, 250: DSCLOG's, Shattered Lands' item box), run in an emulated
 CPU: an item box's damage line in Wake of the Ravager drawn again with the dice against a large foe after it
 ("1D8+4/1D12+4", as Shattered Lands' box: the user's both-games rule, 2026-11-27), and Shillelagh's line
 1D6+1. Needs nasm and unicorn, else skipped."""
@@ -104,7 +104,7 @@ class SizeLineTests(unittest.TestCase):
         self.assertEqual(self.pre("1D8+7", LONG_SWORD)[0], "1D8+7")
 
     def test_patches(self):
-        for name, offset, original, site in (("size_line", 0x7B1CF, "ff46fe", 248), ("size_pre", 0x7B1B2, "ff7614", 249)):
+        for name, offset, original, site in (("size_line", 0x7B1CF, "ff46fe", 249), ("size_pre", 0x7B1B2, "ff7614", 250)):
             p = next(p for p in ravager.PATCHES if p.name == name)
             self.assertEqual((p.offset, p.original.hex()), (offset, original))
             self.assertEqual(p.replacement, bytes((0xCD, ravager.VEC_SITE, site)))
