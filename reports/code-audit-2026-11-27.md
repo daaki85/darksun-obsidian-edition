@@ -17,6 +17,13 @@ audit is [code-memory-audit-final.md](code-memory-audit-final.md) (2026-11-19).*
 | Structural (the skill's blockers) | 5 | 0: proposals, which need the owner's go-ahead because they touch every thread's work |
 | Cleanup | 6 | 0 |
 
+**Where it stands (2026-11-27, later):** the fixes on #235 and the room checks on #238 are merged
+(merge train #241). **R4** is fixed in #239 (merged): 0FFh means "no kit" only off a human with
+three classes, so no save needed changing. **R3** is #242: DSCLOG2's build checks upper memory,
+measured in the game at 83,392 bytes free. The owner's calls on the structural findings: **S4**
+(the outfit placements as tables) goes ahead now; **S1**, **S2/S3** and **S5** go ahead now that
+the port's PRs are merged (#241). C1, C2 and C4 are with the port thread.
+
 The worst finding is **B1**. After a game of Wake of the Ravager played from the Loader's window,
 starting Shattered Lands from the same window wrote SL's copies with the sequel's record offsets,
 and SL started without its new items, people and icons. #235 fixes it. B1 has the same root as the
@@ -105,13 +112,13 @@ move to the tail that #228 gave DSCLOG2 (the kits' names are there already; the 
 and the remaining `cs:` tables could follow), then a margin test. The docs' figures are for the
 docs audit (sent there).
 
-**R3. DSCLOG2 has no build check on upper memory.** DSCLOG fails its build when `UMB_NEED` or
+**R3. DSCLOG2 has no build check on upper memory.** *(Done in #242.)* DSCLOG fails its build when `UMB_NEED` or
 `UMB_KEPT` passes `UMB_ROOM`. DSCLOG2 has neither check. Its block is 4,133 paragraphs (66,128
 bytes, `KEPT_PARAS`) plus the see-through figures' 5,632, and every port adds to it. Proposal: port
 DSCLOG's two `times -(...)` checks, sized for the sequel's own overlay and music buffers (measure
 them once in the game with `memaudit.py`).
 
-**R4. The kit byte's `KIT_OPEN` (FFh) is also a legal value.** The sheet's kit byte holds the three
+**R4. The kit byte's `KIT_OPEN` (FFh) is also a legal value.** *(Fixed in #239.)* The sheet's kit byte holds the three
 class places' kits (2 bits each, bits 0 to 5), `OWN_BIT` (40h) and Friends known (80h). FFh is
 read as "kit taken back, none chosen" (`kitpages.kit_at`, DSCLOG2's `NEW_SHEET`, `OWN_RACE_B`,
 `DK_ASK`). A character with the third kit in all three places, `OWN_BIT` and Friends known has FFh
