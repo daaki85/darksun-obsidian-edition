@@ -1,6 +1,6 @@
 # Cloth folds and Gladiator contrast
 
-The earlier columns use revision `fee30cff`. The outfit columns show the Loader’s walking and combat pictures with empty equipment slots. The body columns show the cleaned art used to fit each garment. In the animations, the small copy is game size. Each pair shares the same ground line, pose and floor.
+The body and shoulder comparisons use `17aaacef` for the earlier art. The wider cloth comparison starts at `fee30cff`. The outfit columns show the Loader’s walking and combat pictures with empty equipment slots. The body columns show the cleaned art used to fit each garment. In the animations, the small copy is game size. Each pair shares the same ground line, pose and floor.
 
 ## Cloth on the arena floor
 
@@ -17,20 +17,24 @@ The earlier columns use revision `fee30cff`. The outfit columns show the Loader�
 
 ## Gladiators and exposed skin
 
-The first two columns show how the shoulder, ribs and loaded thigh turn before the garment is added. The next two show the same figure wearing the Gladiator straps and kilt. Follow the cut edge of the leather where it touches skin. The right column shows the retail Warrior when the game supplies a corresponding pose.
+Read the body and Gladiator columns together. The same patch of exposed skin should keep its light as the strap crosses the chest or the kilt lifts past the knee. The last two columns show the corresponding retail source figure and the retail Warrior where its picture supplies that pose. The half-elves use their retail parent figures for this comparison.
 
 | Figures | Where to look |
 |---|---|
-| Humans | The kilt lap catches the light, and the short underside darkens against the thigh. Follow the rear step and the woman’s side walk as the hem changes angle. |
-| Elves and half-elves | In the men’s first side strike (21), the reflected light follows the ribs below the raised arm. Watch the half-elf woman’s exposed shoulder blade beneath her bun during the rear walk. |
-| Half-giants | Follow the narrow shoulder strap under the guard through the front strikes, then the leather skirt against the forward thigh. The flank takes a shorter reflection than the outside of the calf. |
-| Halflings and Mul | Inspect the halfling woman’s belt under her hair during rear idle and the rear walk. The Mul’s strap turns toward the light as he winds up for a rear strike. In side bow (26), his exposed flank narrows above the hip. |
-| Dwarves | The existing bronze guard, strap and hem separate clearly at this scale. Both dwarves are included as comparisons. The thri-kreen uses its original retail figure. |
-
-Across the 29 poses, the median brightness difference between adjacent leather and skin on the half-giants rose from about 16 to 29 on the man and 28 on the woman (0–255 scale). In the first side strike, the largest flat patch on the bare torso fell from 27 to 7 pixels on the elf man and from 29 to 10 on the half-elf man.
+| Humans | Follow the light across the near shoulder and the short shadow under the ribs. At the waist the leather crosses into that shadow, and the forward thigh catches light below the kilt. |
+| Dwarves | In front idle the lit chest turns into the abdomen just behind the diagonal strap. From behind, the shoulder blades and hip have separate highlights. Watch the bent knee move out of the kilt’s shadow. |
+| Elves and half-elves | Watch the near ribs under the raised arm in the first side strike (21). In the rear walk, compare the exposed back beside the strap with the same area on the bare body. |
+| Half-giants | The chest and shoulder blades have the largest exposed surfaces. Follow their light toward the narrower waist during the strikes, then compare the nearer and farther knees as the kilt swings. |
+| Halflings and Mul | On the smaller bodies, use the side walk to follow the light under the arm into the waist. On the Mul, the shadow beneath the ribs sets off the warm leather at the hip. |
 
 [Human, dwarf and elf Gladiators through all 29 poses](gladiator-contrast-original-six.gif) · [Half-elf, half-giant, halfling and Mul Gladiators through all 29 poses](gladiator-contrast-later-seven.gif) · [Compare all 13 bodies and outfits on paving](gladiator-contrast-stone.png)
 
 [Gerakis wearing the revised Gladiator art in DOSBox](../../../playtest/logs/2026-11-27-material-folds.md)
 
-Regenerate the gallery with `python prototypes/materialfoldreview.py GAME_DIR OUTPUT_DIR --previous-checkout BASELINE_CHECKOUT`. Use a checkout of `fee30cff` for the earlier pictures.
+## Shoulder of the trailing cloak
+
+In side-walk frame 14, six far-shoulder pixels interrupted the green panel on the male elf Ranger and the male half-elf Ranger/Thief. Follow the closed panel back toward the shoulder, then step through the two middle frames where the forward arm extends into view.
+
+[Inspect side walk 4](cloak-shoulder.png) · [Watch all four steps](cloak-shoulder.gif)
+
+Regenerate the gallery with `python prototypes/materialfoldreview.py GAME_DIR OUTPUT_DIR --previous-checkout BODY_CHECKOUT --previous-cloth-checkout CLOTH_CHECKOUT`. Use `17aaacef` for the body and shoulder baseline and `fee30cff` for the wider cloth comparison.
