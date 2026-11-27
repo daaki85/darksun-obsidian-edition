@@ -9,7 +9,7 @@ drawn on the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
 with your options and keeps the full dice log while you play. Most of it is
 always on; the new content and a few rules have a switch on the Loader's Options
-tab ([each one, its default and when it takes effect](obsidian-edition/PLAYER-GUIDE.md#the-options-tab-at-a-glance)).
+tab ([each one, its default and when it takes effect](obsidian-edition/README.md#the-options-tab-at-a-glance)).
 If you have **Wake of the Ravager** too, the Loader starts the sequel with most of the mod, and
 your party can go on into it ([Wake of the Ravager](obsidian-edition/RAVAGER.md)).
 
