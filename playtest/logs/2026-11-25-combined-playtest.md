@@ -71,3 +71,13 @@ DSCLOG2's site table joined as: 130-139 none, 140-149 the new spells (#200, #201
 Memory, `RAV_LOADER=1 RAV_UMB=1 sh ravstart.sh` to Tyr, then `dosmem.py`: DSCLOG2's upper memory block
 57,648 bytes (plus its 5,632-byte tail), **92,304 bytes of upper memory free** (the largest piece 92,160);
 conventional memory 63,232 free after the game.
+
+## 2026-11-27: upper memory with the kit ports joined (#218-#222)
+
+DSCLOG2.EXE 65,136 bytes with #218 (kit PSP, hit dice), #219 (casting levels, cures), #220 (the
+Shinobi's spells), #221 (weapon traits) and #222 (poison, arrows, Fine Bow) joined. `RAV_LOADER=1
+RAV_UMB=1 sh ravstart.sh` to Tyr, then `dosmem.py`: DSCLOG2's resident block 64,576 bytes (MCB CA0A)
+plus its 5,632-byte block at EE9F; **upper memory free 85,376 bytes** (largest piece 85,232), against
+92,304 at 58,192 bytes (2026-11-26). Conventional memory after the game 63,168 bytes, its far heap 47 KB
+free, HMA on. Afterwards `python3 -m dsloader.ravager narrow /tmp/playtest/rav` (the Loader's start
+widens the roster).
