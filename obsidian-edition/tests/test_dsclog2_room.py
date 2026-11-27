@@ -79,8 +79,17 @@ class RoomTests(unittest.TestCase):
                              "Move tables or buffers to its tail (THE IMAGE'S PARTS in dsclog2.asm)")
 
     def test_the_tail_and_the_install_fit_their_segments(self):
-        for part, end in (("tail", "tail_end"), ("install", "install_end")):
+        for part, end in (("tailz", "tail_end"), ("install", "install_end")):
             self.assertLessEqual(self.sections[part][end], SEGMENT, part)
+
+    def test_the_tests_return_spot_misses_the_tail_tables(self):
+        """The emulator tests return to a HLT they put at the helper's CS:FFF0 (to FFFFh), which the
+        image doesn't reach while the segment and the tail together are shorter. Past that it lands in
+        the tail: in its buffers (section tailz, zeros the Loader fills) it does no harm, in its tables
+        (section tail: the sites', the AD&D slots and XP) it would change what the tests read. When this
+        fails, the segment is near full anyway: move code out, or the tests' spot elsewhere."""
+        tables = (self.equs["TAIL_PARAS"] * 16, self.equs["TAIL_PARAS"] * 16 + self.sections["tail"]["tail_mid"])
+        self.assertFalse(tables[0] < 0x10000 and tables[1] > 0xFFF0, [hex(a) for a in tables])
 
     def test_the_parts_are_where_the_paragraphs_say(self):
         """The tail at TAIL_PARAS x 16 in the image (its signature first; the header's +1836 the same),
@@ -93,7 +102,7 @@ class RoomTests(unittest.TestCase):
         hdr = image.find(b"DSCLOGR1")
         self.assertEqual(hdr, 0)
         self.assertEqual(struct.unpack_from("<H", image, hdr + 1836)[0], equs["TAIL_PARAS"])
-        self.assertEqual(install, tail + self.sections["tail"]["tail_end"])
+        self.assertEqual(install, tail + self.sections["tailz"]["tail_end"])
         ip, cs = struct.unpack_from("<HH", exe, 0x14)
         self.assertEqual((cs, ip), (equs["INSTALL_PARAS"], self.sections["install"]["install"]))
         self.assertEqual(len(image), install + self.sections["install"]["install_end"])
@@ -104,8 +113,9 @@ class RoomTests(unittest.TestCase):
         through TAIL_FS, the install's are gone once it stays), and the install's code never names one
         of the segment's after "cs:" (its CS is its own: DS is the segment there). A port written
         before a table moved fails here, not in the game."""
-        image, tail, install = (set(self.sections[s]) for s in ("image", "tail", "install"))
-        wrong = {"image": tail | install, "tail": set(), "install": image | tail}
+        image, install = set(self.sections["image"]), set(self.sections["install"])
+        tail = set(self.sections["tail"]) | set(self.sections["tailz"])
+        wrong = {"image": tail | install, "tail": set(), "tailz": set(), "install": image | tail}
         section, found = "image", []
         for number, line in enumerate(self.source.splitlines(), 1):
             code = line.split(";")[0]

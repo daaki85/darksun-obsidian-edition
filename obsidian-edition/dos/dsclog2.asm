@@ -115,10 +115,12 @@ section mz start=0
         align 32, db 0
 
 section image follows=mz vstart=0
-section tail follows=image vstart=0 align=16
+section tail follows=image vstart=0 align=16           ; (the tail's tables, with their values)
 tail_start:
 tail_sig db 'DSCLOG2 TAIL', 0, 0, 0, 0  ; (so that nothing of the Loader's is at the tail's offset 0)
-section install follows=tail vstart=0 align=16
+section tailz follows=tail vfollows=tail align=16     ; (then its buffers, zeros in the file: the same segment)
+tailz_start:
+section install follows=tailz vstart=0 align=16
 section image
 
 ; ---- header, found by the Loader via SIG (16-byte aligned): DSCLOG's layout and length ----
@@ -1639,7 +1641,7 @@ c_draw   dd 0                   ; the text routine
 c_winptr dd 0                   ; the window it prints in
 use_count dw 0                  ; PROBE_USE's and PROBE_WIN's draws (for the tests)
 win_count dw 0
-section tail                    ; (U_LINE and SLOTS_TEXT: the tail's)
+section tailz                   ; (U_LINE and SLOTS_TEXT: the tail's)
 u_line   times SLOTS_SIZE db 0
 slots_text times 4 * SLOTS_SIZE db 0
 section image
@@ -2342,7 +2344,7 @@ l_line   times L_LINE_SIZE db 0
 look_count dw 0                 ; boxes filled (for a look in play)
 look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
 LOOK_FULL_SIZE equ 700
-section tail
+section tailz
 look_full times LOOK_FULL_SIZE db 0 ; (LOOK_FULL_OFF's: the tail's)
 section image
 look_pending db 0               ; 1 once LOOK_FULL has a description UNLOOK hasn't shown
@@ -2916,7 +2918,7 @@ np_ip   dw 0
 np_cs   dw 0
 np_fl   dw 0
 no_name db 0
-section tail
+section tailz
 item_names times NAMES_ROOM * NAME_KEPT db 0    ; (the tail's)
 section image
 
@@ -13365,6 +13367,7 @@ large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, siz
              db 1, 12, 0            ; lotulis: 1d12
              db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; double spear, trikal, javelin: the same
              db 1, 2, 0             ; darts: 1d2
+section tailz
 large_bits times LARGE_MOST / 8 + 1 db 0
 section image
 large_hits   dw 0               ; (hits on large targets, for a look in play)
@@ -15862,7 +15865,7 @@ l_on_map:
         ret
 
 align 2
-section tail
+section tailz
 lbl_slots times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1834:+1838)
 section image
 
@@ -19381,7 +19384,7 @@ quick_saves dw 0                ; (saves and loads made, for a look in play)
 quick_loads dw 0
 pages_back  dw 0                ; (the QUICK page taken off by SAVE_TICK, for a look in play)
 greq_data   times 10 db 0
-section tail
+section tailz
 save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914: the tail's)
 section image
 
@@ -20162,7 +20165,7 @@ pick_top:
 cr_far     dd 0
 cr_cap     db 0                 ; (the spell levels on offer up to this one: 0 none set)
 cr_due     times WIZ_LEVELS db 0
-section tail
+section tailz
 cr_defs    times 128 db 0
 section image
 cr_n       dw 0
@@ -22170,10 +22173,13 @@ align 16
 install_end:
 section tail
 align 16
+tail_mid:
+section tailz
+align 16
 tail_end:
 section install
 TAIL_PARAS    equ (image_end - hdr) / 16                ; the tail's paragraph in the image
-TAIL_LEN      equ (tail_end - tail_start) / 16
+TAIL_LEN      equ ((tail_mid - tail_start) + (tail_end - tailz_start)) / 16
 KEPT_PARAS    equ TAIL_PARAS + TAIL_LEN                 ; what stays: the segment and the tail
 INSTALL_PARAS equ KEPT_PARAS                            ; the install's paragraph, after them
 image_len equ (INSTALL_PARAS * 16) + (install_end - install)

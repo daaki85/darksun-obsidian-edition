@@ -71,7 +71,7 @@ def build(asm=ASM):
                 if len(parts) == 2 and all(c in "0123456789ABCDEF" for c in parts[0]):
                     equs[parts[1]] = int(parts[0], 16)
             sym.update({n: v for n, v in equs.items() if n.startswith("FAR_")})
-            for section, paras in (("tail", "TAIL_PARAS"), ("install", "INSTALL_PARAS")):
+            for section, paras in (("tail", "TAIL_PARAS"), ("tailz", "TAIL_PARAS"), ("install", "INSTALL_PARAS")):
                 if paras not in equs or "Section %s " % section not in listing:
                     continue  # (DSCLOG2's other parts: each label at its place in the image, as loaded)
                 sym[paras] = equs[paras]
