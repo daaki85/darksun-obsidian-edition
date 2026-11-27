@@ -48,6 +48,8 @@ class Machine:
     def __init__(self, asm, xms=True, hma="given", a20=True, hma_dirty=False, umb=0x2000, conv=0x8000):
         exe, self.sym = build(asm)
         image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
+        self.entry = struct.unpack_from("<HH", exe, 0x14)  # (IP, CS: DSCLOG2's install, a segment of its own)
+        self.code = TSR + self.sym.get("INSTALL_PARAS", 0)  # (FAR_INIT's segment: the install's)
         self.xms, self.hma, self.a20, self.umb, self.conv = xms, hma, a20, umb, conv
         self.hma_owned = False
         self.a20_enabled = False
@@ -166,17 +168,19 @@ class Machine:
 
     # the runs
     def far_init(self):
-        """FAR_INIT called (CS = DS = the image): CF, and FAR_SEG."""
-        self.set(CS=TSR, DS=TSR, ES=TSR, SS=STACK_SEG, SP=0x100)
+        """FAR_INIT called (CS the install's, DS the image's segment): CF, and FAR_SEG."""
+        self.set(CS=self.code, DS=TSR, ES=TSR, SS=STACK_SEG, SP=0x100)
         end = TSR * 16 + self.sym["far_init.ret"]
         self.mu.emu_start(TSR * 16 + self.sym["far_init"], end, count=2_000_000)
-        self.assertion_at_end = self.reg("IP") == self.sym["far_init.ret"]
+        self.assertion_at_end = self.reg("CS") * 16 + self.reg("IP") == end
         return bool(self.reg("EFLAGS") & CF), self.word("far_seg")
 
     def install(self):
-        """The helper run as DOS starts an EXE (DS = ES = its PSP), to its INT 21h 4Ch or 31h."""
-        self.set(CS=TSR, DS=PSP, ES=PSP, SS=STACK_SEG, SP=0x100)
-        self.mu.emu_start(TSR * 16 + self.sym["install"], 0, count=5_000_000)
+        """The helper run as DOS starts an EXE (DS = ES = its PSP, CS:IP its header's), to its INT 21h 4Ch
+        or 31h."""
+        ip, cs = self.entry
+        self.set(CS=TSR + cs, DS=PSP, ES=PSP, SS=STACK_SEG, SP=0x100)
+        self.mu.emu_start((TSR + cs) * 16 + ip, 0, count=5_000_000)
         return self.exit
 
 

@@ -372,17 +372,18 @@ class PassTests(unittest.TestCase):
 
 
     def test_slots_written_to_the_helper(self):
-        """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148), a member's in each
-        SLOTS_SIZE bytes, and nowhere else."""
+        """The USE screen's lines go into DSCLOG2's SLOTS_TEXT (its header's +148, an offset in its tail,
+        whose segment is the header's +1834), a member's in each SLOTS_SIZE bytes, and nowhere else."""
         g = FakeGuest()
-        seg_base, hdr, slots = 0xC91B0, 0x20, 0x900
+        seg_base, hdr, slots, tail = 0xC91B0, 0x20, 0x900, 0xD4A0
         struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
         struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_SLOTS_OFF, slots)
+        struct.pack_into("<H", g.mem, seg_base + hdr + 1834, tail)
         log = ravlog.RavDiceLog(g)
         log.tsr_hdr = seg_base + hdr
         log.slots_lines = lambda member: "\x80SPELLS LEFT|\x81WIZ 2/4" if member == 1 else ""
         log._write_slots()
-        at = seg_base + slots + dicelog.SLOTS_SIZE
+        at = tail * 16 + slots + dicelog.SLOTS_SIZE
         self.assertEqual(bytes(g.mem[at:at + 24]), b"\x80SPELLS LEFT|\x81WIZ 2/4".ljust(24, b"\0"))
         self.assertEqual(log.guest.dropped, 0)
         writes = g.writes

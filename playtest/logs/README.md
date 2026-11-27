@@ -214,6 +214,7 @@ schedules and diffs a log made or used.
 | [2026-11-26](2026-11-26-ravager-poison-arrows.md) | Wake of the Ravager: the Poisoner's poison (DSCLOG2's POISON_HIT, site 214: the sequel's record 273, a save or 10 damage, once a hand a fight; a weapon of its own spell no dose), the Spellarcher's spell arrows +1 to +3 (ARROW_PLUS, site 215) and its Fine Bow's +1 to hit (FINE_HIT), against kits-off controls; Computer Control shoots only with a bow +15 |
 | [2026-11-27](2026-11-27-ravager-spell-arrows-made.md) | Wake of the Ravager: a new Spellarcher makes spell arrows on the USE screen (DSCLOG2's SPELL ARROWS, site 240; `ravarrows.make`): CHILL ARROWS and SHOCKING ARROWS buttons, a slot a press, the stack (2 of 24), both shot casting Chill Touch at caster level 6 (the preserver level), no buttons in a fight or with `RAV_NO_ARROWS=1` (the control) |
 | [2026-11-27](2026-11-27-ravager-arrow-leftovers.md) | Wake of the Ravager: the spell arrows' leftovers: a new Spellarcher starts with 24 of each touch spell's arrows it picked, another member's arrows go back to it as the inventory shuts, the pointer lights the button it is on (not Turn Undead's place), a full stack refused, a Vampiric Arrow made, Shocking Arrows shot (Shocking Grasp at caster level 6) from the "Wooden Fine Bow" (no longer "item 305"); the Vampiric Arrow not shot |
+| [2026-11-27](2026-11-27-dsclog2-segment-room.md) | DSCLOG2 in three parts (segment, tail, install): with #218-#223 joined, to Tyr, the tail as built, the USE screen's slots from the tail, upper memory 84,160 free |
 
 ## files/
 

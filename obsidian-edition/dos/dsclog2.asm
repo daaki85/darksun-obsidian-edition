@@ -92,6 +92,11 @@ STACK   equ 256         ; bytes of stack while installing
 HDR_SIZE equ 1872       ; DSCLOG's header to its last field (dicelog.py's TSR_ offsets end at +1867)
 
 ; ---- MZ header: no relocations, and only as much memory as the image needs (as DSCLOG's) ----
+; The image is three parts, each a section of its own that starts its labels at 0 (THE IMAGE'S PARTS,
+; at the end): the segment (IMAGE: the header and all the code that stays, reached through CS), the
+; tail (TAIL: tables and buffers that stay, outside the segment, TAIL_PARAS paragraphs on) and the
+; install (INSTALL: its code and data, not kept, INSTALL_PARAS paragraphs on: DOS starts it there, the
+; header's CS:IP). Only the segment has to fit 64 KB (tests/test_dsclog2_room.py keeps a margin).
 section mz start=0
         db 'MZ'
         dw file_len % 512                       ; bytes in the last page
@@ -103,13 +108,20 @@ section mz start=0
         dw image_len / 16                       ; SS (relative to the image): just past it
         dw STACK                                ; SP
         dw 0                                    ; checksum
-        dw install                              ; IP
-        dw 0                                    ; CS (relative to the image)
+        dw install                              ; IP (in the install's own segment)
+        dw INSTALL_PARAS                        ; CS (relative to the image): the install's
         dw 0x1C                                 ; relocation table offset
         dw 0                                    ; overlay
         align 32, db 0
 
 section image follows=mz vstart=0
+section tail follows=image vstart=0 align=16           ; (the tail's tables, with their values)
+tail_start:
+tail_sig db 'DSCLOG2 TAIL', 0, 0, 0, 0  ; (so that nothing of the Loader's is at the tail's offset 0)
+section tailz follows=tail vfollows=tail align=16     ; (then its buffers, zeros in the file: the same segment)
+tailz_start:
+section install follows=tailz vstart=0 align=16
+section image
 
 ; ---- header, found by the Loader via SIG (16-byte aligned): DSCLOG's layout and length ----
 hdr:
@@ -150,16 +162,16 @@ probe_char_off dw 0             ; +136
 tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block's (FAR_SEG), set as it loads
 panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in the far block (PANEL_BLIT)
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
-vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the image
+vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the install (its segment: the EXE header's CS)
 copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF, 4 its OBJEX.GFF
-slots_off dw slots_text         ; +148 offset of SLOTS_TEXT: 4 x SLOTS_SIZE bytes, one a party member,
+slots_off dw slots_text         ; +148 offset of SLOTS_TEXT in the tail (+1834's): 4 x SLOTS_SIZE bytes, one a party member,
                                 ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
 look_seq   dw 0                 ; +150 monsters looked at in a fight (PROBE_LOOK counts them)
 look_reply dw 0                 ; +152 the Loader sets this to LOOK_SEQ once LOOK_TEXT is ready
 look_who   dw 0                 ; +154 the combatant looked at
 look_off   dw look_text         ; +156 offset of LOOK_TEXT: up to 3 short lines for the Look box, "|"
                                 ;      between them (a first byte 1: beside LEVEL), written by the Loader
-look_full_off dw look_full      ; +158 offset of LOOK_FULL: the whole description, shown in the dialogue
+look_full_off dw look_full      ; +158 offset of LOOK_FULL in the tail (+1834's): the whole description, shown in the dialogue
                                 ;      window as the Look box closes (UNLOOK), written by the Loader
 look_on    dw 0                 ; +160 the Loader sets 1 to have monsters described
         times 164 - ($ - hdr) db 0  ; (DSCLOG's fields +162 to +163: none of them here yet, zero)
@@ -169,7 +181,7 @@ stats_stamp dw 0                ; +164 the BIOS timer when the Loader last passe
 rules      dw 0                 ; +170 the rule changes the Loader turns on, as DSCLOG's (RULE_HP_BEST, ...;
                                 ;      the Loader writes only the ported ones: ravager.RULES_PORTED)
         times 196 - ($ - hdr) db 0  ; (DSCLOG's fields +172 to +195: none of them here yet, zero)
-names_off  dw item_names        ; +196 offset of ITEM_NAMES in this segment: the item names past the
+names_off  dw item_names        ; +196 offset of ITEM_NAMES in the tail (+1834's): the item names past the
 names_count dw NAMES_ROOM       ; +198   game's 256 (as DSCLOG's EXTRA_NAMES), NAME_KEPT bytes each,
                                 ;        written by the Loader (dsloader/ravager.item_names)
         times 204 - ($ - hdr) db 0  ; (DSCLOG's fields +200 to +203: none of them here yet, zero)
@@ -243,8 +255,8 @@ gear_due   db 0                 ; +1830 a new character just made (GEAR_DONE, at
                                 ;      starting gear (startgear.py), then clears it (DSCLOG's GEAR_DUE)
 gear_given db 0                 ; +1831 ... bit N: party member N's items changed by it (DSCLOG's GEAR_GIVEN)
         times 1834 - ($ - hdr) db 0 ; (DSCLOG's fields +1832 to +1833: none of them here yet, zero)
-tail_seg dw 0                   ; +1834 DSCLOG's tail's segment: here this helper's own (LBL_SLOTS is
-tail_paras dw 0                 ; +1836   in its resident part), set as it loads
+tail_seg dw 0                   ; +1834 the tail's segment, as DSCLOG's (TAIL: the tables and buffers kept
+tail_paras dw TAIL_PARAS        ; +1836   outside this segment), set as it loads: this one's + TAIL_PARAS
 lbl_off  dw lbl_slots           ; +1838 offset of LBL_SLOTS there: the Loader's names over figures (labels.py)
 big_off  dw 0                   ; +1840 (DSCLOG's BIG, the cahulaks' too-big list: none here, the Loader's LARGE_BITS serve)
 large_off dw large_bits         ; +1842 offset of LARGE_BITS there: the Loader's, a bit per combatant large or bigger
@@ -286,7 +298,7 @@ save_req   dw 0                 ; +1912 the Loader sets 1 to have the game saved
                                 ;      (SAVE_TICK: the file and the name in SAVE_TEXT), 2 to have the game's
                                 ;      LOAD window opened; 0 while DSCLOG2 is at it, then 3 done, 4 the game's
                                 ;      save failed, 5 not in a fight (DSCLOG's +1886)
-save_off   dw save_text         ; +1914 offset of SAVE_TEXT in this segment (+1834's): the Loader's: the save's
+save_off   dw save_text         ; +1914 offset of SAVE_TEXT in the tail (+1834's): the Loader's: the save's
                                 ;      file (SAVE_FILE bytes with its NUL), then its name (DSCLOG's +1888)
 save_greq  dw 0                 ; +1916 the Loader's, with a save's request: the number of the save's GREQ
                                 ;      chunk (the map's limits, kept in the roster file: GREQ_WRITE), 0 none
@@ -1539,8 +1551,25 @@ probe_win:
         add sp, 2
         iret
 
-use_draw:                       ; the selected character's slots in the USE screen's panel
-        mov ax, ds
+; TAIL_FS: FS the tail's segment (TAIL: CS + TAIL_PARAS, as TAIL_SEG has it once installed; worked out
+; here so that it holds before the install too, and in the tests). All else kept, the flags too.
+tail_fs:
+        push ax
+        pushf
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov fs, ax
+        popf
+        pop ax
+        ret
+
+use_draw:                       ; the selected character's slots in the USE screen's panel (SLOTS_TEXT
+        push fs                 ;   and U_LINE: the tail's, FS)
+        call tail_fs
+        call .draw
+        pop fs
+        ret
+.draw:  mov ax, ds
         add ax, USE_WHO_SEG
         mov es, ax
         mov bx, [es:USE_WHO_OFF] ; the character on show
@@ -1548,7 +1577,7 @@ use_draw:                       ; the selected character's slots in the USE scre
         ja .done
         imul si, bx, SLOTS_SIZE
         add si, slots_text
-        cmp byte [cs:si], 0
+        cmp byte [fs:si], 0
         je .done                ; no spells
         mov ax, ds
         add ax, USE_TEXT_SEG
@@ -1572,9 +1601,9 @@ use_draw:                       ; the selected character's slots in the USE scre
         mov dx, USE_FIRST_Y + USE_STEP
         call .find
 .done:  ret
-.find:  cmp [cs:si], bl         ; the line keyed BL from SI drawn at y DX, carry clear; carry set
+.find:  cmp [fs:si], bl         ; the line keyed BL from SI drawn at y DX, carry clear; carry set
         je .line                ; if none
-.next:  mov al, [cs:si]
+.next:  mov al, [fs:si]
         inc si
         cmp al, '|'
         je .find
@@ -1584,24 +1613,25 @@ use_draw:                       ; the selected character's slots in the USE scre
         ret
 .line:  inc si                  ; (past its key)
         mov di, u_line          ; copy the line (up to "|" or the end) and draw it
-.copy:  mov al, [cs:si]
+.copy:  mov al, [fs:si]
         cmp al, '|'
         je .cut
         cmp al, 0
         je .cut
-        mov [cs:di], al
+        mov [fs:di], al
         inc si
         inc di
         cmp di, u_line + SLOTS_SIZE - 1
         jb .copy
-.cut:   mov byte [cs:di], 0
+.cut:   mov byte [fs:di], 0
         push bx
         push dx
         push dx                 ; y
         push word USE_X         ; x
-        push cs
+        push fs
         push word u_line
         call c_draw_line
+        call tail_fs            ; (the game's text routine may change FS)
         pop dx
         pop bx
         clc
@@ -1630,8 +1660,10 @@ c_draw   dd 0                   ; the text routine
 c_winptr dd 0                   ; the window it prints in
 use_count dw 0                  ; PROBE_USE's and PROBE_WIN's draws (for the tests)
 win_count dw 0
+section tailz                   ; (U_LINE and SLOTS_TEXT: the tail's)
 u_line   times SLOTS_SIZE db 0
 slots_text times 4 * SLOTS_SIZE db 0
+section image
 
 
 ; ---- CHARGES IN ITEM BOXES: DSCLOG's PROBE_ITEM_BOX, IB_CHARGES and IB_MATERIAL ----
@@ -2230,7 +2262,10 @@ probe_look:
         jne .done
         mov [cs:look_who], di   ; the combatant
         mov byte [cs:look_text], 0
-        mov byte [cs:look_full], 0
+        push fs
+        call tail_fs
+        mov byte [fs:look_full], 0      ; (the tail's)
+        pop fs
         inc word [cs:look_seq]
         xor ax, ax
         mov es, ax
@@ -2246,7 +2281,10 @@ probe_look:
         call rtc_waited         ; (the BIOS clock can stand still: at most 2 s by the real-time clock)
         jnc .wait
         jmp .done
-.ready: cmp byte [cs:look_full], 0
+.ready: push fs
+        call tail_fs
+        cmp byte [fs:look_full], 0
+        pop fs
         je .short
         mov byte [cs:look_pending], 1   ; (the whole description: UNLOOK's, as the box closes)
 .short: mov es, [ss:si + 36]
@@ -2325,7 +2363,9 @@ l_line   times L_LINE_SIZE db 0
 look_count dw 0                 ; boxes filled (for a look in play)
 look_text times LOOK_SIZE db 0  ; (LOOK_OFF's)
 LOOK_FULL_SIZE equ 700
-look_full times LOOK_FULL_SIZE db 0 ; (LOOK_FULL_OFF's)
+section tailz
+look_full times LOOK_FULL_SIZE db 0 ; (LOOK_FULL_OFF's: the tail's)
+section image
 look_pending db 0               ; 1 once LOOK_FULL has a description UNLOOK hasn't shown
 
 ; UNLOOK (site 75 at 6378Dh, "mov word [08CAh],270Fh", SL's PROBE_UNLOOK at 5F2AAh): the end of the routine
@@ -2344,6 +2384,7 @@ unlook:
         mov byte [cs:look_pending], 0
         inc word [cs:unlook_count]
         mov word [cs:show_text], look_full
+        mov byte [cs:show_tail], 1      ; (LOOK_FULL: the tail's)
         mov bx, sp              ; the frame at BX+34: IP, CS, flags
         push word [ss:bx + 36]  ; the way back, pushed as a far call's, with BP
         push word [ss:bx + 34]
@@ -2809,8 +2850,13 @@ show_window:
         push word 1
         call far [cs:dlg]
         add sp, 8
-        push word 0             ; the text
-        push cs
+        push word 0             ; the text: in this segment, or with SHOW_TAIL the tail's
+        mov ax, cs
+        cmp byte [cs:show_tail], 0
+        je .here
+        add ax, TAIL_PARAS
+        mov byte [cs:show_tail], 0
+.here:  push ax
         push word [cs:show_text]
         push word 2
         call far [cs:dlg]
@@ -2844,6 +2890,7 @@ show_window:
         mov byte [cs:showing], 0
         ret
 show_text dw 0                  ; the text SHOW_WINDOW shows
+show_tail db 0                  ; 1: SHOW_TEXT is in the tail (once: SHOW_WINDOW clears it)
 dlg     dd 0                    ; the dialogue window routine being called
 showing db 0                    ; 1 while SHOW_WINDOW has its window up
 
@@ -2875,6 +2922,7 @@ name_push:
         push bp
         mov bp, sp
         xchg ax, [bp + 2]           ; (the offset in place of the AX pushed, AX back)
+        add word [bp + 4], TAIL_PARAS   ; (and the tail's segment in place of CS: ITEM_NAMES is there)
         pop bp
         jmp .back
 .none:  push cs
@@ -2889,7 +2937,9 @@ np_ip   dw 0
 np_cs   dw 0
 np_fl   dw 0
 no_name db 0
-item_names times NAMES_ROOM * NAME_KEPT db 0
+section tailz
+item_names times NAMES_ROOM * NAME_KEPT db 0    ; (the tail's)
+section image
 
 ; RTC_BEGIN, RTC_WAITED: DSCLOG's: a wait for the Loader ends after its BIOS ticks, or, as the BIOS
 ; clock can stand still in fights, once the real-time clock's second has changed twice (1 to 2 s)
@@ -4011,7 +4061,10 @@ site_int:
         inc word [bp + 2]
         pop ds
         shl bx, 1
-        mov bx, [cs:site_table + bx]
+        push fs
+        call tail_fs
+        mov bx, [fs:site_table + bx]        ; (SITE_TABLE: the tail's)
+        pop fs
         mov [cs:site_jump], bx
         pop bx
         pop bp
@@ -4019,6 +4072,7 @@ site_int:
 site_jump dw 0
 site_none:
         iret
+section tail                                ; (SITE_TABLE: the tail's, to RULE_NEW_SPELLS)
 site_table:
         dw stink_round                      ; 0 SITE_STINK
         dw hd_save                          ; 1 SITE_HD_SAVE
@@ -4255,6 +4309,7 @@ site_table:
 ;   list, far, or 0 to count, [BP+0Ch] bit 0 the wizards', [BP+0Eh] the level, [BP-4] the most), its "xor
 ;   si,si / cmp di,[bp-2]" (6254Fh) as it starts: the new spells of that level the member knows put first
 ;   (SI their count), then the compare.
+section image
 RULE_NEW_SPELLS equ 32
 NS_FIRST     equ 320
 NS_COUNT     equ 6
@@ -4317,20 +4372,29 @@ ns_cmp:
         les bx, [ss:di + 34]        ; (the way back: its IP, and the word there)
         mov ax, bx
         mov dx, [es:bx]
+        push fs
+        call tail_fs                ; (NS_CMP_TABLE: the tail's)
         mov si, ns_cmp_table
 .find:  cmp si, ns_cmp_table_end
         jae .lost
-        cmp [cs:si], ax
+        cmp [fs:si], ax
         jne .next
-        cmp [cs:si + 2], dx
+        cmp [fs:si + 2], dx
         je .found
 .next:  add si, 10
         jmp .find
-.lost:  inc word [cs:ns_lost]
+.lost:  pop fs
+        inc word [cs:ns_lost]
         pop es
         popad
         iret
-.found: mov al, [cs:si + 4]         ; (the form; its NS_PLUS1 bit apart)
+.found: mov eax, [fs:si + 4]        ; (the entry's form to its immediate into NS_ENTRY, SI there)
+        mov [cs:ns_entry + 4], eax
+        mov ax, [fs:si + 8]
+        mov [cs:ns_entry + 8], ax
+        pop fs
+        mov si, ns_entry
+        mov al, [cs:si + 4]         ; (the form; its NS_PLUS1 bit apart)
         and al, ~NS_PLUS1
         cmp al, 0
         jne .bp
@@ -4370,9 +4434,12 @@ ns_cmp:
         pushf
         pop ax
         jmp acid_flags
+ns_entry times 10 db 0         ; (NS_CMP's entry found, copied from the tail)
+section tail
 ns_cmp_table:
 %include "ns_cmp_table.inc"
 ns_cmp_table_end:
+section image
 ns_know:
         pushad
         push es
@@ -8719,7 +8786,10 @@ adnd_slots:
         cmp ax, SLOT_SPELLS
         jae .none
         add bx, ax
-        mov al, [cs:bx + rav_slots]
+        push fs
+        call tail_fs
+        mov al, [fs:bx + rav_slots]     ; (RAV_SLOTS: the tail's)
+        pop fs
         mov ah, 0
         inc word [cs:slot_count]
         jmp .sum
@@ -8962,6 +9032,7 @@ veiled_count dw 0
 ; RAV_RANGER_SLOTS)
 
 RANGER_LAST  equ 16
+section tail
 rav_slots:
         db 1, 0, 0, 0, 0, 0, 0, 0, 0    ; priests (clerics, druids): 1
         db 2, 0, 0, 0, 0, 0, 0, 0, 0
@@ -9053,6 +9124,7 @@ rav_slots:
         db 3, 3, 3, 0, 0, 0, 0, 0, 0
         db 3, 3, 3, 0, 0, 0, 0, 0, 0
         db 3, 3, 3, 0, 0, 0, 0, 0, 0    ; 30
+section image
 ; CON AS IN AD&D: DSCLOG's REGEN_SITE and CON_SAVE (RULE_HI_CON, the second rules word's 1024), the
 ; sequel's routines SL's:
 ; - REGEN_SITE (site 35, "regen_rate"): "mov dx,cx / imul dx,dx,31h" (26599h; 5 bytes, SL's 228BFh)
@@ -13179,7 +13251,10 @@ is_large:                           ; CF if combatant AX is large (see SIZE). DS
         jae .race
         mov si, ax
         call tangle_bit
-        test [cs:large_bits + si], al
+        push fs
+        call tail_fs
+        test [fs:large_bits + si], al   ; (LARGE_BITS: the tail's)
+        pop fs
         jnz .yes
 .race:  mov ax, dx
         call fighter_creature
@@ -13252,13 +13327,19 @@ size_dice:
         jz .done
         dec si
         imul si, si, 3
-        movzx ax, byte [cs:si + large_dice]
+        push fs
+        call tail_fs                ; (LARGE_DICE: the tail's)
+        movzx ax, byte [fs:si + large_dice]
+        pop fs
         or ax, ax
         jz .done
         mov [bp - 0x10], ax
-        movzx ax, byte [cs:si + large_dice + 1]
+        push fs
+        call tail_fs
+        movzx ax, byte [fs:si + large_dice + 1]
         mov [bp - 0x12], ax
-        movsx ax, byte [cs:si + large_dice + 2]
+        movsx ax, byte [fs:si + large_dice + 2]
+        pop fs
         add [bp - 0x14], ax
         call spec_grand_die
 .done:  popa
@@ -13319,6 +13400,7 @@ kind_of_type:
         db 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8, 10, 0, 0, 0   ; types 102-118
         db 0, 0, 0, 0, 3, 7, 7, 3, 0, 0, 0, 0, 0, 0, 12, 12      ; types 119-134
 LARGE_MOST    equ 520
+section tail                        ; (LARGE_DICE and LARGE_BITS: the tail's)
 large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, sizes.LARGE_DICE)
              db 1, 3, 0             ; club: 1d3
              db 1, 3, 0             ; dagger: 1d3
@@ -13339,7 +13421,9 @@ large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, siz
              db 1, 12, 0            ; lotulis: 1d12
              db 0, 0, 0, 0, 0, 0, 0, 0, 0 ; double spear, trikal, javelin: the same
              db 1, 2, 0             ; darts: 1d2
+section tailz
 large_bits times LARGE_MOST / 8 + 1 db 0
+section image
 large_hits   dw 0               ; (hits on large targets, for a look in play)
 spared_count dw 0               ; (Hold or Charm Person spared so)
 
@@ -14658,8 +14742,7 @@ label_tick:
         cmp si, lbl_state + LBL_SLOTS * 8
         jb .moved
 .slots: push fs
-        push cs
-        pop fs
+        call tail_fs                    ; (LBL_SLOTS: the tail's)
         mov si, lbl_state
         mov di, lbl_slots
 .slot:  call label_where
@@ -14839,22 +14922,22 @@ label_erase:
 label_stamp:
         cmp byte [cs:lbl_busy], 0
         jne .ret
+        push fs
+        call tail_fs                    ; (LBL_SLOTS: the tail's)
 %assign slot 0
 %rep LBL_SLOTS
-        cmp byte [cs:lbl_slots + slot * LBL_SIZE], 0
+        cmp byte [fs:lbl_slots + slot * LBL_SIZE], 0
         jne .some
 %assign slot slot + 1
 %endrep
+.none:  pop fs
 .ret:   ret                             ; (no label in any slot: nothing to put, nor to place)
 .some:  cmp byte [cs:vga_busy], 0
-        jne .ret
+        jne .none
         mov byte [cs:lbl_busy], 1
-        push fs
         pusha
         push ds
         push es
-        push cs
-        pop fs
         call on_map
         jne .out
         mov ds, [cs:pointer_ds]
@@ -15836,7 +15919,9 @@ l_on_map:
         ret
 
 align 2
+section tailz
 lbl_slots times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1834:+1838)
+section image
 
 
 
@@ -18653,9 +18738,11 @@ save_work:
         mov ax, QS_SAVE_SEG
         mov bx, QS_SAVE_ENTRY
         call qs_far
-        push cs                         ; save(file, name)
+        mov ax, cs                      ; save(file, name): SAVE_TEXT, the tail's
+        add ax, TAIL_PARAS
+        push ax
         push word save_text + SAVE_FILE
-        push cs
+        push ax
         push word save_text
         call far [cs:qs_call]
         add sp, 8
@@ -19351,7 +19438,9 @@ quick_saves dw 0                ; (saves and loads made, for a look in play)
 quick_loads dw 0
 pages_back  dw 0                ; (the QUICK page taken off by SAVE_TICK, for a look in play)
 greq_data   times 10 db 0
-save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914)
+section tailz
+save_text   times SAVE_FILE + SAVE_NAME db 0 ; (the Loader's: SAVE_TICK's file and name, +1914: the tail's)
+section image
 
 ; ---- STORE AND RECALL: DSCLOG's PROBE_RS_CLICK on the sequel's creation screen (rollstore.py) ----
 ; RS_CLICK (site 83, "roll_store"): "mov cx,16h" (6DE85h, SL's 6625Dh) where the screen's click routine (its
@@ -19658,7 +19747,10 @@ cr_spells:
         jae .got
         call bit_known
         jz .next
-        mov [cs:cr_defs + di], al
+        push fs
+        call tail_fs
+        mov [fs:cr_defs + di], al   ; (CR_DEFS: the tail's)
+        pop fs
         inc di
         call wiz_level          ; (DL its level)
         movzx dx, dl
@@ -19729,7 +19821,10 @@ cr_fill:
         je .ret
         cmp di, [cs:cr_n]
         jae .rest
-        mov al, [cs:cr_defs + di]
+        push fs
+        call tail_fs
+        mov al, [fs:cr_defs + di]
+        pop fs
         inc di
         call bit_known
         jnz .level
@@ -19752,7 +19847,10 @@ cr_fill:
         je .ret
         cmp di, [cs:cr_n]
         jae .ret
-        mov al, [cs:cr_defs + di]
+        push fs
+        call tail_fs
+        mov al, [fs:cr_defs + di]
+        pop fs
         inc di
         call bit_known
         jnz .each
@@ -20121,7 +20219,9 @@ pick_top:
 cr_far     dd 0
 cr_cap     db 0                 ; (the spell levels on offer up to this one: 0 none set)
 cr_due     times WIZ_LEVELS db 0
+section tailz
 cr_defs    times 128 db 0
+section image
 cr_n       dw 0
 cr_left    dw 0
 psi_defs   times POWER_COUNT db 0
@@ -20347,11 +20447,15 @@ rav_xp_at:
         add bl, dh
         adc bh, 0
         shl bx, 2
-        mov eax, [cs:bx + rav_xp]
+        push fs
+        call tail_fs
+        mov eax, [fs:bx + rav_xp]       ; (RAV_XP: the tail's)
+        pop fs
         pop bx
         ret
 ; tables.RAV_XP, a row a class, the XP of levels 1-30 (past the game's table, 20 entries, the owner's AD&D
 ; tables, 2026-11-25)
+section tail
 rav_xp:
         dd 0, 1500, 3000, 6000, 13000, 27500, 55000, 110000, 225000, 450000, 675000, 900000, 1125000, 1350000, 1575000, 1800000, 2025000, 2250000, 2475000, 2700000, 2925000, 3150000, 3375000, 3600000, 3825000, 4050000, 4275000, 4500000, 4725000, 4950000 ; cleric
         dd 0, 2000, 4000, 7500, 12500, 20000, 35000, 60000, 90000, 125000, 200000, 300000, 750000, 1500000, 3000000, 3500000, 4000000, 4500000, 5000000, 5500000, 6000000, 6500000, 7000000, 7500000, 8000000, 8500000, 9000000, 9500000, 10000000, 10500000 ; druid
@@ -20361,6 +20465,7 @@ rav_xp:
         dd 0, 2200, 4400, 8800, 16500, 30000, 55000, 100000, 200000, 400000, 600000, 800000, 1000000, 1200000, 1500000, 1800000, 2100000, 2400000, 2700000, 3000000, 3300000, 3600000, 4000000, 4400000, 4800000, 5200000, 5600000, 6000000, 6500000, 7000000 ; psionicist
         dd 0, 2250, 4500, 9000, 18000, 36000, 75000, 150000, 300000, 600000, 900000, 1200000, 1500000, 1800000, 2100000, 2400000, 2700000, 3000000, 3300000, 3600000, 3900000, 4200000, 4500000, 4800000, 5100000, 5400000, 5700000, 6000000, 6300000, 6600000 ; ranger
         dd 0, 1250, 2500, 5000, 10000, 20000, 40000, 70000, 110000, 160000, 220000, 440000, 660000, 880000, 1100000, 1320000, 1540000, 1760000, 1980000, 2200000, 2420000, 2640000, 2860000, 3080000, 3300000, 3520000, 3740000, 3960000, 4180000, 4400000 ; thief
+section image
 ;
 ; LV_ORDINAL (site 118, "level_ordinal"): "mov ax,2B7Eh" (959D3h; 3 bytes) in the level up's message ("%Fs is
 ; %d%s level %Fs", DS:2B68h), AX the new level when it is above 3: the game pushes "th" (DS:2B7Eh, used nowhere
@@ -22365,7 +22470,8 @@ fine_hit:
 
 resident_end:
 align 16
-RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the image to here: what stays)
+image_end:
+RESIDENT_PARAS equ (resident_end - hdr + 15) / 16   ; (the segment to here: what stays of it)
 
 ; ---- the far block (FAR_INIT): the ring ----
 FAR_RING   equ 0x10
@@ -22396,15 +22502,19 @@ FAR_TOP    equ FAR_GH_TAB + 80
 %endif
 FAR_PARAS  equ (FAR_TOP - FAR_RING + 15) / 16 + 1
 
-; ---- install (not kept) ----
-install:                        ; DS = ES = PSP, CS = the image
+; ---- install (not kept): its own segment, INSTALL_PARAS paragraphs into the image ----
+; CS the install's (its variables and ALL_VECTORS are cs:), DS the segment's (what stays: the
+; header's fields, the handlers' offsets), the PSP's paragraphs below it.
+section install
+install:                        ; DS = ES = PSP, CS = the install's
         mov [cs:psp], es
-        push cs
-        pop ds
+        mov ax, es
+        add ax, 0x10
+        mov ds, ax              ; (DS the segment: the image, past the PSP)
         mov si, all_vectors     ; the vectors must be free (DSCLOG's check)
         mov cx, VECTORS
 .check:
-        lodsb
+        cs lodsb
         inc si
         inc si
         mov ah, 35h
@@ -22413,8 +22523,7 @@ install:                        ; DS = ES = PSP, CS = the image
         or dx, bx
         jz .free
         mov dx, busy
-        mov ah, 9
-        int 21h
+        call say
         mov ax, 4C01h
         int 21h
 .free:
@@ -22424,21 +22533,19 @@ install:                        ; DS = ES = PSP, CS = the image
         mov ah, 49h
         int 21h
         mov dx, msg
-        mov ah, 9
-        int 21h
+        call say
         call far_init
         jnc .far
         mov dx, no_far
-        mov ah, 9
-        int 21h
+        call say
         mov ax, 4C01h
         int 21h
 .far:
         mov si, all_vectors
         mov cx, VECTORS
-.vec:   lodsb
+.vec:   cs lodsb
         mov ah, 25h
-        mov dx, [si]
+        mov dx, [cs:si]
         inc si
         inc si
         int 21h
@@ -22458,27 +22565,40 @@ install:                        ; DS = ES = PSP, CS = the image
         mov dx, int16
         int 21h
         mov byte [hooked], 1
-        mov ax, [cs:far_seg]
-        mov [cs:ring_seg], ax
-        mov [cs:tail_seg], cs   ; (the labels' slots: in this segment)
-        mov [cs:panel_seg], ax  ; (the panel's picture: in the far block)
-        mov [cs:tbuf_seg], ax   ; (the text buffer: in the far block)
-        mov es, [cs:psp]        ; our block cut down to the PSP and what stays, then kept
-        mov bx, 0x10 + RESIDENT_PARAS
+        mov ax, [far_seg]
+        mov [ring_seg], ax
+        mov [panel_seg], ax     ; (the panel's picture: in the far block)
+        mov [tbuf_seg], ax      ; (the text buffer: in the far block)
+        mov ax, ds
+        add ax, TAIL_PARAS
+        mov [tail_seg], ax      ; (the tail: the labels' slots, the item names, ...)
+        mov es, [cs:psp]        ; our block cut down to the PSP, the segment and the tail, then kept
+        mov bx, 0x10 + KEPT_PARAS
         mov ah, 4Ah
         int 21h
         push bx
         mov bx, GHOST_PARAS     ; the see-through figures' pixels and spans (GHOST_DRAW), if upper memory
         call umb_alloc          ;   has the room (their tables are the far block's)
         jc .no_ghost
-        mov [cs:ghost_seg], ax
+        mov [ghost_seg], ax
 .no_ghost:
         pop bx
         mov dx, bx
         mov ax, 3100h
         int 21h
 
-; FAR_INIT: DSCLOG's: FAR_SEG set and its FAR_RING to FAR_END cleared; CF if there was no room.
+; SAY: DOS's 09h, the install's text CS:DX. AX changed.
+say:
+        push ds
+        push cs
+        pop ds
+        mov ah, 9
+        int 21h
+        pop ds
+        ret
+
+; FAR_INIT: DSCLOG's: FAR_SEG (DS:, the segment's) set and its FAR_RING to FAR_END cleared; CF if there
+; was no room.
 ; The HMA when it is ours (XMS's, or unused: all zero), else a block of upper memory, else of
 ; conventional memory (FAR_SEG a paragraph below it). XMS 01h's 90h (no HMA, as DOSBox 0.74 says)
 ; tries the HMA if all zero; 91h (in use: DOS=HIGH, DOSBox-X's DOS in the HMA) and 92h go straight
@@ -22526,7 +22646,7 @@ far_init:
         cld
         repe scasw
         jne .block
-.hma:   mov word [cs:far_seg], 0xFFFF
+.hma:   mov word [far_seg], 0xFFFF
         jmp .clear
 .drop:  cmp byte [cs:hma_given], 0  ; given but unusable (A20 won't come on): back to XMS (02h),
         je .block               ;   for whoever asks next
@@ -22541,8 +22661,8 @@ far_init:
         int 21h
         jc .ret
 .got:   dec ax
-        mov [cs:far_seg], ax
-.clear: mov es, [cs:far_seg]
+        mov [far_seg], ax
+.clear: mov es, [far_seg]
         mov di, FAR_RING
         mov cx, (FAR_TOP - FAR_RING) / 2
         xor ax, ax
@@ -22656,7 +22776,21 @@ all_vectors:
         vector VEC_SITE, site_int
 VECTORS equ ($ - all_vectors) / 3
 
+; ---- THE IMAGE'S PARTS: the segment (to IMAGE_END), the tail, the install; each a whole number of
+; paragraphs, so that each starts where the paragraphs before it end ----
 align 16
-image_len equ $ - $$
+install_end:
+section tail
+align 16
+tail_mid:
+section tailz
+align 16
+tail_end:
+section install
+TAIL_PARAS    equ (image_end - hdr) / 16                ; the tail's paragraph in the image
+TAIL_LEN      equ ((tail_mid - tail_start) + (tail_end - tailz_start)) / 16
+KEPT_PARAS    equ TAIL_PARAS + TAIL_LEN                 ; what stays: the segment and the tail
+INSTALL_PARAS equ KEPT_PARAS                            ; the install's paragraph, after them
+image_len equ (INSTALL_PARAS * 16) + (install_end - install)
 LOAD_EXTRA equ (STACK + 15) / 16
 file_len equ 32 + image_len
