@@ -362,8 +362,7 @@ The mod's rule is that both games get each change. These are the parts of the mo
 and the sequel does not yet, each checked against the Loader's code (2026-11-27):
 
 - **[What the party wears](FEATURES.md#what-the-party-wears)**: class outfits on the map, the creation-screen class preview,
-  and the class-specific full-length inventory pictures (the humans', and the other races' Gladiator
-  women). The sequel keeps its own figures, [drawn in Shattered Lands'
+  and the class-specific full-length inventory pictures of every race. The sequel keeps its own figures, [drawn in Shattered Lands'
   style](#the-mod-in-the-sequel).
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.

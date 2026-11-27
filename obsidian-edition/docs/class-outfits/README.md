@@ -18,7 +18,7 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 ## Inventory portraits
 
-In Shattered Lands, both human inventory figures wear the selected character’s active class outfit. The dwarf, elf, half-elf, half-giant and halfling women have a repainted figure as single-class Gladiators. All other cases use the retail full-length pictures, including multiclass characters of those races, their men, the mul and the thri-kreen. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
+In Shattered Lands, every race's inventory figure wears the selected character's classes. The two humans show their active class in eight outfits. The dwarf, elf, half-elf, half-giant, halfling and mul figures have a painting for each class and multiclass a character of that race can take, 270 in all, and the thri-kreen has one painting for all its builds. A figure the Loader finds no painting for, or a game with figures of other sizes, keeps the retail picture. Individual equipped items appear in the surrounding slots. Character creation has a separate class preview built from the walking sprite. The full-length redraws here belong to the inventory screen.
 
 ### Human inventory fittings
 
@@ -32,7 +32,7 @@ The sheet shows Loader-rendered portraits at 2× on sand and at native size on a
 
 ### Importing a repainted figure
 
-A class can also be painted as one whole figure at native size (48×95 for the man, 44×88 for the woman). `python -m dsloader.inventoryart import GAME_DIR FIGURE CLASS PICTURE` turns it into the class's layer in `dsloader/inventory-garments.zip`. FIGURE is 0 for the man or 1 for the woman. CLASS is 1–8, in this order: Cleric, Druid, Fighter, Gladiator, Preserver, Psionicist, Ranger, Thief. The command does four things:
+A class can also be painted as one whole figure at native size (48×95 for the man, 44×88 for the woman). `python -m dsloader.inventoryart import GAME_DIR FIGURE CLASS PICTURE` turns it into the class's layer in `dsloader/inventory-garments.zip`. FIGURE is 0 for the man or 1 for the woman. CLASS is 1–8, in this order: Cleric, Druid, Fighter, Gladiator, Preserver, Psionicist, Ranger, Thief. `python -m dsloader.inventoryart import-roster GAME_DIR FOLDER` imports a whole roster at once: one subfolder per figure (`human-male` … `halfling-female`, `mul`, `thri-kreen`), each picture named by its classes (`cleric-fighter-thief.png`), and the thri-kreen's one `general.png`. Multiclass layers are named `{figure}/body{classes}`, the class numbers joined by hyphens (`4/body1-3-6`). The import command does four things:
 
 - It keeps the stock face. On the woman that includes her hair and tiara. Add `--repaint-head` for a class whose hood covers the head.
 - It keeps every pixel that matches the stock.
