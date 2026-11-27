@@ -1030,6 +1030,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
    **`fountain-user`'s ambush needs Pehtucl's speech clicked away first** (2026-11-26): loaded, the
    speech box is up with `fight_on` 0 and fightout.sh says NO FIGHT ON; `msgbox.sh` only reports the
    box. Five clicks on it (`click.py 160 30 left`, 3 s apart) start the fight (`fight_on 1`).
+   **The sequel's ravclick.py coordinates in the 640x480 window** (2026-11-27): the game's x is the screen's / 2,
+   its y the screen's / 2.4 (USE's spell icons at y 58, the portraits at 47/98, 53/112). A killed creature
+   leaves the combatants' table at once: a watcher of that table misses its last hit points.
 2. **Never `killfoes.py` in a fight a script waits on.** Kills made in memory bypass the scripts'
    reactions to them (in the arena, none of the Announcer's lines about the kills). It is only for
    fights no story depends on, and the fight still needs its turn ended. To kill one foe in memory

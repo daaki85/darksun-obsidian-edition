@@ -1260,6 +1260,10 @@ SF_SWINGS, SF_LESSES, SF_BACKS, TRIP_SAVES, TRIPS = 2020, 2022, 2024, 2026, 2028
 # Turn Undead's drawn). The refusal's words go in PICK POCKETS' PICK_TEXT.
 AR_ON, AR_SEQ, AR_REPLY, AR_WHO, AR_ROW = 2098, 2100, 2102, 2104, 2106
 AR_SHOWN, AR_LATE, AR_DRAWN = 2108, 2110, 2112
+# DSCLOG2's HDR_LEN (+30, glob's fourth word, 0 in every helper before it): its header's length. The header has no
+# version and its signature is still DSCLOGR1, so a word past +2012 is written only where HDR_LEN reaches past it
+# (header_holds): an older helper may have code there.
+HDR_LEN = 30
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
@@ -1290,7 +1294,8 @@ class RavDiceLog(dicelog.DiceLog):
     """dicelog.DiceLog for Wake of the Ravager: on its layout (apply_layout), its memory behind a
     ReadOnlyGuest, which drops every write but to the ranges a ported feature names in its `writable`
     (the helper DSCLOG2's buffers and mailboxes, and the item lists under the item gate), each feature
-    adding its own only once the helper in memory has the field (a nonzero header offset). After the
+    adding its own only once the helper in memory has the field (a nonzero header offset, and for a
+    field past +2012 one within DSCLOG2's HDR_LEN: header_holds). After the
     rolls, the ported features' pass (_after_rolls: hit points, effects, slots, creation, spell
     arrows, locks and the rest)."""
 
@@ -1351,8 +1356,9 @@ class RavDiceLog(dicelog.DiceLog):
     def _tail_at(self, field: int) -> Optional[int]:
         """The address of a buffer of DSCLOG2's tail (TAIL: the tables and buffers it keeps outside its
         64 KB segment) whose offset is the header's word at FIELD: the tail's segment (+1834, as it sets it
-        while loading) x 16 + the offset. None without the helper, or with either 0."""
-        if self.tsr_hdr is None:
+        while loading) x 16 + the offset. None without the helper, or with either 0, or with FIELD past +2012
+        and beyond its header (header_holds: an older helper's code may lie there)."""
+        if self.tsr_hdr is None or (field > PP_TEXT_OFF and not self.header_holds(field + 2)):
             return None
         seg, = struct.unpack("<H", self.guest.read(self.tsr_hdr + labels.TSR_TAIL_SEG, 2))
         off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + field, 2))
@@ -1905,7 +1911,7 @@ class RavDiceLog(dicelog.DiceLog):
 
     def _after_rolls(self, show_all: bool, now: float) -> List[str]:
         """Of Shattered Lands' pass after the rolls, only the hit points' changes (hp_changes: each
-        fall matched with the weapon hits it took in, regeneration, spells' damage), PSP and ability scores
+        fall matched with the weapon hits it took in, regeneration, spells' damage), the kills (_kills_pass), PSP and ability scores
         changing (_psp_ability_changes), effects starting and ending (effect_changes), the names over
         figures whose time is up (labels.Labels.tick), the spell slots' lines for the USE screen
         (_write_slots, as often as Shattered Lands' writes them), a wizard's try at a scroll's spell
@@ -1919,6 +1925,7 @@ class RavDiceLog(dicelog.DiceLog):
         out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
         out += self._step(self._strays_pass)  # (spell arrows only a Spellarcher carries: ravarrows.return_strays)
         out += self._step(lambda: self.hp_changes(now))
+        out += self._step(lambda: self._kills_pass(now))  # (the monsters killed: the fight's tally counts them)
         out += self._step(lambda: self._psp_ability_changes(now))  # (PSP spent, kept up, regained; abilities)
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
@@ -2099,18 +2106,19 @@ class RavDiceLog(dicelog.DiceLog):
     spell_arrows = True  # (a Spellarcher's arrows buttons: ARROWS_ON; off for a control)
 
     def _arrows_ready(self) -> bool:
-        """Whether the Loader's copy of OBJEX.GFF has the spell arrows' objects (ravarrows.chunks): without
-        them an arrow made would be an item of no object, so no buttons are offered. Read once."""
+        """Whether the Loader's copy of OBJEX.GFF has all three spell arrows' objects (ravarrows.objects_ready):
+        without them an arrow made would be an item of no object, so no buttons are offered. Read once."""
         if getattr(self, "_arrows_objects", None) is None:
-            import os
-            from . import launch, ravarrows
-            try:
-                with open(os.path.join(launch.DOS_DIR, ravager.OBJECTS_COPY), "rb") as f:
-                    chunks = gff.read_gff(f.read())
-                self._arrows_objects = ("OJFF", ravarrows.own_object(ravarrows.ARROWS[0].row)) in chunks
-            except (OSError, gff.GffError, struct.error):
-                self._arrows_objects = False
+            from . import ravarrows
+            self._arrows_objects = ravarrows.objects_ready()
         return self._arrows_objects
+
+    def header_holds(self, end: int) -> bool:
+        """Whether DSCLOG2's header reaches END (its HDR_LEN, +30, at END or more): the words below END are the
+        helper's header's, safe to write. An older helper's HDR_LEN is 0: nothing past +2012 is written to it."""
+        if self.tsr_hdr is None:
+            return False
+        return struct.unpack("<H", self.guest.read(self.tsr_hdr + HDR_LEN, 2))[0] >= end
 
     def _answer_arrows(self) -> List[str]:
         """Shattered Lands' spell arrows made (DiceLog._answer_use's ARROWS_BY: spellarrows.SpellArrows.make), on
@@ -2123,8 +2131,8 @@ class RavDiceLog(dicelog.DiceLog):
             return []
         hdr = self.tsr_hdr
         text_off, = struct.unpack("<H", self.guest.read(hdr + PP_TEXT_OFF, 2))
-        if not text_off:
-            return []  # (a helper before PICK POCKETS)
+        if not text_off or not self.header_holds(AR_ROW + 2):
+            return []  # (a helper before PICK POCKETS, or before SPELL ARROWS: its HDR_LEN short of them)
         base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
         want = [(hdr + AR_ON, 2), (hdr + AR_REPLY, 2), (base + text_off, dicelog.PICK_SIZE)]
         self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
@@ -2280,7 +2288,7 @@ class RavDiceLog(dicelog.DiceLog):
         at = self._tail_at(LOCK_OFF)
         if at is None:  # (a helper without LOCK_SITE)
             return
-        data = (at, locks.table(locks.barred(self.game, self.picked)))
+        data = (at, locks.table(locks.barred(self.game, self.picked, self.picked_at)))
         if data != self._locks_written:
             before = self.guest.writable
             self.guest.writable = before + [(at, len(data[1]))]
@@ -2289,6 +2297,14 @@ class RavDiceLog(dicelog.DiceLog):
             finally:
                 self.guest.writable = before
             self._locks_written = data
+
+    def _kills_pass(self, now: float) -> List[str]:
+        """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
+        check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
+        sequel's pass had no such step, so every fight's summary said "0 kills". Nothing while a game loads."""
+        if self.tracker is None or self._party_check(now):
+            return []
+        return self.tracker._check_monsters(now)
 
     def _psp_ability_changes(self, now: float) -> List[str]:
         """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep

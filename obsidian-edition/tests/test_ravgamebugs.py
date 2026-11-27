@@ -257,12 +257,89 @@ class KreenClawsTests(unittest.TestCase):
         self.assertEqual(self.hit(8, kinds=0x20), 0x20)
 
 
+@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
+class BerserkTests(unittest.TestCase):
+    """BERSERK (sites 245, 246): the add check's "no case" (822A1h, back to 0F1Eh) keeps a Berserk's (7) side in
+    the far word [BP+0Ch] points at (the record's +9 to come: the thing SI's creature's +15h, or an older
+    Berserk's kept side); the end's "no case" (827D6h, back to 12E9h) sends Berserk to Controlled's case (120Dh)."""
+    CODE = 0x2000  # (the effect routines' segment: HLT throughout, the way back read from IP)
+    EFFECTS = GDS - (0x47E0 - 0x3E71)  # (DSCLOG2's EFFECTS_GAP)
+
+    @classmethod
+    def setUpClass(cls):
+        from test_dsclog_drawing import build
+        exe, cls.sym = build(ASM)
+        cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
+
+    def add(self, effect, side=0, records=()):
+        bp = 0x600
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, self.image)
+        mu.mem_write(self.CODE * 16, b"\xF4" * 0x2000)
+        mu.mem_write(GDS * 16 + 0x19C9, struct.pack("<HH", 0, CREATURES))
+        mu.mem_write(FIGHTERS * 16 + 0xC33 + 6 * 3, struct.pack("<BH", 2, 5))  # (thing 6: creature 5)
+        mu.mem_write(CREATURES * 16 + 5 * 0x31 + 0x15, bytes((side,)))
+        mu.mem_write(SS * 16 + bp + 0x0A, struct.pack("<HHH", effect, 0x700, SS))  # (+9's word at SS:700h)
+        mu.mem_write(SS * 16 + 0x700, struct.pack("<H", 0xEEEE))
+        mu.mem_write(GDS * 16 + 0x2100, struct.pack("<H", len(records)))
+        for k, (owner, eff, extra) in enumerate(records):
+            rec = bytearray(10)
+            struct.pack_into("<H", rec, 0, owner)
+            rec[6], rec[9] = eff, extra
+            mu.mem_write(self.EFFECTS * 16 + 0x24D + k * 10, bytes(rec))
+        sp = 0x7F0
+        mu.mem_write(SS * 16 + sp - 6, struct.pack("<HHH", 0x0B34, self.CODE, 0x2))
+        for reg, value in dict(cs=TSR, ds=GDS, es=0x1234, ss=SS, esp=sp - 6, ebp=bp, esi=6, eax=0x1111,
+                               ebx=0x2222, eflags=0x2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        mu.emu_start(TSR * 16 + self.sym["berserk_add"], self.CODE * 16 + 0x1FFF, count=100000)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_EIP) & 0xFFFF) - 1, 0x0F1E)  # (on to the add's tail)
+        self.assertEqual(mu.reg_read(r.UC_X86_REG_SP) & 0xFFFF, sp)
+        return struct.unpack("<H", bytes(mu.mem_read(SS * 16 + 0x700, 2)))[0]
+
+    def test_the_side_kept(self):
+        self.assertEqual(self.add(7, side=0), 0)
+        self.assertEqual(self.add(7, side=9), 9)
+
+    def test_an_older_berserks_side(self):
+        self.assertEqual(self.add(7, side=2, records=((3, 7, 5), (6, 21, 1), (6, 7, 0))), 0)
+
+    def test_other_effects_untouched(self):
+        self.assertEqual(self.add(9, side=2), 0xEEEE)
+
+    def end(self, effect):
+        bp = 0x600
+        mu = Uc(UC_ARCH_X86, UC_MODE_16)
+        mu.mem_map(0, 0x100000)
+        mu.mem_write(TSR * 16, self.image)
+        mu.mem_write(self.CODE * 16, b"\xF4" * 0x2000)
+        mu.mem_write(SS * 16 + bp + 8, struct.pack("<H", effect))
+        sp = 0x7F0
+        mu.mem_write(SS * 16 + sp - 6, struct.pack("<HHH", 0x1069, self.CODE, 0x2))
+        for reg, value in dict(cs=TSR, ds=GDS, es=0x1234, ss=SS, esp=sp - 6, ebp=bp, esi=6, edx=3, eax=0x1111,
+                               ebx=0x2222, eflags=0x2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        mu.emu_start(TSR * 16 + self.sym["berserk_end"], self.CODE * 16 + 0x1FFF, count=100000)
+        self.assertEqual([mu.reg_read(x) & 0xFFFF for x in (r.UC_X86_REG_SP, r.UC_X86_REG_BX, r.UC_X86_REG_BP,
+                                                             r.UC_X86_REG_DX)], [sp, 0x2222, bp, 3])
+        return (mu.reg_read(r.UC_X86_REG_EIP) & 0xFFFF) - 1
+
+    def test_berserk_given_back(self):
+        self.assertEqual(self.end(7), 0x120D)
+
+    def test_others_on(self):
+        for effect in (102, 1, 35):
+            self.assertEqual(self.end(effect), 0x12E9)
+
+
 @unittest.skipUnless(WOTR, "needs the sequel's files (DSUN_WOTR)")
 class FileTests(unittest.TestCase):
     def test_the_patches_find_the_sequels_bytes(self):
         with open(os.path.join(WOTR, "DSUN.EXE"), "rb") as f:
             exe = f.read()
-        for name in ("shots_left", "roster_delete", "gladiator_armour", "lock_site", "ai_wall", "kreen_claws"):
+        for name in ("shots_left", "roster_delete", "gladiator_armour", "lock_site", "ai_wall", "kreen_claws",
+                     "berserk_add", "berserk_end"):
             p = next(p for p in ravager.PATCHES if p.name == name)
             self.assertEqual(exe[p.offset:p.offset + len(p.original)], p.original, name)
         # (the roster's "mov ax,2F8h" where the game's were: the loader fixes their segment up)

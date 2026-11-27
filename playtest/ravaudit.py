@@ -2,7 +2,8 @@
 # tail's, its offset at the header's +2114: the locks each member failed at its thief level now, as the Loader
 # wrote them), the open locks checks LOCK_SITE put out of reach (+2116), the gladiators' AC worked out with no
 # armour (GL_ARMOUR, +2118), the computer's walls across the line of fire (AI_WALL, +2120), a party
-# thri-kreen's natural attacks made edged (KREEN_CLAWS, +2122), and the region and the thing the running script was started on. Run from playtest/.
+# thri-kreen's natural attacks made edged (KREEN_CLAWS, +2122), Berserks put on with their side kept and ended with it
+# given back (BERSERK_ADD, +2124; BERSERK_END, +2126), the header's length (HDR_LEN, +30), and the region and the thing the running script was started on. Run from playtest/.
 import argparse, os, struct, sys
 PT = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, os.path.join(PT, '..', 'obsidian-edition'))
 from dsloader.__main__ import connect
@@ -18,7 +19,8 @@ if hdr is None:
     sys.exit('no DSCLOG2 header at the INT F5h segment %04x' % seg)
 w = lambda at: struct.unpack('<H', g.read(hdr + at, 2))[0]
 tail = w(1834)
-print('lock_off %04x lock_bars %d gl_bare %d ai_walls %d kreen_cuts %d' % (w(2114), w(2116), w(2118), w(2120), w(2122)))
+print('lock_off %04x lock_bars %d gl_bare %d ai_walls %d kreen_cuts %d berserk_sides %d berserk_ends %d hdr_len %d'
+      % (w(2114), w(2116), w(2118), w(2120), w(2122), w(2124), w(2126), w(30)))
 if tail and w(2114):
     rows = struct.unpack('<32H', g.read(tail * 16 + w(2114), 64))
     for m in range(4):

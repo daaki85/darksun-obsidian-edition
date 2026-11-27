@@ -138,21 +138,24 @@ class LoaderTests(unittest.TestCase):
         struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
         struct.pack_into("<H", g.mem, seg_base + hdr + labels.TSR_TAIL_SEG, tail)
         struct.pack_into("<H", g.mem, seg_base + hdr + LOCK_OFF, off)
+        struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.HDR_LEN, LOCK_BARS + 2)
         log = ravlog.RavDiceLog(g)
         log.tsr_hdr = seg_base + hdr
         log.game = ravlog.RavGameData(log.guest, self.DS, 0)
         rows = [[], [(0x32, 140)], [], []]
-        real = locks.barred
-        locks.barred = lambda gd, tried: rows
+        real, asked = locks.barred, []
+        log.picked_at = {"o12@3,4": 7}
+        locks.barred = lambda gd, tried, when=None: asked.append(when) or rows
         try:
             log._locks_pass()
         finally:
             locks.barred = real
+        self.assertEqual(asked, [{"o12@3,4": 7}])  # (the times each was tried: the four failed last kept)
         at = tail * 16 + off
         self.assertEqual(bytes(g.mem[at:at + 64]), locks.table(rows))
         self.assertEqual(log.guest.dropped, 0)
         writes = g.writes
-        locks.barred = lambda gd, tried: rows
+        locks.barred = lambda gd, tried, when=None: rows
         try:
             log._locks_pass()  # (unchanged: not written again)
         finally:
@@ -168,6 +171,27 @@ class LoaderTests(unittest.TestCase):
         log.game = ravlog.RavGameData(log.guest, self.DS, 0)
         log._locks_pass()  # (an older helper: no tail, nothing written)
         self.assertEqual(g.writes, 0)
+
+    def test_none_past_the_header(self):
+        """A helper whose HDR_LEN (+30) is 0, as every one before it: its +2114 may be code, not LOCK_OFF, so
+        nothing is written into its tail; HDR_LEN short of LOCK_OFF's word likewise."""
+        for hdr_len in (0, LOCK_OFF):
+            g = FakeGuest()
+            seg_base, hdr, tail, off = 0xC91B0, 0x20, 0xD4A0, 0x3A0
+            struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
+            struct.pack_into("<H", g.mem, seg_base + hdr + labels.TSR_TAIL_SEG, tail)
+            struct.pack_into("<H", g.mem, seg_base + hdr + LOCK_OFF, off)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.HDR_LEN, hdr_len)
+            log = ravlog.RavDiceLog(g)
+            log.tsr_hdr = seg_base + hdr
+            log.game = ravlog.RavGameData(log.guest, self.DS, 0)
+            real = locks.barred
+            locks.barred = lambda gd, tried, when=None: [[], [(0x32, 140)], [], []]
+            try:
+                log._locks_pass()
+            finally:
+                locks.barred = real
+            self.assertEqual(g.writes, 0, hdr_len)
 
 
 @unittest.skipUnless(os.environ.get("DSUN_SL") and os.environ.get("DSUN_WOTR"), "needs both games' files")

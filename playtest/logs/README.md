@@ -222,6 +222,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-arrow-leftovers.md) | Wake of the Ravager: the spell arrows' leftovers: a new Spellarcher starts with 24 of each touch spell's arrows it picked, another member's arrows go back to it as the inventory shuts, the pointer lights the button it is on (not Turn Undead's place), a full stack refused, a Vampiric Arrow made, Shocking Arrows shot (Shocking Grasp at caster level 6) from the "Wooden Fine Bow" (no longer "item 305"); the Vampiric Arrow not shot |
 | [2026-11-27](2026-11-27-ravager-audit-rest.md) | Wake of the Ravager, the port audit's rest (WIP): CHOOSE A SPELL's 1st level in rows of six, centred (spellgrid in the sequel); the dice log's effect, PSP and ability lines, LOCK_SITE, GL_ARMOUR and the data fixes not played yet |
 | [2026-11-27](2026-11-27-creation-figure-outfits.md) | The creation screen's figure in the class's outfit |
+| [2026-11-27](2026-11-27-ravager-audit-leftovers.md) | Wake of the Ravager, the audit's leftovers: the dice log's kills ("Fight over: 4 rounds, 4 kills", run 1's 0) and each last blow's HP line; Berserk (a test edit of Charm Mammal) keeping a Draxan's side 7 in its record and its end sent to the side's case (berserk_sides, berserk_ends 1); a WIS item counting only worn (not needed); a living creature's Berserk end with its side changed not seen |
 
 ## files/
 

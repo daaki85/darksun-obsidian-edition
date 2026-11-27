@@ -146,10 +146,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Shattered Lands (with [Thieves as in AD&D](FEATURES.md#thief-skills-from-adds-table)); the dice log says why.
 - **Shattered Lands' fixes of the game's own bugs** that the sequel shares come with it: a character's
   most PSP from its own scores, the computer's walls cast across the line of fire, a party thri-kreen's
-  claws and bite that cut, the gladiator's armour optimisation only with armour on, and the rest
+  claws and bite that cut, the gladiator's armour optimisation only with armour on, a berserk creature
+  back on its own side as Berserk ends, and the rest
   ([which](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel)). The dice log there says when an effect starts
   and ends (`Thy'rokh gives Paralyzed to Draxan`, `Controlled ends on Draxan`), a member's PSP spent or
-  regained, and an ability score changing, as in Shattered Lands.
+  regained, an ability score changing, and the monsters killed (`Draxan is killed`, counted in the
+  fight's summary), as in Shattered Lands.
 - **Items weigh what they do in Shattered Lands.** SSI left most of the sequel's items weighing
   nothing, though its program still reads weight as Shattered Lands' does. With the Loader a long sword,
   a mace, a shield and armour weigh as they do there, so the sequel's own rules

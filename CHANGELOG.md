@@ -310,6 +310,13 @@ pull request; [the features page](obsidian-edition/FEATURES.md) has the detail.
   pointer after a shot; the roster's DELETE with the list scrolled; Slay Living's description; CHOOSE A
   SPELL's grid past 15 spells ([GAME-BUGS](obsidian-edition/GAME-BUGS.md#shattered-lands-fixes-in-the-sequel)).
   A lock a thief failed is out of reach until the thief gains a level, as in Shattered Lands (#232).
+- **A berserk creature fought on for the side its turns rolled** to the end of the fight: Berserk's end
+  had no case to give its side back (Shattered Lands' bug, shared). Its side is kept as Berserk starts
+  and given back as it ends (DSCLOG2's sites 245, 246). The **dice log said no monster was killed**, so
+  every fight's summary said "0 kills", and a killed creature's last blow had no HP line: both said now.
+  DSCLOG2's header says its length (+30), and the Loader writes none of its later fields to an older
+  helper; a Spellarcher's starting arrows are given only with all three arrows' objects in the copy, and
+  its plain arrows taken only once they are in (#240).
 
 **Fixed: the Loader**
 - Every Shattered Lands start failed before the game ran, on either engine: the weapon window's

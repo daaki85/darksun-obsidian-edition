@@ -370,6 +370,37 @@ class PassTests(unittest.TestCase):
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
         self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
 
+    def test_the_kills_said(self):
+        """The monsters killed ("Draxan is killed", tracker.PartyTracker's look at the monsters) follow the hit
+        points, for the fight's tally: the sequel's every summary said "0 kills" without them. Its XP lines
+        and the prime requisites' bonus are not run; nothing while a game loads."""
+        log = ravlog.RavDiceLog(FakeGuest())
+        log.hp_changes = lambda now: ["  Draxan now 0/70 HP (-3)"]
+        log.tracker = types.SimpleNamespace(_check_monsters=lambda now: ["Draxan is killed"],
+                                            check=lambda now: self.fail("its XP part not ported"))
+        log._party_check = lambda now: False
+        self.assertEqual(log._after_rolls(False, 1.0), ["  Draxan now 0/70 HP (-3)", "Draxan is killed"])
+        log._party_check = lambda now: True
+        self.assertEqual(log._after_rolls(False, 2.0), ["  Draxan now 0/70 HP (-3)"])
+
+    def test_an_older_header_gets_no_arrows_words(self):
+        """SPELL ARROWS' words (+2098 up) are written only to a helper whose HDR_LEN (+30) reaches past them: an
+        older DSCLOG2, its word 0 (glob's fourth capture, none), may have its code there and gets no write;
+        one whose HDR_LEN holds them has ARROWS_ON set."""
+        for hdr_len, writes in ((0, 0), (ravlog.AR_ROW, 0), (ravlog.AR_DRAWN + 2, 1)):
+            g = FakeGuest()
+            seg_base, hdr = 0xC91B0, 0x20
+            struct.pack_into("<H", g.mem, seg_base + hdr + dicelog.TSR_HDR_OFF, hdr)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.PP_TEXT_OFF, 0x900)
+            struct.pack_into("<H", g.mem, seg_base + hdr + ravlog.HDR_LEN, hdr_len)
+            log = ravlog.RavDiceLog(g)
+            log.tsr_hdr = seg_base + hdr
+            log.game = types.SimpleNamespace(guest=log.guest, rules=0)
+            log.spell_arrows, log._arrows_ready = True, lambda: True
+            self.assertEqual(log._answer_arrows(), [], hdr_len)
+            self.assertEqual(g.writes, writes, hdr_len)
+            self.assertEqual(log.header_holds(ravlog.AR_ROW + 2), bool(writes))
+
     def test_after_rolls_flushes_dice_no_spell_claimed(self):
         """Dice held to learn which spell they belong to (PendingDice) are said once PENDING_SECONDS
         pass, as in Shattered Lands' pass, not kept until the next roll forces them out (2026-11-27's
