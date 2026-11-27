@@ -504,12 +504,17 @@ class KitTests(unittest.TestCase):
                 kid = kits.SCHOLAR if rules and kits.SCHOLAR in kitpages.kit_ids(sheet) else None
                 self.party([wotr_sheet((9,), (3,), 1, 0), sheet])
                 self.mu.mem_write(SS * 16 + 0x606, struct.pack("<H", 1))
-                for cut in (0, 4, 11):
+                for cut, who in ((0, 0), (4, 1), (11, 1)):
+                    flag = TSR * 16 + self.sym["cr_thac0_scholar"]
+                    self.mu.mem_write(flag, bytes((7,)))
+                    self.mu.mem_write((GDS + 0x3E71 - 0x47E0) * 16 + 0xB44, struct.pack("<H", who))
                     with self.subTest(classes=classes, byte=byte, rules=rules, cut=cut):
-                        got = self.run_int("scholar_thac0", esi=cut, eax=0xBEEF)
+                        got = self.run_int("scholar_thac0", esi=cut, eax=0xBEEF, edx=0x1234)
                         self.assertEqual(got["eax"] & 0xFFFF, kits.thac0(kid, levels[0], 20 - cut))
                         self.assertEqual(got["esi"] & 0xFFFF, cut)
+                        self.assertEqual(got["edx"] & 0xFFFF, 0x1234)
                         self.assertEqual(got["esp"] & 0xFFFF, 0x7FE)
+                        self.assertEqual(self.mu.mem_read(flag, 1)[0], (kid == kits.SCHOLAR) if who == 1 else 7)
                     seen += kid == kits.SCHOLAR
         self.assertTrue(seen)
 
@@ -618,6 +623,64 @@ class KitTests(unittest.TestCase):
                                          [0x1234, 0x804, bonus, self.MADE, SS])
                         self.assertTrue(self.mu.reg_read(r.UC_X86_REG_EFLAGS) & 0x200)
         self.assertEqual(kits.max_psp(kits.MIND_WARRIOR, 129), 104)
+
+    def test_cr_kit_thac0(self):
+        """CR_KIT_THAC0 (the creation screen's THAC0 line): CL a new character's THAC0 1 worse with the Scholar
+        kit chosen (kits.thac0; KIT_MADE: none left over from other classes, none with the rule off); an
+        EDIT's (CR_EDITING a member) kept, its kit in its own. The creature's THAC0 already with a Scholar's in it
+        (CR_THAC0_SCHOLAR, SCHOLAR_THAC0's at a roll): taken out if the kit is no longer chosen, else kept. Other
+        registers kept."""
+        flag = TSR * 16 + self.sym["cr_thac0_scholar"]
+        seen = set()
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for cls, byte, _ in self.CR:
+                for edit in (-1, 1):
+                    for stale in (None, 0x0101):
+                        for have in (0, 1):
+                            self.made((cls,), byte, stale)
+                            self.mu.mem_write(GDS * 16 + 0x112E, struct.pack("<h", edit))
+                            self.mu.mem_write(flag, bytes((have,)))
+                            got = self.run_routine("cr_kit_thac0", b"", ecx=18, eax=0x1357, ebx=0x2468)
+                            made = rules and stale is None and byte not in (0, 0xFF) and cls * 4 + (byte & 3) == kits.SCHOLAR
+                            base = 18 - have if edit == -1 else 18  # (the creature's without the kit)
+                            kid = kits.SCHOLAR if made and edit == -1 else None
+                            want = kits.thac0(kid, 7, base) if edit == -1 else 18
+                            with self.subTest(cls=cls, byte=byte, edit=edit, stale=stale, rules=rules, have=have):
+                                self.assertEqual(self.mu.reg_read(r.UC_X86_REG_ECX) & 0xFF, want)
+                                self.assertEqual((got["eax"] & 0xFFFF, got["ebx"] & 0xFFFF), (0x1357, 0x2468))
+                            seen.add((kid, have, want))
+        self.assertTrue({(kits.SCHOLAR, 0, 19), (kits.SCHOLAR, 1, 18), (None, 1, 17)} <= seen)
+
+    def test_dam_kits(self):
+        """The DAM lines' kits (DAM_KIT_MELEE, DAM_EXPERT) are the attack's: KIT_MELEE's damage with the kits'
+        rule (none without), and EXPERT_HALVES' attacks for one who isn't a warrior, the attack's KIT_RATES
+        count kept."""
+        types = bytearray(15 * (ravager.GAME_TYPES + ravager.MOD_TYPES))
+        for t in range(ravager.GAME_TYPES + ravager.MOD_TYPES):
+            types[t * 15 + 0x0B] = 0x40 if t % 3 == 0 else 0
+        self.mu.mem_write(GDS * 16 + TYPES_AT, bytes(types))
+        self.mu.mem_write(GDS * 16 + 0x19CD, struct.pack("<HH", TYPES_AT, GDS))
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, byte in (((9,), 3), ((9,), 0), ((10,), 3)):
+                sheet = wotr_sheet(classes, (5,), 2, byte)
+                ids = kitpages.kit_ids(sheet) if rules else []
+                for t in (0, 1, 3):
+                    want = sum(kits.melee(k, t % 3 == 0, specialize.KIND_OF_TYPE.get(t)) for k in ids)
+                    got = self.run_routine("dam_kit_melee", sheet, esi=t, eax=0xBEEF)["eax"] & 0xFFFF
+                    self.assertEqual(got, want, (classes, byte, rules, t))
+        self.rules(game.RULE_KITS >> 16)
+        rates = TSR * 16 + self.sym["kit_rates"]
+        for level in (1, 7):
+            sheet = wotr_sheet((11,), (level,), 1, 2)  # (a Battle Mage)
+            self.run_routine("kit_is", sheet, eax=kits.BATTLE_MAGE)
+            for skill in (specialize.PLAIN, specialize.EXPERT):
+                self.mu.mem_write(rates, struct.pack("<H", 5))
+                got = self.run_routine("dam_expert", sheet, eax=0xAB02, edx=skill)["eax"] & 0xFFFF
+                want = (4 if level >= 7 else 3) if skill == specialize.EXPERT else 2
+                self.assertEqual(got, want, (level, skill))
+                self.assertEqual(struct.unpack("<H", self.mu.mem_read(rates, 2))[0], 5)
 
     def test_kit_rolls_due(self):
         """KIT_ROLLS_DUE: KIT_REROLL due for the sheet being made's Battle Mage, Arcanist or Mind Warrior
