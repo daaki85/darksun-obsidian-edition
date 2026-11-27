@@ -319,6 +319,27 @@ RAV_THING_OBJECT = 0x67D6  # (each map thing's object number: the 25h-byte recor
 # A lock failed (locks.py; DSCLOG2's LOCK_SITE, site 241): LOCK_BARRED's offset in the tail, the header's +2114,
 # and the checks it put out of reach, +2116
 LOCK_OFF, LOCK_BARS = 2114, 2116
+# The Effects screen's mod lines (DSCLOG2's EF_CHARGES, EC_MOD: SL's from its STATS): EF_STATS' offset in the tail,
+# the header's +2134, EF_STATS_SIZE bytes a party member (Enlarge's level, the armour spells' AC, EF_NO_AC none),
+# and the lines named by them or by Reflected Image, +2136
+EF_STATS_OFF, EF_MOD_LINES, EF_STATS_SIZE, EF_NO_AC = 2134, 2136, 4, -128
+
+
+def ef_stats(g) -> bytes:
+    """EF_STATS' bytes for party members 0-3 of game G: each its Enlarge's level (the game's 608h:52h sum, 0 none;
+    g.enlarge_level) and the AC Barkskin, Flesh Armor and Magical Vestments give it (g.armour_spells_ac: the
+    sequel's AC routine 85BA7h works them out as SL's 7C557h), EF_NO_AC without one."""
+    out = b""
+    for member in range(4):
+        rec = g.creature(member)
+        if len(rec) < game.CREATURE_SIZE or not rec[game.CREATURE_NAME]:
+            out += struct.pack("<B3b", 0, EF_NO_AC, EF_NO_AC, EF_NO_AC)
+            continue
+        armour = g.armour_spells_ac(member)
+        out += bytes([max(0, min(255, g.enlarge_level(member)))])
+        out += struct.pack("<3b", *(max(-127, min(127, armour[e])) if e in armour else EF_NO_AC
+                                    for e in (game.EFFECT_BARKSKIN, game.EFFECT_FLESH_ARMOR, game.EFFECT_VESTMENTS)))
+    return out
 STOCK_INTERVAL = 1.0  # (seconds between looks for a saved game's sellers without the new items: shopstock)
 
 
@@ -1314,6 +1335,7 @@ class RavDiceLog(dicelog.DiceLog):
         self._next_stock = 0.0
         self.first_pick_weapon = True  # (a new warrior's weapon a +1 of its first pick: ravfirstweapon; off for a control)
         self.kit_start_gear = True  # (a new character's gear fitted to its classes and kit: ravkitstart; off for a control)
+        self._ef_stats_written: Optional[Tuple[int, bytes]] = None  # (EF_STATS as last written: _ef_stats_pass)
         self._stock: Optional[Dict[int, List[bytes]]] = None  # (shopstock's: the sellers' new items, read once)
         keys, auto = self.quicksave.keys, self.quicksave.auto
         self.quicksave = quicksave.QuickSave(QUICK_LAYOUT)  # (the sequel's: DSCLOG2's QUICK SAVES)
@@ -1341,6 +1363,7 @@ class RavDiceLog(dicelog.DiceLog):
         finally:
             dicelog.GameData = real
         self._write_item_names()
+        self._ef_stats_written = None  # (a new helper at the same header: EF_STATS written anew)
         if self.text is not None:  # (the sequel's portraits apart from SL's: RAV_PORTRAITS)
             self.text = SequelText(self.text)
         return result
@@ -2261,6 +2284,24 @@ class RavDiceLog(dicelog.DiceLog):
                 self.guest.writable = before
             self._locks_written = data
 
+    def _ef_stats_pass(self) -> None:
+        """SL's STATS' Enlarge and armour bytes (dicelog's _stats, for DSCLOG's EF_CHARGES) as DSCLOG2's EF_STATS, in its
+        tail (the header's EF_STATS_OFF), written when they change."""
+        if self.tsr_hdr is None or self.game is None:
+            return
+        at = self._tail_at(EF_STATS_OFF)
+        if at is None:  # (a helper without EC_MOD)
+            return
+        data = (at, ef_stats(self.game))
+        if data != self._ef_stats_written:
+            before = self.guest.writable
+            self.guest.writable = before + [(at, len(data[1]))]
+            try:
+                self.guest.write(at, data[1])
+            finally:
+                self.guest.writable = before
+            self._ef_stats_written = data
+
     def _kills_pass(self, now: float) -> List[str]:
         """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
         check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
@@ -2423,6 +2464,7 @@ RavDiceLog.PASS = (
     _take("turn_lines", run=lambda log, now, loading: log.turn_lines()
           if log.game is not None and log.game.rules & game.RULE_STEALTH else None),  # (stealth.turn)
     _take("write_slots", phase=dicelog.EFFECTS),
+    _own("ef_stats", lambda log, now, loading: log._ef_stats_pass(), dicelog.EFFECTS, says=False),  # (EC_MOD's EF_STATS)
     _own("panel", lambda log, now, loading: log._panel_pass(now), dicelog.EFFECTS),  # (the combat log's panel)
     _take("effect_changes"),  # (effects starting, ending, put in again)
     _own("aging", lambda log, now, loading: log._aging_pass()

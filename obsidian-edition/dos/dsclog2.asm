@@ -409,7 +409,12 @@ ef_charge_lines dw 0            ; +2128 Effects screen lines named with their ch
 arrows_barred dw 0              ; +2130 spell arrows a party member not a Spellarcher was kept from readying
                                 ;      (ARROWS_FORBID, counted)
 arrows_sounds dw 0              ; +2132 spell arrows made with their cast sound played (ARROWS_ASK, counted)
-hdr_end:                        ; +2134 (HDR_LEN: the header's end; new words go above this line)
+ef_stats_off dw ef_stats        ; +2134 offset of EF_STATS in the tail: the Loader's, EF_STATS_SIZE bytes a party member
+                                ;      (Enlarge's level, the three armour spells' AC: RavDiceLog._ef_stats_pass)
+ef_mod_lines dw 0               ; +2136 Effects screen lines named by Enlarge's damage, an armour spell's AC or
+                                ;      Reflected Image's name (EF_CHARGES' EC_MOD and EC_REFLECT, counted; its
+                                ;      charges count in EF_CHARGE_LINES too)
+hdr_end:                        ; +2138 (HDR_LEN: the header's end; new words go above this line)
 align 16
 kind     dw 0                   ; the entry kind RECORD writes (0: a rand() call)
 extra    dw 0                   ; RECORD's +186 (none yet)
@@ -23806,8 +23811,13 @@ berserk_end:
 ;   back past the NOPs (8ABC5h, the call). Only for the effect's push: the segment pushed the one the code's
 ;   "push 318h" has (its word as the overlay manager fixed it up, 6 bytes back from the way back), and the
 ;   offset a whole record. The character on show is USE_WHO's (370h:0B44h), as EF_ROWS's.
-; Not here (SL's other parts of EF_CHARGES, from the Loader's STATS): Enlarge's damage, Barkskin's, Flesh
-; Armor's and Magical Vestments' AC; Reflected Image's own name for its Mirror Images.
+; - SL's other parts (EC_MOD, from the Loader's EF_STATS as SL's from its STATS): a party member's Enlarge named
+;   with its melee damage instead, "Enlarged (+90% dice)" ("damage" without RULE_HI_ENLARGE), from the level
+;   the Loader puts there (the game's 608h:52h sum, ENL_SITE's), and Barkskin, Flesh Armor and Magical Vestments
+;   with the AC they give, "Barkskin (AC 4)" (the AC routine's 85BA7h: 6 - level/4, 10 - level, 5 less 1 for
+;   each 3 levels past 5, SL's 7C557h the same); only with the Loader there (LOADER_FRESH). Mirror Images
+;   from Reflected Image (the record's spell 323) named "Reflected Image" (EC_REFLECT), with its charges.
+;   Not ported: Reflected Image's own icon (the cells' icons are drawn elsewhere).
 EC_PAST       equ 0x8ABC5 - 0x8ABC0     ; (the bytes replaced past the way back)
 EC_SEG_BACK   equ 0x8ABC0 - 0x8ABBA     ; ("push 318h"'s word, back from the way back)
 EC_LINE       equ 0x2C06                ; (the line's id, the game's push)
@@ -23851,20 +23861,42 @@ ef_charges:
         add ax, USE_WHO_SEG
         mov es, ax
         mov ax, [es:USE_WHO_OFF]        ; (AX the character on show)
-        call ec_counted                 ; (BL its charges, or CF clear)
-        jnc .out
+        call ec_counted                 ; (BL its charges, or CF clear; DX the spell)
+        setc ch                         ; (CH 1: charges to name)
+        mov bh, 0                       ; (BH 1: the line made here)
         call tail_fs
-        push ds
-        lds si, [bp + 14]               ; (the record's name)
         mov di, ec_text
-        mov cx, EC_NAME_MOST
-.name:  lodsb
+        push ax                         ; (the character)
+        cmp cl, MIRROR_EFFECT
+        jne .own
+        cmp dx, EC_REFLECT_SPELL
+        jne .own
+        mov si, ec_reflect              ; (Reflected Image's Mirror Images: its own name)
+        mov bh, 1
+.rname: mov al, [fs:si]
         or al, al
         jz .named
         mov [fs:di], al
+        inc si
+        inc di
+        jmp .rname
+.own:   push ds
+        lds si, [bp + 14]               ; (the record's name)
+        push cx
+        mov cx, EC_NAME_MOST
+.name:  lodsb
+        or al, al
+        jz .end
+        mov [fs:di], al
         inc di
         loop .name
-.named: pop ds
+.end:   pop cx
+        pop ds
+.named: pop ax
+        call ec_mod                     ; (Enlarge's damage or an armour spell's AC after it, CF set)
+        jc .modded
+        or ch, ch
+        jz .plain
         mov word [fs:di], ' ('
         add di, 2
         mov al, bl
@@ -23882,9 +23914,17 @@ ef_charges:
         mov byte [fs:di], 's'
         inc di
 .shut:  mov word [fs:di], ')'
-        mov word [bp + 14], ec_text
-        mov [bp + 16], fs
         inc word [cs:ef_charge_lines]
+        or bh, bh
+        jnz .modded                     ; (Reflected Image's: both counted)
+        jmp .set
+.plain: or bh, bh
+        jz .out
+        mov byte [fs:di], 0
+.modded:
+        inc word [cs:ef_mod_lines]
+.set:   mov word [bp + 14], ec_text
+        mov [bp + 16], fs
 .out:   pop fs
         pop es
         popad
@@ -23892,8 +23932,8 @@ ef_charges:
         iret
 ec_word db ' charge', 0
 
-; EC_COUNTED: CF set, BL the charges, if thing AX's effect CL has charges that mean something (EF_CHARGES).
-; DS the game's; BX, DX, SI, ES changed.
+; EC_COUNTED: CF set, BL the charges, if thing AX's effect CL has charges that mean something (EF_CHARGES);
+; DX the spell that made it (FFFFh: thing AX hasn't it). DS the game's; BX, DX, SI, ES changed.
 ec_counted:
         push cx
         mov dx, ds
@@ -23913,9 +23953,9 @@ ec_counted:
         dec dx
         jmp .find
 .found: mov bx, [es:si + 7]             ; (BH the charges, BL the handle)
-        or bh, bh
-        jz .no
         mov dx, [es:si + 4]             ; (the spell that made it)
+        or bh, bh
+        jz .none
         push fs
         call tail_fs
         mov si, ec_uses
@@ -23929,8 +23969,8 @@ ec_counted:
         les si, [EVENT_QUEUE]           ; (else only if timed: an item's power, cast for -9999, and a
         mov cx, [EVENT_COUNT]           ;  permanent effect have none, and +8 a stray)
         cmp cx, 1000
-        ja .no
-.event: jcxz .no
+        ja .none
+.event: jcxz .none
         cmp byte [es:si + 4], EVENT_EFFECT_ENDS
         jne .on
         cmp [es:si + 5], ax
@@ -23946,9 +23986,86 @@ ec_counted:
         pop cx
         stc
         ret
-.no:    pop cx
+.no:    mov dx, 0xFFFF
+.none:  pop cx
         clc
         ret
+
+; EC_MOD: (EF_CHARGES) CF set and the line's end at FS:DI (DI past it) made SL's mod line where party member AX's
+; effect CL is Enlarge, " (+90% dice)", or an armour spell, " (AC 4)", and the Loader's EF_STATS (FS's tail)
+; has a level or an AC for it; CF clear, nothing written, else. AX and DI changed only with CF set.
+EC_ENLARGE   equ 32                     ; (the sequel's effects: Enlarged, and the armour spells in EF_STATS' order)
+EC_BARKSKIN  equ 6
+EC_FLESH     equ 40
+EC_VESTMENTS equ 104
+EC_REFLECT_SPELL equ 323
+EF_STATS_SIZE equ 4                     ; (+0 Enlarge's level, 0 none; +1 to +3 the ACs, signed, EC_NO_AC none)
+EC_NO_AC     equ 0x80
+ec_mod:
+        cmp ax, 4
+        jae .no
+        call loader_fresh
+        jnz .no
+        push bx
+        push si
+        mov si, ax
+        shl si, 2
+        add si, ef_stats                ; (the member's row)
+        cmp cl, EC_ENLARGE
+        je .enlarge
+        mov bx, 1
+        cmp cl, EC_BARKSKIN
+        je .ac
+        inc bx
+        cmp cl, EC_FLESH
+        je .ac
+        inc bx
+        cmp cl, EC_VESTMENTS
+        jne .not
+.ac:    mov al, [fs:si + bx]
+        cmp al, EC_NO_AC
+        je .not
+        mov dword [fs:di], ' (AC'
+        mov byte [fs:di + 4], ' '
+        add di, 5
+        or al, al
+        jns .acn
+        mov byte [fs:di], '-'
+        inc di
+        neg al
+.acn:   call ec_itoa
+        mov si, ec_shut
+        jmp .tail
+.enlarge:
+        mov al, [fs:si]
+        or al, al
+        jz .not
+        mov word [fs:di], ' ('
+        mov byte [fs:di + 2], '+'
+        add di, 3
+        call ec_itoa                    ; (the level, then a 0: 10% a level)
+        mov si, ec_dice
+        test word [cs:rules_hi], RULE_HI_ENLARGE
+        jnz .tail
+        mov si, ec_damage
+.tail:  mov al, [cs:si]
+        mov [fs:di], al
+        inc si
+        inc di
+        or al, al
+        jnz .tail
+        dec di
+        pop si
+        pop bx
+        stc
+        ret
+.not:   pop si
+        pop bx
+.no:    clc
+        ret
+ec_dice   db '0% dice)', 0
+ec_damage db '0% damage)', 0
+ec_shut   db ')', 0
 
 ; EC_ITOA: AL (unsigned) in decimal at FS:DI, DI past it. Others kept.
 ec_itoa:
@@ -23984,6 +24101,8 @@ section tail
 ; the spells that last a number of uses (their records' time, +7, -1: RESOURCE.GFF's, ravlog.spell_table; and
 ; Reflected Image, 323, Mirror Image's record), ended by -1
 ec_uses dw 0, 17, 19, 46, 52, 86, 104, 120, 153, 167, 168, 179, 200, 225, 285, 301, 323, -1
+ec_reflect db 'Reflected Image', 0      ; (EC_REFLECT: its Mirror Images' name)
+ef_stats times 4 db 0, EC_NO_AC, EC_NO_AC, EC_NO_AC   ; (EF_STATS: the Loader's, a row a party member)
 section tailz
 ec_text times 48 db 0                   ; (EF_CHARGES' line: the name, then " (255 charges)" at most)
 section image
