@@ -202,6 +202,12 @@ The comparison uses the same scale for all four rooms. Look at the front panel w
 
 ![Both stored poses of the previous and revised Mines chest, the Pyramid chest and an upper castle chest for scale](mine-chest-poses.png)
 
+The DOSBox close-ups below show the party opening the Mines chest on both builds. The map renders above show the front edge that the party partly covers.
+
+![Matched Mines 3 DOSBox views with the loot chest closed and open before and after lowering](mines-chest-live.png)
+
+![Pyramid chest default and staged raised pose in DOSBox, with the Mines 3 loot and second-use messages](chests-live.png)
+
 ## Region work queue
 
 The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements, including repeats. The last column names the next review for that region.
@@ -211,7 +217,7 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 001 Forest | 252 | 0 | 56 | Check dining sets in play |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
-| 034 Pyramid | 152 | 0 | 23 | Both chest poses checked against the foreground wall in the room render. Check remaining furnishings in play |
+| 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
 | 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
 | 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
