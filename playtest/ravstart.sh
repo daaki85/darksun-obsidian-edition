@@ -39,7 +39,7 @@ if skip:
     if gone:
         ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone))
         skip = [s for s in skip if s not in gone]
-    for part in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights'):   # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them; the spells themselves kept)
+    for part in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows'):   # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them; the spells themselves kept)
         if part in skip:
             ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), {part}, sl)
             skip.remove(part)

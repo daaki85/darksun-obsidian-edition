@@ -26,7 +26,7 @@ from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
-    shadows, sizes, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
+    gff, shadows, sizes, spellarrows, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -1184,6 +1184,12 @@ KIT_HEADER_BYTES = 6  # DSCLOG2's KIT_OUTDOORS, KIT_DANCE (4) and KIT_WILD, from
 # offset; +2014 to +2018 its counts (purses shown, picks readied, picks not answered in time)
 PP_ON, PP_SEQ, PP_REPLY, PP_WHO, PP_THIEF, PP_TAKEN, PP_TEXT_OFF = 2000, 2002, 2004, 2006, 2008, 2010, 2012
 PP_SHOWN, PP_ARMED, PP_LATE = 2014, 2016, 2018
+# A Spellarcher's spell arrows (ravarrows.py; DSCLOG2's SPELL ARROWS, site 240 and PICK POCKETS' 180-185): its
+# header's words from +2098: ARROWS_ON (the Loader's 1), ARROWS_SEQ, ARROWS_REPLY, ARROWS_WHO (the member),
+# ARROWS_ROW (spellarrows.ARROWS' place); +2108 to +2112 its counts (buttons shown, asks late, buttons beside
+# Turn Undead's drawn). The refusal's words go in PICK POCKETS' PICK_TEXT.
+AR_ON, AR_SEQ, AR_REPLY, AR_WHO, AR_ROW = 2098, 2100, 2102, 2104, 2106
+AR_SHOWN, AR_LATE, AR_DRAWN = 2108, 2110, 2112
 DSCLOG2_SELL_DONE = 1884  # DSCLOG2's header (its own): SELL_SEQ as the Loader last saw to it (SHOP_LOOP waits on it)
 DSCLOG2_DAC_CHANGES = 240  # DSCLOG2's header: the palette's changes counted (its own: DSCLOG's dust count there)
 PANEL_H_MOST = 130  # (DSCLOG2's PANEL_H_MOST: the picture's rows at most)
@@ -1819,6 +1825,7 @@ class RavDiceLog(dicelog.DiceLog):
         out = self._step(self._gear_pass)  # (a new character's fuller starting gear: DONE waits for it)
         self._step(self._forget_undone_picks)  # (pockets tried since the save loaded: forgotten)
         out += self._step(self._answer_pick)  # (a thief's Pick Pockets button: DSCLOG2's PICK POCKETS, PP_HAND waits)
+        out += self._step(self._answer_arrows)  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS waits)
         out += self._step(lambda: self.hp_changes(now))
         out += self._step(lambda: self._blast_pass(now))
         out += self._step(lambda: self._creation_pass(now))
@@ -1992,6 +1999,72 @@ class RavDiceLog(dicelog.DiceLog):
         if result.text and result.text not in self._own_text:  # (not dialogue: the Dialogue tab leaves it out)
             self._own_text.append(result.text)
         return result.log or [result.text]
+
+    spell_arrows = True  # (a Spellarcher's arrows buttons: ARROWS_ON; off for a control)
+
+    def _arrows_ready(self) -> bool:
+        """Whether the Loader's copy of OBJEX.GFF has the spell arrows' objects (ravarrows.chunks): without
+        them an arrow made would be an item of no object, so no buttons are offered. Read once."""
+        if getattr(self, "_arrows_objects", None) is None:
+            import os
+            from . import launch, ravarrows
+            try:
+                with open(os.path.join(launch.DOS_DIR, ravager.OBJECTS_COPY), "rb") as f:
+                    chunks = gff.read_gff(f.read())
+                self._arrows_objects = ("OJFF", ravarrows.own_object(ravarrows.ARROWS[0].row)) in chunks
+            except (OSError, gff.GffError, struct.error):
+                self._arrows_objects = False
+        return self._arrows_objects
+
+    def _answer_arrows(self) -> List[str]:
+        """Shattered Lands' spell arrows made (DiceLog._answer_use's ARROWS_BY: spellarrows.SpellArrows.make), on
+        DSCLOG2's SPELL ARROWS: ARROWS_ON (its header's +2098) set while the arrows' objects are there
+        (_arrows_ready); an arrows button let go of (ARROWS_SEQ, +2100, ahead of ARROWS_REPLY), ravarrows.make for
+        that member (ARROWS_WHO) and spell (ARROWS_ROW) under the item gate, the request looked at again first
+        (one DSCLOG2 gave up waiting for is dropped); a refusal's words into PICK_TEXT (PICK POCKETS' +2012's),
+        empty when made, and ARROWS_REPLY given ARROWS_SEQ."""
+        if self.tsr_hdr is None or self.game is None:
+            return []
+        hdr = self.tsr_hdr
+        text_off, = struct.unpack("<H", self.guest.read(hdr + PP_TEXT_OFF, 2))
+        if not text_off:
+            return []  # (a helper before PICK POCKETS)
+        base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
+        want = [(hdr + AR_ON, 2), (hdr + AR_REPLY, 2), (base + text_off, dicelog.PICK_SIZE)]
+        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        on = struct.pack("<H", int(self.spell_arrows and self._arrows_ready()))
+        if self.guest.read(hdr + AR_ON, 2) != on:
+            self.guest.write(hdr + AR_ON, on)
+        seq = self.guest.read(hdr + AR_SEQ, 2)
+        if seq == self.guest.read(hdr + AR_REPLY, 2):
+            return []
+        from . import ravarrows
+        result = None
+        try:
+            member, row = struct.unpack("<HH", self.guest.read(hdr + AR_WHO, 4))
+            with self._items_writable():
+                if 0 <= member < game.PARTY_SIZE:
+                    self.guest.writable = self.guest.writable + [ravarrows.slots_range(self.game, member)]
+                itemgate.hold(self.game)  # (held, DOSBox paused, before anything is moved)
+                try:
+                    if self.guest.read(hdr + AR_REPLY, 2) == seq:
+                        return []  # (DSCLOG2 gave up waiting: nothing made)
+                    if self._fighting():
+                        result = pickpocket.Attempt(spellarrows.NOT_IN_A_FIGHT, [])
+                    else:
+                        result = ravarrows.make(self.game, member, row)
+                finally:
+                    itemgate.release(self.game)
+        except itemgate.ItemsBusy:
+            return []  # (the game changing its item lists: answered in a later pass)
+        except (struct.error, IndexError, ValueError):
+            result = None
+        text = (result.text if result else "").encode("cp437", "replace")[:dicelog.PICK_SIZE - 1]
+        self.guest.write(base + text_off, text + b"\0")
+        self.guest.write(hdr + AR_REPLY, seq)
+        if result and result.text and result.text not in self._own_text:
+            self._own_text.append(result.text)
+        return ravarrows.lines_for(result)
 
     def _stock_pass(self, now: float) -> List[str]:
         """A saved game's sellers given the mod's new items once (shopstock.py), every STOCK_INTERVAL while the
