@@ -3,8 +3,9 @@
 **[Read the Obsidian Edition manual](https://daaki85.github.io/darksun-obsidian-edition/)**
 
 Obsidian Edition is a mod for **Dark Sun: Shattered Lands** (the GOG release)
-in DOSBox: rules closer to AD&D, kits, new spells, items and people, the
-party's gear drawn on the map, and every roll shown as it happens. You start
+in DOSBox (DOSBox-X, which comes with the mod on Windows, or GOG's own): rules
+closer to AD&D, kits, new spells, items and people, the party's gear drawn on
+the map, and every roll shown as it happens. You start
 the game with the **Dark Sun Obsidian Edition Loader**, which loads the mod
 with your options and keeps the full dice log while you play. Most of it is
 always on; the new content and a few rules have a switch on the Loader's Options
