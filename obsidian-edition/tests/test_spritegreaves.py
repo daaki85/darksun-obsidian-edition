@@ -32,8 +32,8 @@ class GreaveTests(unittest.TestCase):
                 for gear in ({}, {"boots": (game.SPEED_BOOTS_TYPE, 5)}):
                     bare, plate, shine = (render(slot, gear) for slot in ((), (tier,), (magic,)))
                     if obj == 309:
-                        # The teal hem now covers the pixel immediately above the shin.
-                        self.assertEqual(bare[29+top][7+side], 69)
+                        # The shadowed teal hem covers the pixel immediately above the shin.
+                        self.assertIn(bare[29+top][7+side], (69, 70))
                         self.assertEqual(plate[29+top][7+side], bare[29+top][7+side])
                     for x, y in anchors:
                         self.assertNotEqual(bare[y+top][x+side], plate[y+top][x+side])

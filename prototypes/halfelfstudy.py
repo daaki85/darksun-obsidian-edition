@@ -637,11 +637,13 @@ class Study:
         self.floor = Image.open(TERRAIN).convert("RGB").crop((50, 150, 102, 194))
 
     @lru_cache(None)
-    def male_skin(self, pose):
+    def skin_changes(self, key, pose):
+        body, pad = self.registered.rows(key, pose, "Body base")
+        if key == FIGURES[0]:
+            return halfelfbody.female_back(pose, body, pad)
         cb, f = divmod(pose, 15)
-        fig = self.game.fig(FIGURES[1])
+        fig = self.game.fig(key)
         source = self.game.fr(fig.model + cb, f)
-        body, pad = self.registered.rows(FIGURES[1], pose, "Body base")
         fields = co.frames("Fighter", cb, fig.model)[f]
         protected = set(fields.head) | set(fields.regions[co.FOREARM]) | set(fields.regions[co.BOW])
         back = figures.mover_back(fig.maker.cuts[bool(cb), f])
@@ -660,12 +662,13 @@ class Study:
         return self.exposed_skin(key, pose, rows, pad)
 
     def exposed_skin(self, key, pose, rows, pad):
-        if key != FIGURES[1]:
+        changes = self.skin_changes(key, pose)
+        if not changes:
             return rows, pad
         # Resolve cloth overlaps, belt positions and dyes on the registered
         # figure first. A skin highlight must never change a garment mask.
         out = [row[:] for row in rows]
-        for x, y, old, shade in self.male_skin(pose):
+        for x, y, old, shade in changes:
             if rows[y][x] == old:
                 out[y][x] = shade
         return out, pad

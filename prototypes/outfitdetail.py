@@ -2,6 +2,9 @@
 
 python prototypes/outfitdetail.py GAME_DIR SOURCE_ARCHIVE OUTPUT_ARCHIVE
 
+For a color-only revision to a fitted archive, add --keep-cloak-dyes to
+retain the equipped cloak surfaces.
+
 Each archive keeps its pre-detail paint so a second export starts from the same
 pixels. Equipment masks, body edits, registration and retail art are independent.
 """
@@ -14,6 +17,7 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import outfits
+import humanfolds
 import thiefhood
 from elfcloak import SWING_EDGES, lifted_hem, paint_swing
 from dsloader import art, classoutfits as co, sprites
@@ -331,7 +335,7 @@ def finish_class_color(model, role, paint, regions, folds, heads):
                 row[x] = pigments[color]
 
 
-def finish_archive(game, source, output):
+def finish_archive(game, source, output, *, keep_cloak_dyes=False):
     """Rebuild only the outfit paint. Retain the original paint for repeatable exports."""
     output = Path(output)
     palette = tuple(map(tuple, game.palette))
@@ -383,10 +387,16 @@ def finish_archive(game, source, output):
                                 and f in thiefhood.ELF_CROWNS[model]):
                             thiefhood.elf_profile(model, role, f, rows, paint, folds)
                         finish_class_color(model, role, paint, masks[0], folds, masks[2])
+                        if model in (2095, 2099):
+                            humanfolds.finish(rows, paint, masks[0], masks[3], model, role, pose)
                         frames.append(paint)
                         dyes.append(folds)
                     data = sprites.encode_frames(frames)
-                    dst.writestr(ZipInfo(name + "-dye"), sprites.encode_frames(dyes), ZIP_DEFLATED)
+                    dye_name = name + "-dye"
+                    # A paint-only revision can retain the fitted equipment
+                    # surface, including any hand-painted pose corrections.
+                    dye_data = src.read(dye_name) if keep_cloak_dyes else sprites.encode_frames(dyes)
+                    dst.writestr(ZipInfo(dye_name), dye_data, ZIP_DEFLATED)
                     dst.writestr(ZipInfo(original), raw, ZIP_DEFLATED)
                 dst.writestr(ZipInfo(name), data, ZIP_DEFLATED)
         os.replace(temp_path, output)
@@ -398,5 +408,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for arg in ("game_dir", "source", "output"):
         parser.add_argument(arg, type=Path)
+    parser.add_argument("--keep-cloak-dyes", action="store_true",
+                        help="retain the source archive's fitted cloak dyes in a paint-only export")
     args = parser.parse_args()
-    finish_archive(outfits.Game(args.game_dir), args.source, args.output)
+    finish_archive(outfits.Game(args.game_dir), args.source, args.output, keep_cloak_dyes=args.keep_cloak_dyes)

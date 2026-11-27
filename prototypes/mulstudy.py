@@ -354,7 +354,12 @@ def leather_outfits(game, pose, body, keep, arm):
                         fighter[py][u] = 199 if lacing < .1 else 94
                 dist = x-strap
                 if abs(dist) <= (1.45 if profile else 1.85):
-                    glad[py][u] = material_color(hide, 5.1+.5*weave+relief+3.2*(dist < -.35)-3.2*(dist > .65))
+                    strap_shade = 5.1+.5*weave+relief+3.2*(dist < -.35)-3.2*(dist > .65)
+                    if pose in (18, 19, 20) and dist < -.35:
+                        # The following shoulder turns the lit edge of the
+                        # strap toward the viewer during the backhand strike.
+                        strap_shade += 3.5
+                    glad[py][u] = material_color(hide, strap_shade)
                     if gy+2 <= y < wy-1 and -.95 <= dist < .05 and (y-gy)%4 == 2:
                         glad[py][u] = 169  # Stud in the dark edge of the baldric.
             if skin is not None and (x, y) in facing:
@@ -391,12 +396,19 @@ def leather_outfits(game, pose, body, keep, arm):
             if y <= wy:
                 belt = 169 if x == anchor and y == wy-1 else 89 if y == wy else 92
                 glad[py][u] = belt
+                if pose in (18, 19, 20) and y == wy-1 and x > anchor:
+                    glad[py][u] = material_color(hide, 9.8+.65*weave)
                 fighter[py][u] = 199 if x == anchor and y == wy-1 else belt
                 continue
             shade = 8.0+.85*weave-3.4*exp(-lap**2)+3.7*exp(-(lap+1.2)**2)
             shade -= 3.8*(y == lower) + 2.9*(x == right)
             # The lit ridge on the flap breaks the russet-on-copper edge.
-            glad[py][u] = material_color(hide, shade+.9)
+            # The twisting back exposes the thin underside of this flap.
+            # Break the ochre reflection at the hem above the bare leg.
+            glad_shade = shade+.9
+            if pose in (18, 19, 20) and (y == lower or x == right):
+                glad_shade = 10.3+.6*weave if skin in (129, 135) else min(glad_shade, 2.8+.6*weave)
+            glad[py][u] = material_color(hide, glad_shade)
             if -.95 <= lap < .15 and y < lower:
                 glad[py][u] = 95 if y == wy+1 else 168
             # Short skirt tabs over the far thigh distinguish the jerkin
@@ -414,6 +426,9 @@ def leather_outfits(game, pose, body, keep, arm):
     if pose in (12, 13):
         x, y = (8, 17) if pose == 12 else (2, 18)
         fighter[y][x+PAD] = 90
+    if pose == 20:
+        # The loose corner turns out above the calf in the follow-through.
+        glad[20][13+PAD], glad[20][14+PAD] = 95, 96
     if pose == 24:
         glad[18][9+PAD] = body[18][9+PAD]
     for x, y in {4: ((8, 19),), 19: ((9, 18),), 20: ((11, 18),)}.get(pose, ()):
@@ -490,6 +505,14 @@ def fitted_rows(game, pose):
             across = (x-left)/(right-left)
             plane = 1.65*exp(-12*(across-.28)**2)-1.5*exp(-18*(across-.81)**2)
             body[py][px+PAD] = material_color(skin_ramp, skin_ramp.index(c)+plane)
+    if pose == 26:
+        # At full draw the flank stretches between the lifted elbow and
+        # the hip. Pick out the turning rib and a shorter hip reflection
+        # inside the reconstructed harness shadow.
+        for x, y, shade in ((10, 13, 137), (11, 14, 136), (11, 15, 136),
+                            (10, 17, 136), (11, 17, 137), (10, 18, 136)):
+            if body[y][x+PAD] == 135:
+                body[y][x+PAD] = shade
     out = {"Original": original, "Body base": body}
     keep.update(ARM_EDGES.get(pose, ()))
     # At full draw the collar cut crosses the top of the deltoid.

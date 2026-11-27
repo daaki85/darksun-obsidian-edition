@@ -76,6 +76,11 @@ LOW_HEAD = {16: (16, 8, 5, 5), 17: (12, 12, 5, 5), 23: (21, 6, 4, 5),
             27: (7, 13, 5, 6), 28: (12, 6, 5, 5)}
 SKIN = (129, 134, 133, 132, 131, 130, 144, 145, 146, 147, 148, 149, 151)
 TEAL = (208, 69, 69, 70, 70, 71, 71, 40, 72, 73)
+# These folds use fixed map colours. Regional leaf and hide midtones
+# converge when the Loader prepares costumes for the desert palette.
+CLOAK_LEAF = (208, 17, 188, 189, 53, 54, 55, 56, 57)
+WRAP_TEAL = (208, 69, 70, 71, 40, 72, 73)
+GLADIATOR_HIDE = (208, 204, 203, 207, 195, 179, 205, 196, 201, 168, 169)
 LINEN = (208, 204, 207, 205, 92, 194, 206, 97, 121, 61, 199, 123, 125, 62, 63)
 BONE = (207, 205, 194, 206, 121, 199, 62, 63)
 TEAL_BONE = (208, 69, 70, 71, 40, 72, 73, 199)
@@ -215,16 +220,18 @@ def rear_cloak_color(x, y, pose, texture):
     start = mix(left, hem_left, depth) + 1.3*loft
     end = mix(right, hem_right, depth) - 1.2*loft
     u = (x-start)/max(1, end-start)
-    # Upper light crosses the shoulder blades. Below them two narrow
-    # troughs frame the broad lit face of the hanging cloth.
+    # Upper light crosses the shoulder blades. Three uneven folds divide
+    # below the gathers, following the sideways swing toward the hem.
     shade = 7.5 - 3.3*abs(u-.30) + 1.4*math.cos(4*u+depth)
-    for crease, bend in ((.28, -.12), (.73, .09)):
+    for crease, bend in ((.28, -.12), (.54, .07), (.79, .09)):
         dist = (u-crease-bend*loft)*(end-start)
         shade -= 4.1*math.exp(-.48*dist*dist)
         shade += 2.3*math.exp(-.37*(dist+1.7)**2)
     across = round(x-start)
     grain = texture[round(y-neck) % 8][across % 8]
-    return shade + .68*grain
+    # Narrow ridges beside the troughs stay a distinct value when this
+    # outer layer is dyed for a worn cloak or a multiclass lining.
+    return .66*(shade + 1.05*grain)
 
 
 def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
@@ -298,12 +305,12 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                         depth = (y-shoulder[1])/max(1, belt[1][1]-shoulder[1])
                         fold = 12*u + 1.4*depth + .65*math.sin(depth*2.4)
                         grain = texture[(y-shoulder[1]) % 8][int(16*u) % 8]
-                        shade = 6.8 + 2.8*math.cos(fold) + .65*grain - 1.4*u
+                        shade = 4.6 + 2.0*math.cos(fold) + .72*grain - 1.1*u
                     if (x,y+1) not in cloak or (x+1,y) not in cloak:
-                        shade -= 3.1
+                        shade -= 2
                     if visible is not None:
                         visible["cloak"].add(point)
-                    pieces[role][sy][sx] = pigment(RAMPS["leaf"], shade)
+                    pieces[role][sy][sx] = pigment(CLOAK_LEAF, shade)
                     continue
             if role == "Cleric" and point in sleeve and c is not None:
                 flesh = body[sy][sx]
@@ -357,10 +364,27 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 color = pigment(colors, shade)
                 if role == "Psionicist":
                     # The lower flap continues the wrap below the belt.
-                    color = pigment(TEAL, .56*shade+.45)
+                    color = pigment(WRAP_TEAL, .4*shade + .20*grain)
+                elif role == "Gladiator":
+                    # The overlapping skirt has a turned-under leather edge
+                    # against the thigh and a warm welt beside the lap seam.
+                    hide = .66*shade - .7
+                    if y == hem[x]:
+                        # The near lip catches light against the shadowed
+                        # thigh and turns underneath toward the far knee.
+                        hide = (7.5 if .18 < u < .50 else 1) + .25*grain
+                    elif x == hi:
+                        hide = 1 + .25*grain
+                    elif -.13 < fold < -.04 and y < hem[x]-1:
+                        hide += 1.7
+                    color = pigment(GLADIATOR_HIDE, hide)
                 if y-edge < 1.5:
-                    belt_light = 5 + 3*(y-edge < .55) - 4*shadow
-                    color = pigment(RAMPS["hide"], belt_light+.65*grain)
+                    if role == "Gladiator":
+                        belt_light = 4.8 + 2.6*(y-edge < .55) - 3*shadow
+                        color = pigment(GLADIATOR_HIDE, belt_light + .55*grain)
+                    else:
+                        belt_light = 5 + 3*(y-edge < .55) - 4*shadow
+                        color = pigment(RAMPS["hide"], belt_light+.65*grain)
                     if role == "Fighter" and abs(x-mid[0]+2) < 1:
                         color = 168
             elif role == "Gladiator":
@@ -375,7 +399,10 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 dist = x-center
                 if abs(dist) > (1.0 if pose in PROFILE else 1.25):
                     continue
-                color = pigment(RAMPS["hide"], (10 if dist < -.20 else 3)+.45*grain)
+                # A lit welt on the raised pin-side edge and dark leather
+                # beneath it keep the narrow strap distinct on warm skin.
+                shade = (7 + 1.6*(t < .26) if dist < -.20 else .8) + .45*grain
+                color = pigment(GLADIATOR_HIDE, shade)
             else:
                 # Keep the light on the ribcage in the underlying cel.
                 # Smooth leather changes plane more slowly than creased linen.
@@ -392,7 +419,17 @@ def dress(pieces, source, model, pose, dx, dy, bow, texture, visible):
                 if role == "Psionicist":
                     overlap = t - (.87-.72*u+.11*u*u)
                     turn = 2.0 if -.12 < overlap < 0 else -1.5 if 0 <= overlap < .10 else 0
-                    color = pigment(TEAL, .55*shade+turn+.5)
+                    # The wrap pulls diagonally toward the sash. A second,
+                    # shorter crease starts below the blade, opening toward
+                    # the near shoulder as the fitted panel widens.
+                    tuck = t - (.20 + .38*u)
+                    ridge = 0
+                    if .12 < u < .72:
+                        if -.11 < tuck < 0:
+                            ridge = 1.15
+                        elif 0 <= tuck < .12:
+                            ridge = -1.05
+                    color = pigment(WRAP_TEAL, .38*shade + .80*turn + .26*grain + ridge)
             pieces[role][sy][sx] = color
             if visible is not None and role in visible:
                 visible[role].add(point)
@@ -619,6 +656,15 @@ def study_rows(game, model, pose, texture, *, pairs=False, panels=None):
                         body = SKIN[min(len(SKIN)-1, SKIN.index(body)+2)]
                     elif abs(u-.54) < .07:
                         body = SKIN[max(0, SKIN.index(body)-2)]
+                if in_top and not near_arm and body in SKIN and sx not in (left, right):
+                    # Reflected light below the ribs rolls into a short flank
+                    # shadow. Keep the established outer limb and calf contour.
+                    flank = t - (.65 - .26*u)
+                    tone = SKIN.index(body)
+                    if .28 < u < .81 and 0 <= flank < .12:
+                        body = pigment(SKIN, tone - 2)
+                    elif .20 < u < .49 and -.12 < flank < 0:
+                        body = pigment(SKIN, tone + 1)
                 foot = sandal(x, y, soles, across)
                 # In these two crossing profile steps the back foot lies
                 # directly beside the planted shin. Only its toes take a sole.

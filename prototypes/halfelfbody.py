@@ -1,4 +1,4 @@
-"""Paint the exposed anatomical planes on the widened male half-elf."""
+"""Paint the anatomical planes exposed by the half-elves’ changed builds and hair."""
 
 # Spaces preserve the underpainting. The short strokes follow the near rib,
 # shoulder blade, hip and knee. Light falls from the upper left on the map.
@@ -76,4 +76,24 @@ def paint(pose, body, pad, source, back, protected, original_skin):
                 old = body[y+pad][x+pad]
                 if old in SKIN.values() and old != SKIN[ink]:
                     changes.append((x+pad, y+pad, old, SKIN[ink]))
+    return changes
+
+
+# With the bun lifted, the woman's scapula and spine show where the human's
+# long hair used to fall. The near shoulder rises and falls across the walk.
+BACK_RIBS = {1: (7, 8), 7: (6, 8), 8: (7, 8), 9: (8, 8), 10: (7, 8)}
+
+
+def female_back(pose, body, pad):
+    if pose not in BACK_RIBS:
+        return []
+    cx, cy = BACK_RIBS[pose]
+    changes = []
+    for dx, dy, shade in ((0, 0, 145), (1, 0, 144), (0, 1, 144),
+                          (1, 1, 145), (2, 2, 144), (3, 2, 133),
+                          (3, 3, 134), (2, 4, 133)):
+        x, y = pad+cx+dx, pad+cy+dy
+        old = body[y][x]
+        if old in (130, 131, 132):
+            changes.append((x, y, old, shade))
     return changes

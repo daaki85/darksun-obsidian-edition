@@ -122,6 +122,12 @@ class HalfElfEquipmentTests(unittest.TestCase):
             frame = classoutfits.frames("Cleric/Preserver", False, 307)[pose]
             self.assertIn(stitch, {(x, y) for x, y, _ in frame.equipped_cape})
 
+    def test_halfling_outer_cloak_stops_at_the_raised_arm(self):
+        frame = classoutfits.frames("Cleric/Thief", True, 2070)[5]  # rear strike 3
+        self.assertTrue(frame.equipped_cape)
+        for layer in (frame.cloak, frame.equipped_cape):
+            self.assertNotIn((13, 8), {(x, y) for x, y, _ in layer})
+
     def test_thief_cloak_follows_the_womans_shoulder_in_the_front_strike(self):
         for role in ("Thief", "Fighter/Psionicist/Thief"):
             frame = classoutfits.frames(role, True, 307)[1]
@@ -391,6 +397,18 @@ class HumanOutfitTests(unittest.TestCase):
                     for y, row in enumerate(upper):
                         body = {side + x for x, c in enumerate(source[y]) if c is not None}
                         self.assertLessEqual({x for x, c in enumerate(row) if c is not None}, body)
+
+    def test_front_wrap_keeps_a_lit_ridge_and_shadow_in_fixed_teal(self):
+        # These shoulder pixels used to merge to a single mid-teal at game size.
+        for model, x, y in ((2095, 4, 6), (2099, 5, 9)):
+            frame = classoutfits.frames("Psionicist", False, model)[0]
+            with self.subTest(model=model):
+                x, y = x + 6, y + 6  # Both human idle layers include a six-pixel margin.
+                lip = frame.image[y][x]
+                crease = frame.image[y+2][x+2]
+                self.assertIn(lip, (71, 72, 73))
+                self.assertIn(crease, (69, 70))
+                self.assertTrue({lip, crease}.isdisjoint(sg.REGIONAL))
 
     def test_psionicist_wrap_reaches_the_belt_in_the_turning_poses(self):
         # Follow the two central ribs in each pose, down the formerly bare midriff.

@@ -246,6 +246,32 @@ HIT_THIGH = {(10, 12): 130, (11, 12): 145, (12, 12): 144,
              (14, 13): 131, (13, 14): 132, (14, 14): 133}
 
 
+# Native columns along the far ribs. The small reflected plane shifts under
+# the shoulder as the arm comes forward; a single highlight would sit still.
+RIB_TURNS = {
+    2061: {0: (6, (12, 11, 10)), 3: (6, (11, 10, 10)), 4: (5, (12, 11, 10)),
+           5: (6, (12, 12, 11, 10)), 6: (7, (11, 10, 9)), 7: (7, (10, 10, 9)),
+           9: (10, (7, 7, 6)), 19: (17, (9, 9, 10)),
+           21: (13, (19, 18, 18, 17, 17)), 27: (6, (12, 11, 10))},
+    2059: {0: (14, (10, 10, 11)), 3: (10, (10, 9, 9, 8))},
+}
+
+# Short reflected light where the side-strike torso joins the raised thigh.
+STRIKE_THIGH = {(18, 20): 132, (19, 21): 130, (20, 22): 132}
+
+# Raised lip on the returning fold of the teal wrap. Follow the turn of
+# the hip in each front step and carry the same crease round the back.
+WRAP_TURNS = {
+    2061: {0: (11, (9, 8, 9, 10, 10, 11)), 3: (12, (9, 8, 8, 8)),
+           4: (10, (9, 9, 10, 10)), 5: (11, (9, 9, 10, 11)),
+           6: (10, (8, 8, 7, 7, 8, 8)), 9: (14, (6, 7, 7, 8, 8)),
+           10: (15, (9, 8, 8, 9))},
+    2059: {0: (11, (10, 9, 9, 8, 9, 9, 8)), 3: (14, (9, 8, 8, 7, 8)),
+           4: (13, (10, 10, 9, 9, 9)), 5: (13, (10, 9, 9, 8)),
+           6: (10, (8, 8, 7, 7, 7, 8)), 27: (12, (9, 9, 10, 10, 9, 10))},
+}
+
+
 def torso_skin(u, depth, rear, profile):
     """Model the light over one shoulder, ribs and iliac crest in pose coordinates."""
     # The near and far planes have unequal widths when the figure turns.
@@ -421,6 +447,8 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
     profile_walk = pose in (2, 11, 12, 13, 14)
     panel = PROFILE_PANELS.get((model, pose))
     panel_hem = waist + (3 if cape == "Thief" else 5)
+    rib_y, ribs = RIB_TURNS[model].get(pose, (0, ()))
+    wrap_y, wrap = WRAP_TURNS[model].get(pose, (0, ()))
     out = [[None] * (width + 2 * PAD) for _ in range(height + 2 * PAD)]
     body = {(x, y) for y, row in enumerate(rows) for x, c in enumerate(row) if c is not None}
     for y, row in enumerate(rows):
@@ -500,6 +528,12 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                         if model == figures.ELF_WOMAN and pose == 27:
                             paint = HIT_THIGH.get((x, y), paint)
 
+                if (paint in (133, 134) and not arm and 0 <= y - rib_y < len(ribs)
+                        and x == ribs[y - rib_y]):
+                    paint = 130 if y - rib_y in (1, 2) else 132
+                if model == 2061 and pose == 21 and paint == 134:
+                    paint = STRIKE_THIGH.get(point, paint)
+
             if role != "Body base" and not foreground and not arm:
                 torso = c is not None and shoulder - 2 <= y <= waist and abs(dx) <= radius + 1
                 rank = 0 if u > 0.85 else 1 if u > 0.25 else 3 if -0.9 < u < -0.22 else 2
@@ -512,9 +546,19 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                 if base == "Gladiator":
                     if torso and abs(dx - (1.8 - 3.8 * t)) < 1.12:
                         strap_edge = dx - (1.8 - 3.8 * t)
-                        paint = dwarf.HIDE[2 if strap_edge < 0 and 0.12 < t < 0.70 else 1]
+                        # A worn lip catches light over the near ribs. The
+                        # overlap tucks into a dark seam at the belt.
+                        paint = dwarf.HIDE[1]
+                        if strap_edge < 0 and 0.12 < t < 0.70:
+                            paint = 99 if 0.18 < t < 0.52 else dwarf.HIDE[2]
+                        elif strap_edge >= 0 and t >= 0.68:
+                            paint = 88
                     if c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1:
                         paint = dwarf.LEATHER[rank]
+                        if depth in (1, 2) and abs(dx + 1.25 - 0.4 * depth) < 0.52:
+                            paint = 98 if depth == 1 else 95
+                        elif depth == 3 and abs(dx) < radius - 0.5 and rank in (1, 2):
+                            paint = 88
                 elif base == "Fighter":
                     if (torso or model == figures.ELF_WOMAN and c in shirt and shoulder <= y <= waist
                         or c is not None and 0 <= depth <= 3 and abs(dx) <= radius + 1):
@@ -576,6 +620,9 @@ def render(game, model, pose, role, layers=None, *, show_cape=True):
                 shadow_turn = -1 <= depth <= 4 or base == "Psionicist" and torso and t > 0.35
                 if paint == 208 and shadow_turn and (x - 1, y + 1) in body:
                     paint = 69 if base == "Psionicist" else 88
+                if (base == "Psionicist" and paint == 69 and 0 <= y - wrap_y < len(wrap)
+                        and x == wrap[y - wrap_y]):
+                    paint = 71 if y - wrap_y in (1, 2) else 70
                 if (
                     paint is not None
                     and paint not in outfits.SKINC

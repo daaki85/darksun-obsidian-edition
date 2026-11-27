@@ -315,7 +315,9 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
                 along = max(0, min(1, (y-guard_y)/max(1, hy-guard_y)))
                 strap = guard_x+(hx+(2 if guard_x < sx else -2)-guard_x)*along
                 if abs(x-strap) <= 1.05:
-                    strap_light = 8.5 if x < strap else 3.6
+                    # The far leather lip is undercut beside the skin. Light
+                    # catches the other side as the strap turns over the ribs.
+                    strap_light = 13.5 if x < strap else 1.8
                     rows['Gladiator'][ny][nx+4] = dye(RAMPS['hide'], strap_light+.45*grain)
             cap_y = y-guard_y
             cap_x = x-guard_x
@@ -375,10 +377,39 @@ def rows_for(game, model, pose, swatch, *, exposed_arm=None):
                     # lap line runs from the belt over the forward thigh.
                     lap = x-hx+.62*(y-hy)
                     light += 2.6 if -.8 < lap < .4 else -2.2 if .4 <= lap < 1.4 else .7
+                if role == 'Cleric' and y > hy:
+                    # Linen folds over at the outside seam and beneath the
+                    # knee. A tan return separates that thin hem from sand.
+                    # Keep the raised, near-facing ridge in the linen light.
+                    if (x+1, y) not in panel:
+                        light = min(light, 3.6 + .65*grain)
+                    elif (x, y+1) not in panel:
+                        light = min(light, 4.4 + .65*grain + 1.1*(x < hx))
+                if role == 'Gladiator' and y > hy:
+                    # The hide flap overlaps the thigh. Its cut underside
+                    # follows the lifted knee through front and rear steps.
+                    if (x, y+1) not in panel or (x+1, y) not in panel:
+                        # The rear thigh under the hem is in deep shadow.
+                        # Show the turned hide edge where that shadow meets it.
+                        if body in (128, 129, 134):
+                            light = 10.0 + .6*grain
+                        else:
+                            light = min(light, 2.7 + .6*grain)
+                    elif -.8 < lap < .4:
+                        light += 1.6
                 color = dye(ramp, light)
                 if y == hy:
                     color = dye(RAMPS['hide'], 4+.55*grain)
+                    if role == 'Gladiator' and pose in REAR and x >= hx:
+                        # The folded top edge passes under the long hair and
+                        # across the far hip in the shadow of the moving arm.
+                        color = dye(RAMPS['hide'], 9.1+.8*grain-abs(x-hx)*.35)
                 rows[role][ny][nx+4] = color
+    if pose == 10:
+        # The narrow rear flap turns out above the darker calf at the end
+        # of the stride. Carry its lit seam down from the waistband.
+        for x, y, tone in ((6, 11, 95), (6, 14, 95), (5, 15, 93)):
+            rows["Gladiator"][y+dy][x+dx+4] = tone
     return {role: flip(r) if pose == 28 else r for role, r in rows.items()}
 
 
