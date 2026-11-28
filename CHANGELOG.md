@@ -67,6 +67,12 @@ A second pass runs ten of DSCLOG's self-contained routines from its tail (`TAIL_
 segment (1,664 free now). Nothing a player sees changes (the same screens under both builds, in both games, and
 the fountain ambush fought with the moved routines). **Dev:** `playtest/scwatch.py` watches the shadow cache.
 
+**New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
+of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in
+(`build/ds2o` beside it: darksun-recompiled's new fifth build), after the same copies and widened sheets as a
+DOSBox start; an older program is passed over, and DOSBox-X chosen on the Options tab still comes first. The log's
+start line names the sequel. **Dev:** a launch test with a stand-in program.
+
 **Fixed: both games, race and sex in talk and the typos** (branch `claude/ravager-script-room`). Wake of the
 Ravager's 17 lines that read a character's race or sex straight off the combat record (always 0: a thri-kreen
 never a "bug", a woman never "lass") now read the character's own record, as Shattered Lands' same fix; seen in

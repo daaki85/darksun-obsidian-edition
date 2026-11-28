@@ -144,6 +144,13 @@ def recompiled_program(settings: Optional[dict] = None) -> Optional[str]:
     return found_recompiled_program()
 
 
+def recompiled_has_sequel(program: str) -> bool:
+    """Whether the recompiled PROGRAM has Wake of the Ravager with the mod built in (its memory
+    image build/ds2o beside it, as its zip has it; darksun-recompiled's tools/build_mod.sh ... ravager).
+    One without it would start the sequel without the mod, so the Loader starts DOSBox instead."""
+    return os.path.isfile(os.path.join(os.path.dirname(os.path.abspath(program)), "build", "ds2o", "image.bin"))
+
+
 def recompiled_command(program: str, game_dir: str) -> List[str]:
     """The command line that starts the recompiled program with the mod."""
     return [program, "--game", game_dir, "--cd", DOS_DIR]
@@ -1112,9 +1119,9 @@ def started_line(game_dir: str) -> str:
     """The log's line for the game started from GAME_DIR: in DOSBox, in DOSBox-X (which program),
     or as Dark Sun Recompiled (which program), so a player sees which one runs."""
     from . import ravager
-    if STARTED:
-        return f"Starting Shattered Lands from {game_dir} as Dark Sun Recompiled ({STARTED})."
     name = "Wake of the Ravager" if ravager.is_wotr_dir(game_dir) else "Shattered Lands"
+    if STARTED:
+        return f"Starting {name} from {game_dir} as Dark Sun Recompiled ({STARTED})."
     if STARTED_ENGINE == dosboxx.DOSBOX_X:
         return f"Starting {name} from {game_dir} in DOSBox-X ({STARTED_DOSBOX_X})."
     return f"Starting {name} from {game_dir} in DOSBox."
@@ -1359,6 +1366,11 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     from . import ravager
     STARTED = None
     del LEFT_OUT[:]  # (Shattered Lands' last start's: not this game's, so not said again after it, 2026-11-26)
+    # (the recompiled program as for Shattered Lands: after DOSBox-X chosen, before DOSBox-X found;
+    # only one with the sequel's mod built in)
+    program = None if dosboxx.chosen(settings) == dosboxx.DOSBOX_X else recompiled_program(settings)
+    if program is not None and recompiled_has_sequel(program):
+        return _launch_wotr_recompiled(game_dir, settings, program)
     if dosboxx.engine(settings) == dosboxx.DOSBOX_X:
         return _launch_wotr_dosbox_x(game_dir, settings)
     dosbox_dir = _find_file(game_dir, "DOSBOX")
@@ -1377,6 +1389,28 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
     _clear_end_files()
     conf = write_conf_wotr(game_dir, settings=settings)
     return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), None
+
+
+def _launch_wotr_recompiled(game_dir: str, settings: dict, program: str) -> Tuple[subprocess.Popen, Optional[str]]:
+    """Wake of the Ravager with the mod as Dark Sun Recompiled: its copies made and the roster's and
+    saves' sheets widened as for DOSBox, then the program started with the game's folder and the
+    mod's dos folder as D: (recompiled_command; the program puts the CD on F:, as the DOSBox autoexec
+    does, from game.gog)."""
+    global STARTED
+    from . import ravager
+    if not _find_file(game_dir, "DSUN.EXE"):
+        raise LaunchError(f"{game_dir} does not look like the GOG install of Wake of the Ravager")
+    problem = ravager.prepare(game_dir, DOS_DIR, settings, find_game_dir())  # (Shattered Lands': the new items' pictures)
+    if problem:
+        raise LaunchError(f"Wake of the Ravager's copy couldn't be made: {problem}")
+    try:  # (the roster's and the saves' sheets the copy's: ravager.widen_files)
+        ravager.widen_files(game_dir)
+    except OSError as e:
+        raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
+    _clear_end_files()
+    proc = subprocess.Popen(recompiled_command(program, game_dir), cwd=os.path.dirname(os.path.abspath(program)))
+    STARTED = program
+    return proc, None
 
 
 # the memory file of the DOSBox-X game launch() last started (None: not DOSBox-X)

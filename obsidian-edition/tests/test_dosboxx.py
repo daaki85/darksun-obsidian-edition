@@ -7,6 +7,7 @@ import stat
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -606,6 +607,58 @@ class LaunchTests(unittest.TestCase):
         with self.assertRaises(launch.LaunchError) as raised:  # (GOG's chosen: its DOSBOX folder wanted)
             launch._launch_wotr(wotr, dict(settings, engine="gog"))
         self.assertIn("GOG install of Wake of the Ravager", str(raised.exception))
+
+    def test_wake_of_the_ravager_as_dark_sun_recompiled(self):
+        """The sequel as Dark Sun Recompiled when the program found has its mod built in (build/ds2o
+        beside it): its copies made and the sheets widened as for DOSBox, the program started with the
+        game's folder and the mod's dos folder; one without it, or DOSBox-X chosen, is passed over."""
+        from dsloader import ravager
+        wotr = os.path.join(self.dir.name, "wotr")
+        os.mkdir(wotr)
+        open(os.path.join(wotr, "DSUN.EXE"), "wb").close()
+        saved = ravager.prepare, ravager.widen_files
+        self.addCleanup(lambda: (setattr(ravager, "prepare", saved[0]), setattr(ravager, "widen_files", saved[1])))
+        done = []
+        ravager.prepare = lambda game_dir, dos_dir, settings=None, sl_dir=None: done.append("prepare")
+        ravager.widen_files = lambda game_dir, size=None: done.append("widen") or []
+        saved_find = launch.find_game_dir
+        self.addCleanup(setattr, launch, "find_game_dir", saved_find)
+        launch.find_game_dir = lambda: None
+        here = os.path.join(self.dir.name, "recompiled")
+        program = os.path.join(here, "dsun")
+        os.makedirs(here)
+        launch.recompiled_program = lambda settings=None: program
+        self.assertFalse(launch.recompiled_has_sequel(program))
+        os.makedirs(os.path.join(here, "build", "ds2o"))
+        open(os.path.join(here, "build", "ds2o", "image.bin"), "wb").close()
+        self.assertTrue(launch.recompiled_has_sequel(program))
+        started = []
+
+        class Started:
+            pid = os.getpid()
+            args = [program]
+
+        popen = launch.subprocess.Popen
+        self.addCleanup(lambda: setattr(launch.subprocess, "Popen", popen))
+        launch.subprocess.Popen = lambda args, **k: started.append((args, k.get("cwd"))) or Started()
+        proc, problem = launch._launch_wotr(wotr, self.settings(engine="gog"))
+        self.assertIsNone(problem)
+        self.assertEqual(done, ["prepare", "widen"])
+        self.assertEqual(started, [([program, "--game", wotr, "--cd", launch.DOS_DIR], here)])
+        self.assertEqual(launch.STARTED, program)
+        with mock.patch.object(ravager, "is_wotr_dir", return_value=True):   # (the stand-in's DSUN.EXE is empty)
+            self.assertEqual(launch.started_line(wotr), f"Starting Wake of the Ravager from {wotr} as Dark Sun Recompiled ({program}).")
+        # DOSBox-X chosen on the Options tab comes first, as for Shattered Lands
+        started.clear()
+        with self.assertRaises(launch.LaunchError):
+            launch._launch_wotr(wotr, self.settings(engine="dosbox-x", dosbox_x_path=os.path.join(self.dir.name, "none")))
+        self.assertEqual(started, [])
+        # a program without the sequel's mod: GOG's DOSBox looked for as before
+        os.remove(os.path.join(here, "build", "ds2o", "image.bin"))
+        with self.assertRaises(launch.LaunchError) as raised:
+            launch._launch_wotr(wotr, self.settings(engine="gog"))
+        self.assertIn("GOG install of Wake of the Ravager", str(raised.exception))
+        self.assertEqual(started, [])
 
     @unittest.skipIf(os.name == "nt", "a shell script stands in for the program")
     def test_the_start_the_lock_files_memory_line_and_the_end(self):
