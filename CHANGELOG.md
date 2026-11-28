@@ -59,13 +59,15 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-**Fixed: Wake of the Ravager, quiet speech** (branch `claude/ravager-voice-volume`). The sequel's spoken lines
-came out 24 dB under their recording in DOSBox-X and 16 dB under in GOG's DOSBox, while its CD music played at full
-level: the game's sound driver turns the Sound Blaster's mixer down and both emulators let that reach their sound
-channel, but not the CD's. The Loader now starts the sequel with `sbmixer=false` in both, so the speech and sound
-effects play at their recorded level, as loud as the music ([the measurements](playtest/logs/2026-11-28-ravager-voice-volume.md)).
-The game menu's SOUND EFFECT VOLUME no longer changes anything; F5 still turns the effects off. Shattered Lands,
-whose music is MIDI, is unchanged.
+**Fixed: both games, quiet speech and sound effects** (branch `claude/ravager-voice-volume`). Wake of the Ravager's
+spoken lines came out 24 dB under their recording in DOSBox-X and 16 dB under in GOG's DOSBox, while its CD music
+played at full: the game menu's SOUND EFFECT VOLUME starts at half, and the emulated Sound Blaster's mixer makes
+half far quieter than a card did. The sequel now starts it at full (its speech and effects as recorded, as loud as
+the music, in both emulators), and Shattered Lands, whose music is MIDI, a notch up in DOSBox-X only (79 of 127,
+which plays its effects as loud as GOG's DOSBox at the game's 63). A loaded game takes the volume from the roster,
+so the Loader sets it there too, but only where it is still the starting value: a volume set in the menu stays,
+and the menu works as before ([the measurements](playtest/logs/2026-11-28-ravager-voice-volume.md)). **Dev:**
+`sfxvolume`, the patches `sfx_volume_full` (sequel) and `sfx_volume_dosbox_x` (`gamepatch.SFX_VOLUME_DBX`).
 
 **New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
 of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in

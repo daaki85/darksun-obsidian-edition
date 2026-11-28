@@ -232,13 +232,19 @@ class LaunchTests(unittest.TestCase):
             raise gamepatch.PatchError("not in a test")
         gamepatch.write_patched = write_patched
         try:
+            from dsloader import dosboxx
+            x = {dosboxx.SETTING: dosboxx.DOSBOX_X}  # (the engine: SFX_VOLUME_DBX's patch in DOSBox-X alone)
+
             def skip(settings):
-                self.assertEqual(launch.prepare_patched_game(self.dsun_only(), settings), "not in a test")
+                self.assertEqual(launch.prepare_patched_game(self.dsun_only(), dict(x, **settings)), "not in a test")
                 return skips[-1]
             self.assertEqual(skip({}), frozenset())
             off = {key: skip({key: False}) for key in launch.CONTENT}
+            # (GOG's DOSBox: the effects' starting volume left as the game's, every switch's patches in)
+            self.assertEqual(skip({dosboxx.SETTING: dosboxx.GOG}), frozenset(gamepatch.SFX_VOLUME_DBX))
         finally:
             gamepatch.write_patched = saved
+        del switches["SFX_VOLUME_DBX"]  # (the engine's, not an Options key's)
         # (the switches gone from the tab, game.ALWAYS_ON: their patches always in, whatever is saved)
         always = {"EFFECTS_KEPT", "ROLL_STORE", "CAMERA", "SCENE_POINTER", "MOUSE_START", "PARTY_SPREAD",
                   "SPELLS_MANUAL", "SPELL_TO_HIT"}
@@ -394,7 +400,8 @@ class LaunchTests(unittest.TestCase):
             self.assertEqual(launch.prepare_patched_game(self.dsun_only(), old), "not in a test")
         finally:
             gamepatch.write_patched = saved
-        self.assertEqual(skips[-1], frozenset(gamepatch.STEADY_PACE))  # (only the kept switch's)
+        # (only the kept switch's, and the engine's: GOG's DOSBox here, the effects' volume the game's)
+        self.assertEqual(skips[-1], frozenset(gamepatch.STEADY_PACE) | frozenset(gamepatch.SFX_VOLUME_DBX))
         self.assertIn("sensitivity=33", launch.display_lines(old))  # (the pointer's speed: mouse_start)
 
     def test_settings_saved_whole_and_never_over_an_unreadable_file(self):
@@ -743,8 +750,6 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("scaler=scan3x", lines)
         self.assertIn("cycles=fixed 20000", lines)
         self.assertNotIn("[midi]", lines)
-        # (GOG's DOSBox reads GOG's settings first, sbmixer=true among them: this file's line wins)
-        self.assertIn("sbmixer=false", usual[usual.index("[sblaster]"):usual.index("[dos]")])
         self.assertFalse([line for line in lines if line.startswith("midiconfig")])
         self.assertEqual(conf({"midi_device": "128:0"}), usual)
 

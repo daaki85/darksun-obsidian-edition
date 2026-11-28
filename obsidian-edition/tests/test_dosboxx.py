@@ -268,7 +268,6 @@ class ConfTests(unittest.TestCase):
         for line in ("rom bios allocation max=16", "rom bios minimum size=16"):
             self.assertIn(line, section(conf, "dosbox"))
         self.assertEqual(section(conf, "config"), ["dos=umb"])
-        # (Shattered Lands keeps the card's mixer: its sound effects as in GOG's DOSBox beside its MIDI music)
         self.assertEqual(section(conf, "sblaster"), ["sbtype=sb16", "sbbase=220", "irq=5", "dma=1", "hdma=5"])
         for line in ("showmenu=false", "autolock=true", "middle_unlock=none", "clip_mouse_button=none"):
             self.assertIn(line, section(conf, "sdl"))
@@ -600,9 +599,6 @@ class LaunchTests(unittest.TestCase):
             self.assertIn(f"d:\\{ravager.PATCHED_EXE.lower()} {ravager.ARGS}", auto)
             self.assertNotIn("dsclog.exe", " ".join(auto).lower())  # (Shattered Lands' autoexec not added)
             self.assertIn("umb end=FBFF", conf)
-            # (the sequel's speech at its recorded level beside its CD music: ravager.SOUND_LINES)
-            self.assertEqual(conf.count(ravager.SBMIXER_OFF), 1)
-            self.assertIn(ravager.SBMIXER_OFF, conf[conf.index("[sblaster]"):conf.index("[midi]")])
             self.assertIn(f"memory file={launch.MEMORY_FILE}", conf)
         finally:
             proc.kill()

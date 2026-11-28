@@ -468,8 +468,7 @@ def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional
     the game run under DOSBox-X's own `dx-capture /a`, its sound written there), `extra` (more
     lines, each "section|name=value"). SEQUEL: Wake of the Ravager's autoexec (ravager.conf_lines',
     from its "[autoexec]"), in place of Shattered Lands'; the rest is the same, the music device
-    too (the sequel plays its CD's tracks and no MIDI, so it routes nothing there), but for the
-    Sound Blaster's mixer, left out as in GOG's DOSBox (ravager.SOUND_LINES)."""
+    too (the sequel plays its CD's tracks and no MIDI, so it routes nothing there)."""
     s = settings or {}
     o = dict(options or {})
     core, cycles = speed(s)
@@ -490,10 +489,7 @@ def conf_lines(game_dir: str, dos_dir: str, memory_file: str, settings: Optional
         "[cpu]", f"core={core}", "cputype=auto", f"cycles=fixed {cycles}", "",
         # GOG's card: the game's sound driver is set up for it (DOSBox-X's own default is IRQ 7:
         # "Mel Fatal Error ... DSP Detect Fail")
-        # (the sequel: its speech and sound effects at their recorded level, beside its CD music:
-        # ravager.SOUND_LINES)
-        "[sblaster]", "sbtype=sb16", "sbbase=220", "irq=5", "dma=1", "hdma=5",
-        *(["sbmixer=false"] if sequel is not None else []), "",
+        "[sblaster]", "sbtype=sb16", "sbbase=220", "irq=5", "dma=1", "hdma=5", "",
         "[midi]"] + midi_lines(s) + [
         "",
         # EMS off as on 0.74 (launch.DOS_LINES: its page frame takes the upper memory DSCLOG loads

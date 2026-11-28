@@ -23,8 +23,8 @@ import threading
 import time
 from typing import Callable, Dict, Iterator, List, Optional, Tuple
 
-from . import (champions, dosboxx, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer, tome,
-               worldgear)
+from . import (champions, dosboxx, gamepatch, gff, gpl, icons, itemtables, kalzith, midiout, scenepointer,
+               sfxvolume, tome, worldgear)
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DOS_DIR = os.path.join(HERE, "dos")
@@ -673,6 +673,12 @@ def prepare_patched_game(game_dir: str, settings: Optional[dict] = None) -> Opti
     # (every patch group in, but Steady pace's when it is unticked: the others' switches went after
     # 2.18, game.ALWAYS_ON)
     skip = frozenset() if on["steady_pace"] else frozenset(gamepatch.STEADY_PACE)
+    # the sound effects' starting volume (sfxvolume): in DOSBox-X a notch up, as loud as GOG's DOSBox
+    # plays the game's; a loaded game's from the roster, set to match
+    dosbox_x = dosboxx.engine(chosen) == dosboxx.DOSBOX_X
+    if not dosbox_x:
+        skip |= frozenset(gamepatch.SFX_VOLUME_DBX)
+    sfxvolume.set_roster(game_dir, *sfxvolume.sl_level(dosbox_x))
     source = _find_file(game_dir, "DSUN.EXE")
     if source is None:  # (gone since the folder was picked: said, not a TypeError)
         return f"{game_dir} has no DSUN.EXE"
@@ -1386,6 +1392,7 @@ def _launch_wotr(game_dir: str, settings: dict) -> Tuple[subprocess.Popen, Optio
         ravager.widen_files(game_dir)
     except OSError as e:
         raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
+    sfxvolume.set_roster(game_dir, *sfxvolume.ravager_level())  # (a loaded game's effects' volume: full)
     _clear_end_files()
     conf = write_conf_wotr(game_dir, settings=settings)
     return subprocess.Popen([exe, "-conf", settings_conf, "-conf", conf, "-noconsole"], cwd=dosbox_dir), None
@@ -1407,6 +1414,7 @@ def _launch_wotr_recompiled(game_dir: str, settings: dict, program: str) -> Tupl
         ravager.widen_files(game_dir)
     except OSError as e:
         raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
+    sfxvolume.set_roster(game_dir, *sfxvolume.ravager_level())  # (a loaded game's effects' volume: full)
     _clear_end_files()
     proc = subprocess.Popen(recompiled_command(program, game_dir), cwd=os.path.dirname(os.path.abspath(program)))
     STARTED = program
@@ -1434,6 +1442,7 @@ def _launch_wotr_dosbox_x(game_dir: str, settings: dict) -> Tuple[subprocess.Pop
         ravager.widen_files(game_dir)
     except OSError as e:
         raise LaunchError(f"Wake of the Ravager's roster or saves couldn't be made the Loader's: {e}")
+    sfxvolume.set_roster(game_dir, *sfxvolume.ravager_level())  # (a loaded game's effects' volume: full)
     os.makedirs(DBX_DIR, exist_ok=True)
     cd = ravager.cd_sheet(game_dir, os.path.join(DBX_DIR, "ravager-cd.cue"))  # (else game.ins as it is)
     sequel = ravager.conf_lines(game_dir, DOS_DIR, cd, umb_plus=UMB_PLUS_COM, game_end=GAME_END_COM)
