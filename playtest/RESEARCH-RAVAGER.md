@@ -333,6 +333,11 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   holds at +12h the frame being drawn with its width and height (a byte each) and at +18h the step of its SCMD
   script (the frame shown is the previous step's): poll it beside window grabs to tie a glitch to a step. The
   stock game (`RAV_SKIP=figures`) at the same jump is the control for any redrawn figure.
+- **Seeing a picture no map object uses** (2026-11-28, logs/2026-11-28-ravager-merchants-691.md): Limbo's
+  objects (the shopkeepers 152-155, 320-325 on picture 691) are never on Tyr's map. After `RAV_MENU=1
+  ravstart.sh` has written the Loader's `dos/OBJEX2.GFF`, set a visible object's picture (its OJFF chunk +12,
+  a word) to the one to see, then load: the object shows it, with the object's own colour change applied.
+  Test-only: the copy is rewritten on the next start.
 - **Looking at any spot of a region** (2026-11-27, logs/2026-11-27-ravager-furniture-review.md): after a
   jump, write the view's top left (DS:1408h, two words) to the spot less (160, 100), then U and Escape (USE
   opened and closed) redraw the map there, the party left where it stands: a picture of any placement
