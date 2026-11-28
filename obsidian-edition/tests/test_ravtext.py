@@ -145,25 +145,52 @@ class LoaderSideTests(unittest.TestCase):
         log.learned_speakers[ravlog.RAV_PORTRAITS + 12] = "Uhubito"
         self.assertEqual(log.speaker(ravlog.RAV_PORTRAITS + 12), "Uhubito")
 
-    def test_journal_its_own_chain(self):
-        """The sequel's journal: read as a game begun (0), nothing written into the game; what is said joins
-        the chain shown once it has been read steadily."""
+    def test_journal_follows_the_saves(self):
+        """The sequel's journal keeps its head in the game's global numbers (DS:15F6h's, the last two of 200,
+        saved as SAVE 31) as SL's: written past the read-only view as entries are added, and a game loaded
+        with another head shows that head's chain."""
         import tempfile
 
-        class Clock:
+        class Raw:
+            def __init__(self):
+                self.mem = bytearray(0x80000)
+
+            def read(self, addr, size):
+                return bytes(self.mem[addr:addr + size])
+
+            def write(self, addr, data):
+                self.mem[addr:addr + len(data)] = data
+
+        class Game:
+            ds = 0x1000
+
             def game_time(self):
                 return 3600
 
         with tempfile.TemporaryDirectory() as tmp:
+            raw = Raw()
             log = ravlog.RavDiceLog.__new__(ravlog.RavDiceLog)
-            log.journal, log.game = journal.Journal(os.path.join(tmp, "j.jsonl")), Clock()
-            log.journal.add(journal.TALK, "Welcome to Tyr.", 3600, 0x32)
+            log.guest = ravlog.ReadOnlyGuest(raw)
+            log.journal, log.game = journal.Journal(os.path.join(tmp, "j.jsonl")), Game()
+            self.assertIsNone(log._journal_head())  # (no numbers in memory yet)
+            self.assertFalse(log._journal_write(5))
+            struct.pack_into("<HH", raw.mem, Game.ds * 16 + ravlog.RAV_NUMBERS_PTR, 0x0004, 0x6D8A)
+            numbers = 0x6D8A * 16 + 4
             for _ in range(journal.STEADY):
                 log._journal_sync()
-            self.assertEqual([e.text for e in log.journal.chain()], ["Welcome to Tyr."])
+            log.journal.add(journal.TALK, "Welcome to Tyr.", 3600, 0x32)
+            log._journal_sync()
+            first = log.journal.head
+            self.assertTrue(first)
+            self.assertEqual(struct.unpack_from("<I", raw.mem, numbers + 198 * 2)[0], first)
+            self.assertEqual(sum(raw.mem[numbers:numbers + 198 * 2]), 0)  # (no other number touched)
             log.journal.add(journal.MESSAGE, "YOU LEARN THE SPELL", 3700, 0x32)
             log._journal_sync()
             self.assertEqual(len(log.journal.chain()), 2)
+            struct.pack_into("<I", raw.mem, numbers + 198 * 2, first)  # (a save made after the first, loaded)
+            for _ in range(journal.STEADY + 1):
+                log._journal_sync()
+            self.assertEqual([e.text for e in log.journal.chain()], ["Welcome to Tyr."])
 
     def test_layout(self):
         """The dialogue's replies and the one talked to at the sequel's addresses; the journal's regions its own

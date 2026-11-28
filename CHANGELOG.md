@@ -90,6 +90,12 @@ EXIT, and the window opens on page 1. The sequel's RESOURCE.GFF has no PAGE butt
 them. Each page's saves keep their map limits apart, and the named saves copy all four pages. DSCLOG2's sites
 216, 238 and 239, and its mouse handler (`playtest/logs/2026-11-28-ravager-save-pages.md`).
 
+**New: Wake of the Ravager, the journal follows the saves, and the freeze report** (branch
+`claude/ravager-journal-freeze`). The Journal tab shows a loaded game's own journal in the sequel too: its
+place is kept in the last two of the sequel's 200 global numbers (found at DS:15F6h, saved as SAVE chunk 31),
+which its scripts don't use. DSCLOG2 notes where the game was as its timer strikes, as DSCLOG does, and the
+freeze report reads it and names the sequel's places (`playtest/logs/2026-11-28-ravager-journal-freeze.md`).
+
 Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.

@@ -597,6 +597,11 @@ RAV_DEAD_STATUS = (4, 7)  # a creature's status (+14h): dying, dead (SL's 4, 5)
 # Each map object's x, y (16ths of a square), 25h bytes apart (the attack's set-up reads them for the
 # attacker SI and the target DI: 5C8B7h; SL's 669Dh, 32 apart)
 RAV_POSITIONS, RAV_POSITION_SIZE = 0x67C5, 0x25
+# The game's global numbers (SL's game.NUMBERS_PTR 1356h): a far pointer at DS:15F6h to the 200 words a save
+# keeps as SAVE chunk 31 (SL's 30). The journal's head goes in the last two (journal.NUMBERS), as in SL: the
+# sequel's scripts that decode use 0-150 (tests/test_journal.py: RavScriptNumbersTests).
+RAV_NUMBERS_PTR = 0x15F6
+RAV_NUMBERS_CHUNK = ("SAVE", 31)
 # The regions under the open sky (stealth.daylight), by each RGNxx.GFF's own name (its RNME): forest
 # (Humbleton Forest), Tyr (its streets; its buildings' floors aren't told apart yet), Jann (the Jann
 # tribe's desert), Silt Giants (the Silt Sea islands), Cloud and Limbo. The rest are under a roof or
@@ -1434,12 +1439,28 @@ class RavDiceLog(dicelog.DiceLog):
                 or f"Portrait {portrait - RAV_PORTRAITS}")
 
     def _journal_sync(self) -> None:
-        """The journal's look (SL's DiceLog._journal_sync), but the sequel's game keeps no id of it: SL's
-        place in the game's numbers (journal.NUMBERS, at game.NUMBERS_PTR) isn't found in the sequel, nor two
-        numbers its scripts leave alone. So the sequel's game is read as one begun (0) and nothing is written
-        into it: its journal is a chain of its own from the Loader's start, not following its saves."""
+        """The journal's look (SL's DiceLog._journal_sync) at the id in the sequel's global numbers
+        (RAV_NUMBERS_PTR, journal.NUMBERS): a game loaded shows its own journal, as in SL. The head is
+        written past the read-only view (the game's own numbers, saved with the game)."""
         if self.journal is not None:
-            self.journal.sync(lambda: 0, lambda head: False, self.game.game_time())
+            self.journal.sync(self._journal_head, self._journal_write, self.game.game_time())
+
+    def _journal_numbers(self) -> Optional[int]:
+        """Where the journal's two numbers are now (the last two of the game's 200), or None while the
+        numbers have no place in memory."""
+        numbers = game.far_pointer(self.guest, self.game.ds, RAV_NUMBERS_PTR)
+        return numbers + journal.NUMBERS[0] * 2 if numbers else None
+
+    def _journal_head(self) -> Optional[int]:
+        at = self._journal_numbers()
+        return None if at is None else struct.unpack("<I", self.guest.read(at, 4))[0]
+
+    def _journal_write(self, head: int) -> bool:
+        at = self._journal_numbers()
+        if at is None:
+            return False
+        self.guest.guest.write(at, struct.pack("<I", head))
+        return True
 
     def _tail_at(self, field: int) -> Optional[int]:
         """The address of a buffer of DSCLOG2's tail (TAIL: the tables and buffers it keeps outside its
