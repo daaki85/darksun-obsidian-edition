@@ -1592,6 +1592,15 @@ For an outfit review with the loader detached, stage the walking and fighting ch
   him (from (1496,840) the click says NO PATH FROM HERE); then `walkto.py 1544 856`, `pointer.py look
   120 185` and a slow press at (262,129) opens the body (a scroll, the Quarterstaff, the Cloak, the
   Ashen Robe); `shot.sh`, 200%. In `selling-junk-user` the attack pointer finds no Kalzith to hit.
+- **Wake of the Ravager's screen in its own pixels and colours** (logs/2026-11-28-outfits-vs-stock.md):
+  `shot.sh` is Shattered Lands' capture only. The sequel's grab (`ravload.sh`'s `$WORK/rav-loaded.png`, or
+  `import -window`) is 640x480, each game pixel twice across and 2.4 times down, in ImageMagick's own palette: take
+  every second column and row `int((y+0.5)*2.4)` for the 320x200 picture, and the region palette
+  (`ravitems.region_palettes`, each 6-bit value as `v*4+v//16`) for the game's colours (region 1 is Tyr's).
+- **Outfits beside the stock people on a real floor**: cut a clean floor patch from a `shot.sh` capture (its
+  palette is the game's), tile it, and paint the built pictures (`sprites.Pictures.build`) and the stock ones
+  (SEGOBJEX `BMP` frames 0 front, 1 back, 2 side) on it, feet on one line: the scripts are in project files
+  `class-figures/stock-comparison/tools/`.
 - **A magic item for a look at its box**: [items in memory](RESEARCH-MEMORY.md#items-in-memory).
 - **An icon's shimmer** (logs/2026-11-18-item-glows.md): the game cycles four runs of the palette
   in the inventory too (1-5 green, 6-10 violet, 11-15 the water's, 240-248 fire). Move the pointer
