@@ -409,6 +409,12 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   old build), copy it into `obsidian-edition/dos/` for one `loadsave.sh`, run `memaudit.py`, then
   put the new one back and `cmp` it with a fresh build; not while the unit tests run (they read
   `dos/DSCLOG.EXE`).
+- **Comparing two builds' screens** (logs/2026-11-28-memory-pass-play.md): the old helper from
+  `git show origin/obsidian-edition:obsidian-edition/dos/DSCLOG.EXE` (or `DSCLOG2.EXE`) copied into `dos/` for one
+  load, the same clicks, `compare -metric AE` on each pair of grabs. In Shattered Lands' inventory the bag icon's
+  dot (196,189) cycles its colour by itself, so a pair differs there in four pixels and nowhere else; the
+  sequel's Effects screen has nothing moving (AE 0). ravtail.py's tail_paras against "built" tells which
+  sequel helper is running. Put the new EXE back and `cmp` it with a fresh build after.
 - **Memory at the hungry moments** (logs/2026-11-19-final-audit-memory.md): `memaudit.py` run with
   the map open, in `fountain-user`'s ambush (ten combatants), with a USE screen up, 0.4 s into a
   spell's picture (Ester's Curse, below), with Kalzith's shop up (`openshop.sh`) and after it:

@@ -59,6 +59,12 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Dev: memory pass, both helpers** (branch `claude/helper-memory-pass`, [the report](reports/memory-pass-2026-11-28.md)).
+DSCLOG walks a creature's items once (`WORN_ALL`, `WORN_ON`) in place of four copies: 208 bytes of Shattered Lands'
+helper back, in its segment and in upper memory. DSCLOG2 keeps the kits' names in its tail, as DSCLOG does
+(`kit_names_table.inc`, one table for both), with one `KIT_NAME_PTR`: 592 bytes of the sequel's segment back.
+Nothing a player sees changes (the same screens under both builds, in both games).
+
 **Fixed: Wake of the Ravager, the game's own script bugs** (branch `claude/ravager-script-bugs`). A sweep of
 all 350 of the sequel's scripts ([the report](reports/ravager-script-bugs-2026-11-28.md)) found, and the Loader's copy
 now mends: the sleeping giant Ptar's pocket could be picked again and again (a key

@@ -350,3 +350,4 @@ schedules and diffs a log made or used.
 | [2026-11-28-ravager-to-ptar.sh](files/2026-11-28-ravager-to-ptar.sh) | [The same](2026-11-28-ravager-script-fixes.md): the sequel's party into Ptar's cave by its own mouth, the thief leading |
 | [2026-11-28-ravager-camera.py](files/2026-11-28-ravager-camera.py) | [The same](2026-11-28-ravager-script-fixes.md): reads the sequel's camera and party places; `set` puts the camera on the leader |
 | [2026-11-28-ravager-voucher-probe.hex](files/2026-11-28-ravager-voucher-probe.hex) | [The same](2026-11-28-ravager-script-fixes.md): the probe for `ravprobe.py`: the game's voucher sale of 460, then the Loader's capped one |
+| [2026-11-28](2026-11-28-memory-pass-play.md) | The memory pass: both helpers' changes against the old builds, screen for screen |
