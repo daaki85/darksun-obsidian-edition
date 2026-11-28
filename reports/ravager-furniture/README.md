@@ -81,7 +81,7 @@ The fourth pass changes 14 pictures at 26 placements. On the maps, the gold rect
 ![The Sultan’s cushions, a giant’s table and a red chair before and after beside Shattered Lands furnishings](jann-and-giants-rooms.png)
 
 - **Jann.** Around the Sultan, applying the Tyr scale to the whole cushion opened strips of sand between overlapping pillows. On the five thick cushion drawings, the embroidered tops now sit three or five pixels lower. Only the lower edge is compressed. The thin pillows and the Sultan’s own seat keep their original depth in the pile. The two baskets near Utella’s loom use the regular Tyr treatment.
-- **Silt Sea Giants.** The red chair drops from 49 to 33 visible rows. At the plank table, look at the stump stool and the giant standing behind it. The table keeps its 48-pixel width and both pieces sit on their original floor lines. The seven revised pictures also include the two angled wooden furnishings, the wall-side table and the low footstool. Generoe’s occupied rocker keeps all four poses from the figure redraw.
+- **Silt Sea Giants.** The red chair drops from 49 to 33 visible rows. At the plank table, look at the stump stool and the giant standing behind it. The table keeps its 48-pixel width and both pieces sit on their original floor lines. The seven revised pictures also include the two angled wooden furnishings, the wall-side table and the low footstool. Generoe’s rocker keeps its three occupied poses and its empty drawing from the figure redraw.
 - **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. Eight active busts and eight corresponding displays share a common pedestal height. The [museum playtest](#live-check-in-the-mosaic-museum) covers the seven bust interactions, Terris left in place, and all eight shards of the wall mirror.
 
 The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. Both furniture columns use the figure redraw. The standing village giants use the idle frame and foot anchor from their animation script. Other pictures in these static renders use their first stored pose. The revised Jann and Giants rooms still need in-game inspection.
@@ -91,6 +91,14 @@ The giant behind the stump stool is Gilad, object 214 at (500, 602). He also app
 ![Gilad with the original pose used in the earlier preview and the approved standing pose in the corrected preview](gilad-standing-pose.png)
 
 ![Fletch, Ikibod and the Mosaic displays above Utella, the seated Sultan and Generoe](jann-mosaic-giants-figure-review.png)
+
+### The giants’ homes in DOSBox
+
+All 12 inventoried placements were checked in the game. The three plank tables keep their 48-pixel width and original floor contact. The two red chairs, footstool, stump stools, wall-side table and angled furnishings also keep their floor positions. Keep these proportions. Generoe’s rocking animation uses three occupied poses. The fourth stored drawing shows his empty chair. It has the same seat height as the settled pose.
+
+The earlier picture of Gilad beside the table used an original standing frame in a reconstructed scene. Gilad was away from the table during our visit. In their own rooms, Velden and Davin both displayed the approved redrawn frame 12 of that same picture, 2469. Stock Ravager displayed frame 0 at the matching cameras.
+
+[Whole islands beside Gedron](giants-furniture-whole-map.png) · [Furniture beside Shattered Lands](giants-furniture-live.png) · [Other furniture placements](giants-other-rooms.png) · [Velden and Generoe in the game](giants-figures-live.png) · [Playtest and placement ledger](../../playtest/logs/2026-11-28-ravager-silt-sea-giants.md)
 
 ## Crypt, Cloud and the Temple of the Cosmos
 
@@ -316,7 +324,7 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Six regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48) and Volcano 2 (57). Fourteen regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Seven regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48), Volcano 2 (57) and Silt Sea Giants (12). Thirteen regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -334,7 +342,7 @@ The scan covered all 20 shipped region files. Six regions have in-game coverage 
 | 03D Volcano 2 | 143 | 15 | 23 | All 57 listed placements checked in play, including 15 front-facing shelves, five side-facing counters, six silver furnishings and the repaired barrel stack |
 | 03E Volcano 1 | 133 | 6 | 19 | All 48 listed placements checked in play, including the redrawn beds, six front-facing shelves, four set tables, three side-facing counters and 13 silver furnishings |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
-| 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
+| 041 Giants | 216 | 0 | 11 | All 12 inventoried placements checked in DOSBox. Generoe’s three rocking poses played in his house. The stored empty chair was staged |
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |
 | 043 Crypt | 175 | 0 | 11 | Check barracks furniture, the key beneath Jumah’s table and Kovar’s shackles in play |
 | 044 Cosmos | 86 | 0 | 0 | Check the elemental gates and artifact placement on the ritual statues in play |

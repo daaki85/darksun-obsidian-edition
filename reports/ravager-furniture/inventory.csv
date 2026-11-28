@@ -227,8 +227,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3364,Barrels and crates,Previously lowered. Box of cooking poisons checked with all three neighboring crates in DOSBox,,03A:1
 3414,Freestanding shelves,Both Mines 3 vial shelves checked against stock in DOSBox,,03A:2
 3416,Freestanding shelves,Both Mines 3 shelves checked against stock in DOSBox including the separate vials below the eastern shelf,,03A:2
-3442,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
-3443,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3442,Angled furnishing with green cloth,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:1
+3443,Angled furnishing with purple cloth,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:1
 3485,Side-facing counter with stacked goods,"Only the bottom 18 rows take the reduction. All six placements checked, including both mirrored counters.",,033:2 03D:2 03E:2
 3486,Side-facing counter with jug,"The jug keeps its original outline and depth. All six placements checked, including both mirrored counters.",,033:2 03D:3 03E:1
 3503,"Tables, counters and benches",Lowered and placements reviewed,,033:2
@@ -251,9 +251,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3635,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
 3636,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
 3668,"Occupied beds, beds and basins",Reviewed at current scale,3668-sickbed.zip,045:1
-3695,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
-3698,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:3
-3699,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
+3695,Wall-side wooden table,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:1
+3698,Plank tables,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:3
+3699,Stump stools,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:2
 3733,Two-state mine fixture,Retain both states. Interaction in play pending,,039:2
 3739,Winged statue on a plinth,Retain scale. Both round plinths seen in DOSBox,,03A:2
 3740,Winged statue,Retain scale. Both statues on the north chamber floor seen in DOSBox,,03A:2
@@ -285,6 +285,6 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3832,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
 3835,Crypt beds,Lowered and reviewed at all four placements,,043:2
 3836,Crypt beds,Lowered and reviewed at all four placements,,043:2
-3866,"Seats, loom and restraints",Reviewed at current scale,3866-generoe-chair.zip,041:1
-3870,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
-3871,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3866,Generoe in his rocking chair,Three occupied poses played in DOSBox at home. The empty pose was staged,3866-generoe-chair.zip,041:1
+3870,Red chairs,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:2
+3871,Footstool beside the red chair,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:1
