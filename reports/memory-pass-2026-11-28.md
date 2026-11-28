@@ -118,5 +118,5 @@ They were the same, apart from the inventory's bag icon, whose dot cycles its co
 
 ## Tests
 
-The full suite passes (3,296 tests, 263 skipped, `DSUN_REQUIRE_NASM=1`), as do the start-up tests on both
+The full suite passes (3,301 tests, 268 skipped, `DSUN_REQUIRE_NASM=1`), as do the start-up tests on both
 games' real files.
