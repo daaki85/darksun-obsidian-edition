@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 import halfgiantstudy as hg
+import outfitfinishes
 from fittedraceequipment import make_layers, write_archive
 from studyarmordetail import Atlas, co, landmarks, study_surface
 from dsloader import spritebracers
@@ -151,6 +152,8 @@ def pose_layers(atlas, swatch, model, pose):
                 and not (native_cloak and p in folds)}
         cape = None if native_cloak else {p: sample(ranger, p) for p in folds}
         result[role] = make_layers(source, outfit, LEFT, 0, regions, folds, head, belt, cape)
+    if model == 2072:
+        outfitfinishes.apply(result["Fighter"]["image"], model, "Fighter", pose)
     return result
 
 

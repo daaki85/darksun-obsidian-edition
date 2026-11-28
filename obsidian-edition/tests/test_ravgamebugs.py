@@ -161,7 +161,7 @@ class AiWallTests(unittest.TestCase):
     (WALL_SPELLS) across the line from the caster (DS:67C5h + SI x 25h, in sixteenths) WALL_HALF either way
     (23 each way on the slant); anything else both points at the cell's middle, as the game had them. Point 1
     on top: x, y, then point 2 (DSCLOG's NS_WALL, test_dsclog's test_ai_wall)."""
-    CODE = 0x2000
+    CODE = 0x3000  # (past the helper at TSR: its image and tail run past 2000:0000)
 
     @classmethod
     def setUpClass(cls):
@@ -262,7 +262,7 @@ class BerserkTests(unittest.TestCase):
     """BERSERK (sites 245, 246): the add check's "no case" (822A1h, back to 0F1Eh) keeps a Berserk's (7) side in
     the far word [BP+0Ch] points at (the record's +9 to come: the thing SI's creature's +15h, or an older
     Berserk's kept side); the end's "no case" (827D6h, back to 12E9h) sends Berserk to Controlled's case (120Dh)."""
-    CODE = 0x2000  # (the effect routines' segment: HLT throughout, the way back read from IP)
+    CODE = 0x3000  # (past the helper; the effect routines' segment: HLT throughout, the way back read from IP)
     EFFECTS = GDS - (0x47E0 - 0x3E71)  # (DSCLOG2's EFFECTS_GAP)
 
     @classmethod

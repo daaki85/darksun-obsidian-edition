@@ -256,9 +256,14 @@ bigger character sheets) as it goes in (a game already running lists it from its
   offered and the one chosen (`You chose: Who are you?`), the speaker named once a talk shows whose
   face it is (`Caravan Master`; or name it with **Name speaker...**, kept apart from Shattered Lands'
   faces), and each message box in the journal and in the dice log (`Message: YOU ALREADY KNOW THIS
-  SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
-  sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
-  and Memory tools tabs read the sequel's spells and records.
+  SPELL`). The journal follows the sequel's saves as Shattered Lands' does: its place is kept in the
+  last two of the game's global numbers (the sequel's are at DS:15F6h, saved as SAVE chunk 31), so a game
+  loaded shows its own journal. The Journal tab's **Quests** list the sequel's own: 42 deeds read from its
+  scripts (the Elder Brain, Helmine in the drakes' nest, Fayina's debt, the halflings of the tunnels and the
+  rest), each listed once its flag is set (the sequel's at DS:15F2h, SAVE chunk 30) or its reward's message
+  is in the journal; most show only once finished (below). The Spells
+  and Memory tools tabs read the sequel's spells and records. The **Freeze report** reads the sequel too:
+  DSCLOG2 notes where the game was as its timer strikes.
 - **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon leaves it on in the sequel too.
 - **[Squares in reach](FEATURES.md#squares-in-reach), [F10](FEATURES.md#f10-takes-a-whole-move-back) and
   [Alt](FEATURES.md#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
@@ -318,9 +323,9 @@ bigger character sheets) as it goes in (a game already running lists it from its
   ![The no-speaker frame: Shattered Lands' and the sequel's now](docs/ravager-no-speaker.png)
   ![The shop's right-hand panel: Shattered Lands', the sequel's with a first pattern, the sequel's now](docs/ravager-shop-panel.png)
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
-  party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
-  toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
-  its own).
+  party, the people, the monsters, the drakes and the Tarrasque too; not the dead) casts its see-through
+  shadow on the floor from its feet, laid long toward the lower right, beside the shadows the Loader's copy
+  gives the sequel's walls (it draws none of its own).
 - **[Dust](FEATURES.md#dust)** in the sequel too: whoever walks over dirt or sand raises little puffs behind them
   (Tyr's squares and yards; its grey cobbles and the dark floors indoors take none).
 - **[Magic items' icons](FEATURES.md#magic-items-icons)** shine in the sequel's shops too (they stood still on a
@@ -404,5 +409,8 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
 - **The game's people** wearing and wielding their gear as they come on the map.
+- **The Journal tab's open quests**: the sequel's quests show once finished; what opens each (its "given"
+  flag) is read for three only, and 62 of its scripts' own awards are not in the table yet
+  (the developers' notes on the quests say what is left).
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).

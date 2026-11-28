@@ -6,6 +6,10 @@ newest first, with what is at each now (the game's code, or DSCLOG's own), wheth
 the map's main loop still run, DSCLOG's header, the switches and the dice log's and dialogue's
 last lines; and keeps all of the emulated PC's memory below 1 MB + 64 KB beside it, to read the
 game's state from afterwards. Everything goes in one zip in crash-logs/.
+
+Wake of the Ravager's helper, DSCLOG2, keeps TICKS the same way at the same header fields; its header's
+signature (SEQUEL_SIG) tells the report the sequel's DS (ravager.DGROUP) and its program's header
+(SEQUEL_EXE_HEADER), and its memory block is DSUNLOG2.
 """
 
 import os
@@ -26,6 +30,9 @@ TSR_TAIL_SEG = 1834  # the tail's segment (TAIL_SEG: TICKS's)
 TICK_SLOTS, TICK_SIZE = 16, 16
 HEADER_BYTES = 374  # DSCLOG's header, as it was, in the report (to UMB_NEED, +372: the overlay buffer's place at +368)
 EXE_HEADER = 0x5400  # DSUN.EXE's header: a load-segment address + this is its place in the file
+SEQUEL_SIG = b"DSCLOGR1"  # DSCLOG2's header (Wake of the Ravager)
+SEQUEL_EXE_HEADER = 0x5200  # the sequel's DSUN.EXE's header
+SEQUEL_DGROUP = 0x47E0  # the sequel's DS less its load segment (ravager.DGROUP)
 CODE_BYTES = 24  # what is at each place now
 WATCH_SECONDS = 1.0  # how long the report watches the counters for moving
 BIOS_SEG = 0xF000
@@ -54,33 +61,43 @@ def ticks(read: Callable[[int, int], bytes], hdr: int) -> List[Tick]:
             for k in range(taken)]
 
 
-def place(cs: int, ip: int, tsr_seg: Optional[int], load_seg: Optional[int]) -> str:
-    """Whose code CS:IP is: DSCLOG's, the BIOS's, or the game's (its place in DSUN.EXE, which an
-    overlay's code doesn't have)."""
+def place(cs: int, ip: int, tsr_seg: Optional[int], load_seg: Optional[int], sequel: bool = False) -> str:
+    """Whose code CS:IP is: DSCLOG's (DSCLOG2's in the SEQUEL), the BIOS's, or the game's (its place in
+    DSUN.EXE, which an overlay's code doesn't have)."""
     if tsr_seg is not None and cs == tsr_seg:
-        return f"DSCLOG +{ip:04X}"
+        return f"{helper_name(sequel)} +{ip:04X}"
     if cs >= BIOS_SEG:
         return "the BIOS"
     if load_seg is not None and cs >= load_seg:
-        return f"game {cs - load_seg:04X}:{ip:04X} (DSUN.EXE {(cs - load_seg) * 16 + ip + EXE_HEADER:X}h, unless an overlay)"
+        header = SEQUEL_EXE_HEADER if sequel else EXE_HEADER
+        return f"game {cs - load_seg:04X}:{ip:04X} (DSUN.EXE {(cs - load_seg) * 16 + ip + header:X}h, unless an overlay)"
     return "below the game (DOS or a driver)"
 
 
-def summary(found: List[Tick], tsr_seg: Optional[int], load_seg: Optional[int]) -> List[str]:
+def helper_name(sequel: bool) -> str:
+    return "DSCLOG2" if sequel else "DSCLOG"
+
+
+def is_sequel(read: Callable[[int, int], bytes], hdr: int) -> bool:
+    """HDR is DSCLOG2's header (Wake of the Ravager's helper)."""
+    return read(hdr, len(SEQUEL_SIG)) == SEQUEL_SIG
+
+
+def summary(found: List[Tick], tsr_seg: Optional[int], load_seg: Optional[int], sequel: bool = False) -> List[str]:
     """A line or two on where the game spent its last strikes."""
     if not found:
-        return ["DSCLOG has noted nothing yet (the game's timer hasn't struck since it started)."]
+        return [f"{helper_name(sequel)} has noted nothing yet (the game's timer hasn't struck since it started)."]
     last = found[-8:]
     where = Counter((t.cs, t.ip) for t in last)
     (cs, ip), n = where.most_common(1)[0]
     segs = Counter(t.cs for t in last)
     lines = []
     if n == len(last) and len(last) > 1:
-        lines.append(f"The last {n} notes are all at {cs:04X}:{ip:04X}: {place(cs, ip, tsr_seg, load_seg)}.")
+        lines.append(f"The last {n} notes are all at {cs:04X}:{ip:04X}: {place(cs, ip, tsr_seg, load_seg, sequel)}.")
     elif len(segs) == 1:
         span = (min(t.ip for t in last), max(t.ip for t in last))
         lines.append(f"The last {len(last)} notes are all in segment {cs:04X}, {span[0]:04X} to {span[1]:04X}: "
-                     f"{place(cs, span[0], tsr_seg, load_seg)}.")
+                     f"{place(cs, span[0], tsr_seg, load_seg, sequel)}.")
     else:
         lines.append("The last notes are spread over " + ", ".join(f"{s:04X}" for s in segs) + ".")
     return lines
@@ -104,24 +121,29 @@ def report_text(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Optio
     """The report's text (READ the guest's memory; HDR DSCLOG's header's address, DS the game's
     data segment, either None when not found)."""
     lines = [f"Obsidian Edition freeze report, {stamp}", f"Loader {version}", ""]
-    load_seg = ds - game.DGROUP if ds is not None else load_from_block(read(0, 0xA0000))
+    sequel = hdr is not None and is_sequel(read, hdr)
+    if sequel:
+        lines[-1:] = ["Wake of the Ravager", ""]
+    load_seg = (ds - (SEQUEL_DGROUP if sequel else game.DGROUP) if ds is not None
+                else load_from_block(read(0, 0xA0000)))
     if hdr is None:
         lines.append("DSCLOG wasn't found in memory, so where the game was isn't known.")
     else:
+        name = helper_name(sequel)
         tsr_seg = (hdr - struct.unpack("<H", read(hdr + TSR_HDR_OFF, 2))[0]) // 16
-        lines.append(f"DSCLOG's segment {tsr_seg:04X}; the game's load segment "
+        lines.append(f"{name}'s segment {tsr_seg:04X}; the game's load segment "
                      + (f"{load_seg:04X}, DS {ds:04X}" if ds is not None else
                         f"{load_seg:04X} (from its memory block: its DS not found)" if load_seg is not None else "not found"))
         if moved is not None:
             lines.append(f"In {WATCH_SECONDS:g} s the timer was noted {moved['tick']} times "
                          f"(0: the game's timer isn't striking) and the map's main loop ran {moved['main']} times.")
         found = ticks(read, hdr)
-        lines += [""] + summary(found, tsr_seg, load_seg)
+        lines += [""] + summary(found, tsr_seg, load_seg, sequel)
         lines += ["", "Where the game was as its timer struck, newest first (every 32nd strike):",
                   "  CS:IP      flags SS:SP      BP   DS   ES    whose"]
         for t in reversed(found):
             lines.append(f"  {t.cs:04X}:{t.ip:04X}  {t.flags:04X}  {t.ss:04X}:{t.sp:04X}  {t.bp:04X} {t.ds:04X} "
-                         f"{t.es:04X}  {place(t.cs, t.ip, tsr_seg, load_seg)}")
+                         f"{t.es:04X}  {place(t.cs, t.ip, tsr_seg, load_seg, sequel)}")
         lines += ["", "The code at each place now:"]
         for cs, ip in dict.fromkeys((t.cs, t.ip) for t in reversed(found)):
             lines.append(f"  {cs:04X}:{ip:04X}  {read(cs * 16 + ip, CODE_BYTES).hex(' ')}")
@@ -131,7 +153,7 @@ def report_text(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Optio
             words = struct.unpack("<64H", read(t.ss * 16 + t.sp, 128))
             for k in range(0, 64, 16):
                 lines.append("  " + " ".join(f"{w:04X}" for w in words[k:k + 16]))
-        lines += ["", f"DSCLOG's header ({HEADER_BYTES} bytes):"]
+        lines += ["", f"{name}'s header ({HEADER_BYTES} bytes):"]
         head = read(hdr, HEADER_BYTES)
         for k in range(0, HEADER_BYTES, 24):
             lines.append(f"  +{k:<3d} {head[k:k + 24].hex(' ')}")
@@ -197,12 +219,14 @@ def freeze_report(read: Callable[[int, int], bytes], hdr: Optional[int], ds: Opt
 
 
 def load_from_block(memory: bytes) -> Optional[int]:
-    """The game's load segment from its DOS memory block (named DSUNLOG: the PSP's 256 bytes, then
-    the program), for when its DS can't be found (overwritten)."""
-    found = next((m.start() for m in re.finditer(re.escape(b"DSUNLOG\0"), memory) if m.start() % 16 == 8), None)
+    """The game's load segment from its DOS memory block (named DSUNLOG, the sequel's DSUNLOG2: the PSP's
+    256 bytes, then the program), for when its DS can't be found (overwritten)."""
+    found = next((m.start() for m in re.finditer(rb"DSUNLOG(\0|2)", memory) if m.start() % 16 == 8), None)
     return None if found is None else (found - 8) // 16 + 1 + 0x10
 
 
 def find_header(memory: bytes) -> Optional[int]:
-    """DSCLOG's header in MEMORY (conventional and upper), by its signature on a paragraph."""
-    return next((m.start() for m in re.finditer(re.escape(HDR_SIG), memory) if m.start() % 16 == 0), None)
+    """DSCLOG's header in MEMORY (conventional and upper), by its signature on a paragraph (DSCLOG2's,
+    SEQUEL_SIG, for the sequel)."""
+    sigs = re.escape(HDR_SIG) + b"|" + re.escape(SEQUEL_SIG)
+    return next((m.start() for m in re.finditer(sigs, memory) if m.start() % 16 == 0), None)

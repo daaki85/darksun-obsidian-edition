@@ -412,6 +412,8 @@ class HelperTests(unittest.TestCase):
                          ("extras_drawn", ravlog.AR_DRAWN)):
             self.assertEqual(self.sym[name] - hdr, at, name)
         self.assertEqual(self.sym["fine_hits"] - hdr, 2096)
+        self.assertEqual((self.sym["tick_off"] - hdr, self.sym["tick_seq"] - hdr), (356, 358))  # (freeze.py's TICKS)
+        self.assertEqual(struct.unpack_from("<H", self.image, self.sym["tick_off"])[0], self.sym["ticks"] - self.sym["TAIL_PARAS"] * 16)
         hdr_len = struct.unpack_from("<H", self.image, hdr + ravlog.HDR_LEN)[0]  # (HDR_LEN: the header's end)
         self.assertEqual(hdr_len, self.sym["hdr_end"] - hdr)
         self.assertGreaterEqual(hdr_len, max(ravlog.AR_DRAWN, ravlog.LOCK_BARS) + 2)

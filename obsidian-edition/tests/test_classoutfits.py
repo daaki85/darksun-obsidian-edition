@@ -613,6 +613,14 @@ class HumanOutfitTests(unittest.TestCase):
             hems.append(bottom)
         self.assertLessEqual(max(hems) - min(hems), 2)
 
+    def test_short_druid_cape_exposes_the_back_boot_through_the_profile_stride(self):
+        poses = classoutfits.frames("Druid", False, 2099)
+        for f, ankle in ((11, (9, 17)), (12, (6, 18)), (13, (8, 19))):
+            with self.subTest(frame=f):
+                self.assertIn(ankle, poses[f].regions[classoutfits.LEFT_FOOT])
+                self.assertNotIn(ankle, poses[f].regions[classoutfits.LEGS])
+                self.assertNotIn(ankle, {(x, y) for x, y, shade in poses[f].cloak})
+
     def test_woman_raised_hands_remain_in_front_of_clothing(self):
         for role in classoutfits.CLASSES[1:]:
             poses = classoutfits.frames(role, True, 2099)

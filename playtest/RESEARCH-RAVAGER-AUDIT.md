@@ -36,9 +36,11 @@ and driving the sequel: [RESEARCH-RAVAGER.md](RESEARCH-RAVAGER.md).
   captured until then), S, then the dragon picture waits: Escape, a few seconds, Return gives the opening talk
   (3, Return x4: the ambush). Computer Control: C, then a `ravclick.py` move to capture the pointer, then the four
   lower icons.
-- **A lock to play the lock rule**: `gpl.checks` on the sequel's GPLDATA.GFF decodes 257 of its 350 scripts and
-  finds one open-locks check, in GPL 9 (a grate with a trap: "finds a trap concealed in the grate!"); where that
-  is in the game is not known yet, and the 93 scripts that don't decode may hold more.
+- **A lock to play the lock rule**: `gpl.checks` on the sequel's GPLDATA.GFF decoded 257 of its 350 scripts and
+  found one open-locks check, in GPL 9 (a grate with a trap: "finds a trap concealed in the grate!"); where that
+  is in the game is not known yet. Since 2026-11-28 (the quests' work) all 350 decode, and it finds 37 thief-skill
+  checks: open locks 4 (GPL 9 at 4378, 40 at 6218, 89 at 7826, 264 at 1154), find/remove traps 14, hear noise 6,
+  move silently 4, pick pockets 4, climb walls 3, hide in shadows 2.
 
 ## A control run: RAV_SKIP
 
@@ -211,8 +213,15 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
   "Portrait 18" after CLOSE: no name learned (logs/2026-11-25-ravager-loot-tabs-join.md; the tabs log's talk,
   through the Look box, learned "Caravan Master"). The Loader's window there: `python3.12 -m dsloader view --pid`
   on Xvfb `:56` 1440x900 (tabs at y 132: Dice log 660, Dialogue 752, Journal 841, Spells 911, Memory tools 1013). The sequel's
-  global numbers' pointer (SL's DS:1356h) isn't found by `ravds.py --fuzzy`, and 93 of its scripts don't decode
-  with SL's decoder (those that do use numbers up to 150): the journal can't keep its head in a save there yet.
+  global numbers' pointer (SL's DS:1356h) is DS:15F6h (2026-11-28: the 200 words of SAVE chunk 31, SL's 30, found
+  in memory after a load, and the one far pointer in DS to them; DS:15F2h points 70h bytes before them, as SL's
+  flags' 1352h: it is the flags, the 101 bytes of SAVE chunk 30 byte for byte after a load, 2026-11-28,
+  logs/2026-11-28-ravager-quests.md; ravlog's FLAGS_PTR). 93 of its scripts didn't decode with SL's decoder
+  then (those that did use numbers up to 150; the bytes 87h C6h, number 198, come as often in the 93 as in the
+  rest, where they never are): the journal keeps its head in numbers 198 and 199 there too. Since the quests'
+  work all 350 decode: its reward routines are script 27's at 112 (each party member) and 148 (one person),
+  the amount in number 3 (SL's 74, 135, 171, 16), and script 27 at 228-353 clears the regions' scratch
+  numbers and flags as SL's 74 at 251 does.
 - **The sequel's message box** (560h:2Ah at 59A0Bh; its stub's entry 5DBh in the overlay at file 59430h):
   opens window 2905h (5B0h:48h, kept at 300h:7), writes the text, waits `[26B7h]` x 100 ms with the game's
   delay (0:12FAh, Borland's, on the PIT) and closes it. It was never seen: the windows are drawn only as a

@@ -356,6 +356,48 @@ class ScriptNumbersTests(unittest.TestCase):
         self.assertLess(max(used), min(journal.NUMBERS), sorted(used)[-5:])
 
 
+WOTR = os.environ.get("DSUN_WOTR")
+
+
+@unittest.skipUnless(WOTR and os.path.isfile(os.path.join(WOTR, "GPLDATA.GFF")), "needs the sequel's folder (DSUN_WOTR)")
+class RavScriptNumbersTests(unittest.TestCase):
+    def test_the_sequels_scripts_leave_the_journals_numbers(self):
+        """Wake of the Ravager's scripts (all 350 decode) use global numbers well below the journal's two, and
+        a save keeps the 200 as SAVE 31 (ravlog.RAV_NUMBERS_CHUNK)."""
+        from dsloader import ravlog
+        from dsloader.gff import read_gff
+        with open(os.path.join(WOTR, "GPLDATA.GFF"), "rb") as f:
+            chunks = read_gff(f.read())
+        field_types = next((v for k, v in chunks.items() if k[0] == "GPLX"), b"")[gpl.FIELD_TYPES_AT:]
+        used, undecoded = set(), 0
+
+        def walk(arg):
+            if isinstance(arg, tuple):
+                if len(arg) == 3 and arg[0] == "var" and arg[1] in (7, 0x87) and isinstance(arg[2], int):
+                    used.add(arg[2])
+                for part in arg:
+                    walk(part)
+            elif isinstance(arg, list):
+                for part in arg:
+                    walk(part)
+
+        for (kind, _number), data in chunks.items():
+            if kind in ("GPL ", "MAS "):
+                try:
+                    for op in gpl.decode(data, field_types):
+                        walk(list(op.args))
+                except Exception:
+                    undecoded += 1
+        self.assertTrue(used)
+        self.assertLess(max(used), min(journal.NUMBERS), sorted(used)[-5:])
+        self.assertEqual(undecoded, 0)
+        for name in sorted(os.listdir(WOTR)):
+            if name.upper().startswith("SAVE") and name.upper().endswith(".SAV"):
+                with open(os.path.join(WOTR, name), "rb") as f:
+                    save = read_gff(f.read())
+                self.assertEqual(len(save[ravlog.RAV_NUMBERS_CHUNK]), journal.NUMBER_COUNT * 2, name)
+
+
 try:
     import tkinter as tk
     from dsloader import launch, viewer

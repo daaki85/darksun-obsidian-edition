@@ -59,6 +59,13 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager, the Journal tab's quests** (branch `claude/ravager-quests`). The Quests list
+shows the sequel's own: 42 deeds read from its scripts (`dsloader/ravquests.py`), each finished by the flag set
+beside its reward (the sequel's flags at DS:15F2h, SAVE chunk 30) or by its reward's message; three show while
+open. The script reader now reads all 350 of the sequel's scripts (257 before). **Dev:** the sequel's thief and
+game-bug test rigs moved past the helper's grown tail, and the sheet test on the game's files narrows its copies
+first, so a played folder tests as a stock one.
+
 **New: Wake of the Ravager.** The inventory's party column shows each member's small figure in their class outfit,
 as Shattered Lands' does, and so does the creation screen's small figure, which changes as the class, race or sex does:
 DSCLOG2's SMALL_FIG (site 254) asks for the Loader's frame for the figure and its classes (BMP 7000h + the figure
@@ -89,6 +96,12 @@ on PGUP or PGDN under EXIT, turn the page (the load window passes by empty pages
 EXIT, and the window opens on page 1. The sequel's RESOURCE.GFF has no PAGE buttons, so the label stands in for
 them. Each page's saves keep their map limits apart, and the named saves copy all four pages. DSCLOG2's sites
 216, 238 and 239, and its mouse handler (`playtest/logs/2026-11-28-ravager-save-pages.md`).
+
+**New: Wake of the Ravager, the journal follows the saves, and the freeze report** (branch
+`claude/ravager-journal-freeze`). The Journal tab shows a loaded game's own journal in the sequel too: its
+place is kept in the last two of the sequel's 200 global numbers (found at DS:15F6h, saved as SAVE chunk 31),
+which its scripts don't use. DSCLOG2 notes where the game was as its timer strikes, as DSCLOG does, and the
+freeze report reads it and names the sequel's places (`playtest/logs/2026-11-28-ravager-journal-freeze.md`).
 
 Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
