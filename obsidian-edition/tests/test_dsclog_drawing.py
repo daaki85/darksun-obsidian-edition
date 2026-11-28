@@ -388,14 +388,15 @@ def ghost_digests(asm=ASM):
 # The screens as drawn before the drawing code was made faster (2026-11-08), and the instructions
 # that took then; for each of FLOOR_CALLS' calls (and the whole view again, two pictures let go
 # of), with shadows, dust and rings on, then each alone. The shadows' last two screens since 2026-11-27: a
-# figure's feet are its frame's lowest drawn row (FEET_ROW), and a frame there has its bottom row clear.
+# figure's feet are its frame's lowest drawn row (FEET_ROW), and a frame there has its bottom row clear; the
+# last since 2026-11-28 too: a kept frame of more than SC_RUNS runs keeps those nearest the feet (SC_PUT).
 BEFORE = {
     (1, 1, 1): [("6aa66587bcd7f8c1", 149207), ("4fb5147fe7341df2", 52500), ("720c255ac21d0459", 44346),
                 ("aadbffb618ae5c5e", 58941), ("3385041c16e9bd1a", 47153), ("9c17c564906ed51e", 190508),
-                ("b34e03a4f0321453", 184435)],
+                ("456eca1f78ec4c72", 184435)],
     (1, 0, 0): [("b117771caf8c0526", 99563), ("2f7ed1a7a5520fe9", 44596), ("720c255ac21d0459", 38099),
                 ("a25593731c3651be", 33073), ("3385041c16e9bd1a", 40834), ("9b6d713efcef97ea", 126962),
-                ("0ddaceff78d98ea1", 120889)],
+                ("1ac736bb5353f5fd", 120889)],
     (0, 1, 0): [("82ec5702100be2cc", 24832), ("63a3f73e36d4513d", 2378), ("8dae532d8049c840", 721),
                 ("05d08337bdc14edc", 7355), ("8dae532d8049c840", 792), ("4a2750adb53fd1b8", 38721),
                 ("4a2750adb53fd1b8", 38721)],

@@ -102,6 +102,12 @@ redraws have a margin all round: 10 rows under Ar'Anda's 599, up to 22 under the
 cast its shadow that far below. FEET_ROW (both helpers) takes the frame's last listed row as the feet. To see which
 picture and frame a party member is drawn with, the log's probe reads the draw list and the cache.
 
+**Planar figures and big ones** (2026-11-28, logs/2026-11-28-ravager-shadows-review.md): the drakes (RESOURCE 11005-11007)
+and the Tarrasque (11001, 11002) are planar pictures (FFh "PLNR"), drawn through the same call as the others (FIG_KEEP
+sees them); DSCLOG2 now unpacks such a frame there to keep its shadow. `ravfig.py`'s "none for want of one" counts
+a planar figure never drawn yet. To see what the Loader adds to a view, switch the header's +1872 (walls) and +1960
+(figures) off and on and press U then Escape (logs/files/2026-11-28-ravager-shadows-onoff.sh).
+
 **Dust, and the figures' shadows in a fight** (2026-11-26, logs/2026-11-26-ravager-dust.md): **Tyr's ground is
 darker than SL's sand**: the dirt of the squares and yards (Shadow Square, world ~600, 1226 on, west of the ambush
 street by y 1230) is colours 230, 95, 229, 228 (56,44,28 to 113,105,77 of 255), below `dust.is_ground`'s least value

@@ -41,9 +41,19 @@ def frame(w, h, margin=0):
     return bytes(out + b"\xff")
 
 
+def frame_of_runs(w, h, runs):
+    """A frame W wide of runs: every row RUNS runs of one pixel (colour 9), two pixels apart from x 0."""
+    out = bytearray(struct.pack("<HH", w, h))
+    for y in range(h):
+        out += bytes((y,))
+        for n in range(runs):
+            out += struct.pack("<HBB", 2 * n | (0x8000 if n == runs - 1 else 0), 1, 2) + bytes((1, 9))
+    return bytes(out + b"\xff")
+
+
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class PassTests(unittest.TestCase):
-    def scene(self, statuses, seen=True, margin=0):
+    def scene(self, statuses, seen=True, margin=0, picture=None):
         """Things 5, 6, 7 standing in the view (creatures 0, 1, 2 with STATUSES; None: not a creature), each
         an 8 x 16 frame, their feet 20 pixels apart; the floor all colour 40, DARK 40 -> 41."""
         s = Scene(ASM)
@@ -61,7 +71,7 @@ class PassTests(unittest.TestCase):
         s.ds(0x264E, struct.pack("<H", 3))
         s.ds(0x265D, struct.pack("<H", 3))
         s.ds(0x19C9, struct.pack("<HH", 0, CREATURES))
-        pic = struct.pack("<IHI", 0, 1, 10) + frame(8, 16, margin)
+        pic = struct.pack("<IHI", 0, 1, 10) + (picture or frame(8, 16, margin))
         s.mu.mem_write(PICTURE * 16, pic)
         for n, status in enumerate(statuses):
             thing, x, y = 5 + n, CAM[0] + 40 + 60 * n, CAM[1] + 100
@@ -173,6 +183,72 @@ class PassTests(unittest.TestCase):
                 self.assertEqual(slot[:8], struct.pack("<HHBBBB", 0, 0, 0, 8, 15, 8))
                 self.assertEqual(slot[8:], b"".join(bytes((up, 0, 8)) for up in range(14, -1, -2)))  # (the rows top down)
                 self.assertEqual(struct.unpack("<H", s.get("hdr", 2, FIG_KEPT))[0], 1)
+
+    def test_kept_nearest_the_feet(self):
+        """A frame of more runs than a slot keeps (SC_RUNS, 48) keeps those nearest the feet: a big figure whose
+        picture was out cast the top of its shadow, not its foot, and seemed to float."""
+        s = self.scene([1, None, None], picture=frame_of_runs(16, 20, 8))  # (rows 19, 17 .. 1 cast: 80 runs)
+        game = 0x8000
+        s.mu.mem_write(game * 16 + 0x10, struct.pack("<H", 0x8100))
+        s.mu.mem_write(0x8100 * 16 + 0x3BEC, b"\xb8\x34\x12\xcb")
+        s.mu.mem_write(game * 16 + 0x12, b"\xf4")
+        sp = 0x700
+        s.mu.mem_write(SS * 16 + sp, struct.pack("<HHH", 0x10, game, 0x2)
+                       + struct.pack("<HHHHHHH", 1, 50, 60, 0, 0, PICTURE, 0))
+        for reg, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, edi=5, esi=0, eflags=0x2).items():
+            s.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        s.mu.emu_start(TSR * 16 + s.sym["fig_keep"], game * 16 + 0x12, count=200000)
+        slot = bytes(s.mu.mem_read(FAR * 16 + s.sym["FAR_SC"], 8 + 3 * 48))
+        self.assertEqual(slot[7], 48)
+        ups = sorted(slot[8 + 3 * n] for n in range(48))
+        self.assertEqual(ups, sorted(up for up in range(0, 20, 2) for _ in range(8))[:48])  # (up 0 .. 10)
+
+    def kept(self, s):
+        """FIG_KEEP run for thing 5 (creature 0) drawn with frame 0 of the scene's picture: its slot's header and
+        runs (up, x, pixels), sorted."""
+        game = 0x8000
+        s.mu.mem_write(game * 16 + 0x10, struct.pack("<H", 0x8100))
+        s.mu.mem_write(0x8100 * 16 + 0x3BEC, b"\xb8\x34\x12\xcb")
+        s.mu.mem_write(game * 16 + 0x12, b"\xf4")
+        sp = 0x700
+        s.mu.mem_write(SS * 16 + sp, struct.pack("<HHH", 0x10, game, 0x2)
+                       + struct.pack("<HHHHHHH", 1, 50, 60, 0, 0, PICTURE, 0))
+        for reg, value in dict(cs=TSR, ds=GAME_DS, ss=SS, esp=sp, edi=5, esi=0, eflags=0x2).items():
+            s.mu.reg_write(getattr(r, "UC_X86_REG_" + reg.upper()), value)
+        s.mu.emu_start(TSR * 16 + s.sym["fig_keep"], game * 16 + 0x12, count=2000000)
+        slot = bytes(s.mu.mem_read(FAR * 16 + s.sym["FAR_SC"], 8 + 3 * 48))
+        return slot[:8], sorted(tuple(slot[8 + 3 * n:11 + 3 * n]) for n in range(slot[7]))
+
+    def test_planar_figures_cast(self):
+        """A planar figure (the drakes', the Tarrasque's: FFh "PLNR") casts its shadow, kept as the game draws it:
+        its runs from its lowest drawn row up, every other row, as a picture of runs; then from its kept shadow
+        in the floor pass, in memory or not."""
+        from dsloader import art
+        rows = [[None if (y == 5 and x in (2, 3)) else 9 for x in range(8)] for y in range(16)]
+        rows += [[None] * 8 for _ in range(4)]  # (clear rows under the feet)
+        rows[3][0] = None
+        expected = sorted((15 - y, x0, x1 - x0) for y in range(15, -1, -2)
+                          for x0, x1 in ([(0, 2), (4, 8)] if y == 5 else [(1 if y == 3 else 0, 8)]))
+        plain = self.scene([1, None, None], picture=frame(8, 16))
+        plain.call("fig_pass", fs=FAR)
+        s = self.scene([1, None, None], picture=art.plnr_frame(rows))
+        s.call("fig_pass", fs=FAR)
+        self.assertFalse(self.dark(s))  # (never drawn yet: none kept)
+        head, runs = self.kept(s)
+        self.assertEqual(head[4:8], bytes((0, 8, 15, len(expected))))
+        self.assertEqual(runs, expected)
+        s.call("fig_pass", fs=FAR)
+        self.assertTrue(self.dark(s))
+        self.assertEqual(min(y for _, y in self.dark(s)), 100)
+        self.assertEqual(max(y for _, y in self.dark(s)), 107)
+
+    def test_wide_figures_cast(self):
+        """A figure wider than 128 (the Tarrasque's widest frames, 134 to 153) casts its shadow too."""
+        s = self.scene([1, None, None], picture=frame_of_runs(150, 16, 2))
+        s.call("fig_pass", fs=FAR)
+        dark = self.dark(s)
+        self.assertTrue(dark)
+        self.assertEqual(min(y for _, y in dark), 100)
 
     def site(self, name, bp, stack, words):
         """Site NAME entered as SITE_INT leaves it (the INT's IP, CS and flags on the stack, then STACK), with the

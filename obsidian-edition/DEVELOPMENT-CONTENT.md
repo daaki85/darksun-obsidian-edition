@@ -1644,6 +1644,16 @@ frame's bottom edge. Wake of the Ravager's redrawn figures have clear margins ro
 the party's, up to 22 under the big creatures'), and until 2026-11-27 their shadows fell that far below them,
 the figures seeming to float as they walked. DSCLOG2's `FIG_OF` and `FIG_RECORD` do the same.
 
+**Big figures** (2026-11-28). A kept frame holds at most `SC_RUNS` runs (64 here, 48 in the sequel); a big
+creature's frame has more (up to 108 in Shattered Lands, 129 in the sequel), and the runs were kept in
+order from the top, so the part by the feet was the part lost and the shadow of a big figure whose picture
+was out of memory floated above the ground. Past `SC_RUNS` the kept runs now go round again over the first
+(`SC_PUT`; the sequel's `FIG_RECORD`), keeping those nearest the feet. In the sequel, frames up to 255 wide
+cast a shadow (128 before: the Tarrasque's widest cast none), and the planar pictures of its biggest
+creatures, the drakes and the Tarrasque, cast one too (`PLANAR FIGURES` in `dsclog2.asm`: such a frame is
+unpacked as the game draws it, its feet found and its runs kept, and the floor pass casts from what was
+kept).
+
 **Pictures out of memory.** The shadow is traced from the figure's picture in the game's picture
 cache, and in a big fight (the arena, ten monsters) the game lets go of most pictures between
 drawings: in a save in the arena every figure but one had its picture out of memory as the floor was
