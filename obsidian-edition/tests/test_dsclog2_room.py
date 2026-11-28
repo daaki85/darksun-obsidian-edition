@@ -86,9 +86,11 @@ class RoomTests(unittest.TestCase):
         """The emulator tests return to a HLT they put at the helper's CS:FFF0 (to FFFFh), which the
         image doesn't reach while the segment and the tail together are shorter. Past that it lands in
         the tail: in its buffers (section tailz, zeros the Loader fills) it does no harm, in its tables
-        (section tail: the sites', the AD&D slots and XP) it would change what the tests read. When this
-        fails, the segment is near full anyway: move code out, or the tests' spot elsewhere."""
-        tables = (self.equs["TAIL_PARAS"] * 16, self.equs["TAIL_PARAS"] * 16 + self.sections["tail"]["tail_mid"])
+        (section tail: the sites', the AD&D slots and XP, from TAIL_TABLES on: ITEM_NAMES, a buffer, comes first
+        in the tail for this) it would change what the tests read. When this fails, the segment is smaller than
+        ITEM_NAMES leaves room for, or near full: move code out, or the tests' spot elsewhere."""
+        tail = self.equs["TAIL_PARAS"] * 16
+        tables = (tail + self.sections["tail"]["tail_tables"], tail + self.sections["tail"]["tail_mid"])
         self.assertFalse(tables[0] < 0x10000 and tables[1] > 0xFFF0, [hex(a) for a in tables])
 
     def test_the_parts_are_where_the_paragraphs_say(self):

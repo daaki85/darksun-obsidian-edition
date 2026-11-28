@@ -55,7 +55,7 @@ def main():
         same = g.read(tail + t[a], t[b] - t[a]) == built[t[a]:t[b]]
         bad |= not same
         print(f'  {a:13} +{t[a]:04X}h {t[b] - t[a]:5} bytes: {"as built" if same else "DIFFERENT"}')
-    z = sym['tailz']
+    z = {**sym['tail'], **sym['tailz']}  # (the item names first in the tail, the rest after its tables)
     for name, n in BUFFERS:
         data = g.read(tail + z[name], n)
         text = data.split(b'\0' * 4)[0][:120]

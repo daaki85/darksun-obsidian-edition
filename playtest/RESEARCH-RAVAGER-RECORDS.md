@@ -445,10 +445,25 @@ casts preserver spells by thief level (its slots: SHINOBI_MAGE, site 190, the ki
   sequel side.
 - **The roster holds 40 already** (28h at 58380h, 58A34h, 585C0h, 591F5h, 6E541h, 6EDFAh, 6EE05h, 6FB08h; SL
   14h), and the roster window scrolls with 2F8:0/2 (58742h sets the first row).
-- **More save pages** would go where SL's do: SL's save_page (74901h) and save_click (74B9Fh), the switches'
-  default jumps, are the sequel's 7DABCh (`jmp 7E00Fh`) and 7DD51h (`jmp 7E008h`). But the sequel's
-  RESOURCE.GFF has no WIND 3009 and no ICON/BUTN 80Ah (SL's page buttons), so the window's own resource and
-  room for the arrows must be found first.
+- **More save pages** (2026-11-28, logs/2026-11-28-ravager-save-pages.md): the keys' default jump 7DABCh
+  (`jmp 7E00Fh`, site 238; SL's save_page 74901h) and, as the window opens, the `add sp,4` at 7D691h after its
+  opening routine (7D54Bh) draws it (site 216). The sequel's RESOURCE.GFF has no WIND 3009 and no ICON/BUTN 80Ah
+  (SL's page buttons), so there are no buttons, only the keys and a label. What play showed:
+  - **The way back of a 3-byte site is the site + 3** (7DABFh): offsets reckoned from +2 called a byte into
+    each routine and the game shut on the first PgDn.
+  - **The window's routine sees only buttons (message 2) and keys (6)**: nothing else comes to its way out
+    7DAA0h, so a label must be drawn from the opening routine. **WIN_SHOWN (DS:1431h) is 0** with the window up,
+    and PROBE_SCROLL doesn't run while F2's window waits: neither tells the window is up. The window's far pointer
+    (load+40AFh) is cleared as it shuts.
+  - **A far call in an overlay is no site**: its segment is fixed up as the overlay loads, over the site's bytes.
+  - **The text routine draws into the window's picture**, so the window's own draw (2A8E:060D) goes first and
+    the text after it; its y isn't the screen's (y 90 drew some 35 lines lower: y 64, x 228 is just under EXIT).
+  - **A key for the window from a click**: the game's keyboard handler (39E35h, from the keyboard's interrupt)
+    reads INT 16h and posts each key as an event (1, 0Ah, 0, the key, the shift keys) through 3464:0230. A key
+    written into the BIOS's buffer waits there until a key is pressed; posted through 3464:0230 from the mouse's
+    handler, the window takes it at once (PAGE_MOUSE).
+  - The window keeps its chosen row (load+3C4Ch) when it shuts: the page-back sets it to 0 with the letter, or
+    the window opens on page 1 with an empty row chosen.
 - **Played** (the log): F5, F9 and the autosave after a won fight in the sequel, GREQ 101-103 and 106 written,
   a quick load through site 84 with GREQ 102's limits; F5 with the dice log stopped the game's SOUND EFFECTS
   ON. **DOSBox caches a mounted folder's listing**: a save written into the folder by the Loader from outside

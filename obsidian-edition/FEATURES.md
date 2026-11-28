@@ -1176,7 +1176,10 @@ Loader doesn't see.
 How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#more-saves).
 
-**In Wake of the Ravager:** not yet: the sequel's own ten saves, and the QUICK saves in its own window ([saves in the sequel](RAVAGER.md#saves-in-the-sequel), [the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** the same four pages and the QUICK page (the same `SAVB..` to `SAVQ..` files in the sequel's
+folder), turned with **PgDn** and **PgUp**, or a click on **PGUP** or **PGDN** under EXIT: the sequel has no PAGE
+buttons, so the page's name and "PGUP PGDN" show there instead. The load window passes by an empty page, and the save window has no QUICK page. Every
+window opens on page 1 ([saves in the sequel](RAVAGER.md#saves-in-the-sequel)).
 
 ### Quick save, quick load and autosave
 
