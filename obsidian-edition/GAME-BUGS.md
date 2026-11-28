@@ -247,7 +247,7 @@ to be read for it.
 | The **gladiator's armour optimisation** | Fixed there too (played: Gerakis with his armour in the pack got none) |
 | The **air cleric's daggers** | Fixed there too |
 | **View Character's DAM line** with a weaker material | Fixed there too |
-| The **DAM lines** of a **hasted** or **slowed** character | Fixed there too (2026-11-28), by the sequel's own rule: Slowed or Impeded half, Hasted twice, Slowed first where both; not yet seen in play |
+| The **DAM lines** of a **hasted** or **slowed** character | Fixed there too (2026-11-28), by the sequel's own rule: Slowed or Impeded half, Hasted twice, Slowed first where both (played: a gythka's 1.5x line 3x Hasted, 0.5x Slowed) |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
 | An archer's **pointer** after a shot | Fixed there too; not yet seen in play |
 | A magic item's power on the **Effects screen** | Fixed there too, with the charges lines (played: Armor's "(14 CHARGES)", Inertial Barrier's stray 15 not shown) |
