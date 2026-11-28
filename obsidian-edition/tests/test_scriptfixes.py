@@ -295,3 +295,34 @@ class NotMeleeTests(unittest.TestCase):
         hand = {k for k, flags in kinds.items() if all(f & 0x16 and not f & 1 for f in flags)}
         self.assertLessEqual(hand, set(sf.NOT_MELEE))
         self.assertFalse({k for k in sf.NOT_MELEE if any(f & 1 for f in kinds.get(k, ()))})
+
+
+SL = os.environ.get("DSUN_SL")
+
+
+@unittest.skipUnless(SL, "needs DSUN_SL (Shattered Lands' folder)")
+class TextTests(unittest.TestCase):
+    def test_typos_mended_in_the_copy(self):
+        """Each typo is mended in the Loader's copy of GPLDATA.GFF, with every new piece of content on
+        (their scripts changed first), and the typo is nowhere in its script."""
+        import tempfile
+        from dsloader import kalzith
+        source = os.path.join(SL, kalzith.SCRIPTS_FILE)
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, kalzith.SCRIPTS_FILE)
+            kalzith.write_scripts(source, dest, cloak=True, tome=True, hay=True, champions=True)
+            with open(dest, "rb") as f:
+                scripts, types = gpl.load_scripts(f.read())
+        for number, at, words, mended in sf.TEXT_FIXES:
+            with self.subTest(f"{number} {words}"):
+                printed = " ".join(t for o in gpl.decode(scripts[("GPL ", number)], types) for t in gpl.strings(o) if t)
+                self.assertIn(mended, printed)
+                self.assertNotIn(words, printed)
+
+    def test_shorter_text_padded(self):
+        """A mended string shorter than the game's keeps the command's length, spaces after its last string."""
+        with open(os.path.join(SL, "GPLDATA.GFF"), "rb") as f:
+            scripts, types = gpl.load_scripts(f.read())
+        r, = [r for r in sf.text_repairs(sf.TEXT_FIXES, 123, scripts[("GPL ", 123)], types, strict=True) if r.at == 0x969]
+        self.assertEqual(len(r.now), len(r.was))
+        self.assertIn("high warrens? ", "".join(gpl.strings(gpl.op_at(r.now, 0, types))))

@@ -65,6 +65,16 @@ helper back, in its segment and in upper memory. DSCLOG2 keeps the kits' names i
 (`kit_names_table.inc`, one table for both), with one `KIT_NAME_PTR`: 592 bytes of the sequel's segment back.
 Nothing a player sees changes (the same screens under both builds, in both games).
 
+**Fixed: both games, race and sex in talk and the typos** (branch `claude/ravager-script-room`). Wake of the
+Ravager's 17 lines that read a character's race or sex straight off the combat record (always 0: a thri-kreen
+never a "bug", a woman never "lass") now read the character's own record, as Shattered Lands' same fix; seen in
+play (a thri-kreen woman's race and sex read 8 and 2, 0 before). The text's typos mended in both games: 56 in
+the sequel, 25 in Shattered Lands, from one dictionary sweep. Both ride on the sequel's bigger script buffer
+(#315): a lengthened command runs from after its script's end, Shattered Lands' detour. **Dev:**
+`scriptfixes.text_repairs` and `TEXT_FIXES` (both games; `ravager.TEXT_FIXES`, `ravager.RACE_SEX`),
+`ravager.SEQUEL_LONGEST` now `pensasks.LONGEST`, `ravager.script_fix_names()`, `gpl.op_at`; `ravjump.py` and
+`ravprobe.py` find Reyhan's talk by the copy's index.
+
 **Fixed: Wake of the Ravager, the game's own script bugs** (branch `claude/ravager-script-bugs`). A sweep of
 all 350 of the sequel's scripts ([the report](reports/ravager-script-bugs-2026-11-28.md)) found, and the Loader's copy
 now mends: the sleeping giant Ptar's pocket could be picked again and again (a key

@@ -182,6 +182,7 @@ and some of the sequel's own bugs mended: [In Wake of the Ravager](#in-wake-of-t
 | **Dagolar's slime book**, in his laboratory | "Magical training" to read it took a psionicist, a preserver, a fighter or an air cleric, not an earth, fire or water cleric or a druid | A cleric, druid, preserver or psionicist (any one of the character's classes); a fighter has no magical training |
 | The cave guide's "Why don't you go bother someone **your own size**" | Asked "not a dwarf, or not a halfling?", true of everyone, so a dwarf or halfling heard it too | A dwarf or halfling is told to bother "someone else" |
 | Lines that depend on the **race or sex** of the one talking to someone | Read from the wrong record, so they always took the party's active member for a man of no race: a halfling was never greeted as a fellow halfling ("Oh, it is a relief to see a fellow halfling") nor named by race in the insult that follows, a woman was told "only a mad man would think of fighting Draj" and of "his purse", a thri-kreen never heard the bell the mastyrial hears near Demothi's camp, nor was told "your help" rather than "the help of any humanoid" | Each reads the active member's own race or sex |
+| **Typos** in the text | 25 misspellings in the talk and the story's text ("tommorrow", "curiousity", "destory", "existance", "the sorceror-king's power, he layed", "the high warrrens" and the like) | Spelled right; the dialects, cries and the first letters printed apart left as written |
 
 ## Rules it got wrong
 
@@ -247,7 +248,7 @@ to be read for it.
 | The **gladiator's armour optimisation** | Fixed there too (played: Gerakis with his armour in the pack got none) |
 | The **air cleric's daggers** | Fixed there too |
 | **View Character's DAM line** with a weaker material | Fixed there too |
-| The **DAM lines** of a **hasted** or **slowed** character | Fixed there too (2026-11-28), by the sequel's own rule: Slowed or Impeded half, Hasted twice, Slowed first where both; not yet seen in play |
+| The **DAM lines** of a **hasted** or **slowed** character | Fixed there too (2026-11-28), by the sequel's own rule: Slowed or Impeded half, Hasted twice, Slowed first where both (played: a gythka's 1.5x line 3x Hasted, 0.5x Slowed) |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
 | An archer's **pointer** after a shot | Fixed there too; not yet seen in play |
 | A magic item's power on the **Effects screen** | Fixed there too, with the charges lines (played: Armor's "(14 CHARGES)", Inertial Barrier's stray 15 not shown) |
@@ -273,6 +274,8 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | **Ore vouchers** (the mines' cashiers) | Past 327 vouchers the sum went negative, so cashing them in took money away (460 vouchers: a total of -19,536 and -7,818 paid) | A sale takes 327 vouchers at most, its sums right; the rest stay for the next sale |
 | **DEBUG messages** on screen | "DEBUG : got to here!", "DEBUG: sur_main" and two more of the developers' messages printed in play | Not printed |
 | Ptar's **"warrior"** and **"I let Magnolia go!"**, a camp **peon's look**, a **"magician"** in the forest | A druid or cleric was called a warrior and a fighter wasn't; the taunt missed one of the two ways she is freed; one peon had no look text; an air cleric or a druid was told "we could use another sword-arm" | As meant ([the report](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/ravager-script-bugs-2026-11-28.md)) |
+| Lines that depend on the **race or sex** of the one talking | Read straight off the combat record, which has neither, in 17 places: a thri-kreen was never called a "bug" or told of its mandibles, a woman never "lass", "girl" or "woman", the halfling's "you're a halfling, too" and the races' insults never fitted | Each reads the character's own race or sex, as the rest of the sequel's talk does (as Shattered Lands' same fix) |
+| **Typos** in the text | 56 misspellings ("acquaintence", "recieve", "thier", "a headress clorored tourquoise", "Youa re", "reknowned for for" and the like) | Spelled right, as Shattered Lands' (the dialects and the yuan-ti's hisses left as written) |
 
 ## Saved games
 

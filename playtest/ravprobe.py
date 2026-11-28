@@ -11,11 +11,8 @@ code = bytes.fromhex(sys.argv[1]) + rj.END
 scripts, _ = gpl.load_scripts(open(os.path.join(rj.WORK, 'rav', 'GPLDATA.GFF'), 'rb').read())
 talk = scripts[('GPL ', rj.TALK)]
 copy = open(rj.COPY, 'rb').read()
-key = talk[rj.ENTRY + 20:rj.ENTRY + 300]
-at = copy.find(key)
-if at < 0 or copy.find(key, at + 1) >= 0:
-    sys.exit("Reyhan's talk not found once in the script copy (already replaced? start the game again)")
+at = rj.talk_at(copy, talk)
 if len(code) >= len(talk) - rj.ENTRY - 10:
     sys.exit('the probe is longer than the talk it replaces')
-out = bytearray(copy); out[at - 20:at - 20 + len(code)] = code
+out = bytearray(copy); out[at:at + len(code)] = code
 open(rj.COPY, 'wb').write(out); print('Reyhan talk replaced:', len(code), 'bytes')

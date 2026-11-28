@@ -40,6 +40,21 @@ moves silently..."), and the look on Ptar:
    (`img/2026-11-28-ptar-second-look.png`). In the game as shipped the menu came back every time (the
    walkthrough's "he has the key ... even if you pick his pocket"), since the menu read flag 82.
 
+## The follow-up: race and sex through the character's record, the typos
+
+Build: branch `claude/ravager-script-room` (the bigger script buffer of PR #315 merged; the 17 race and sex
+reads through field 15 and the 56 text fixes as detours). `ravload.sh ravager-roost` started and loaded
+with the new copy (every lengthened script in it), Reyhan's talk ran as the game's.
+
+A probe in Reyhan's talk (`files/2026-11-28-ravager-race-sex-probe.hex`: printnum of the active member's
+`.15.41`, `.41`, `.15.42`, `.42`) printed **8, 0, 2, 0** for Thy'rokh (a thri-kreen, female): the game's reads
+straight off the combat record give 0, the mended ones her race and sex. A mended text wasn't put on screen
+(Reyhan's "their drivel" waits on the miners' question, not open in this save); the tests read every mended
+string back from the copy.
+
+`ravjump.py` and `ravprobe.py` now find Reyhan's talk by the copy's index: a copy with lengthened scripts keeps
+the old chunks' bytes too, unindexed, so a search for the talk's bytes found it twice.
+
 ## Learned
 
 - `ravprobe.py HEX`: a script probe run by Reyhan's talk, for what a fixed script does in the game's own

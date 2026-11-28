@@ -13,6 +13,11 @@ left standing (stuckwalk on the sequel's table, 3F49:08A7h).
   object 15's entry in memory (order 15, file 147): with ravdice.py (RAV_NO_SAVES=1) running 75 s, the log said
   "Pedestrian walks on (a walk saved halfway had left them standing)" twice and object 17's order was 0 (the
   other a real pedestrian at a stop: its order taken back, its script sending it on, as SL's). No save made.
-- Hasted and Slowed: unit tests only (test_ravengine: SPEED_HALVES against the speed routine's order). The
-  inventory couldn't be opened: the window grab stayed the loaded picture and no click or key reached the game
-  after the memory edit (game time went on). Not yet seen in play.
+- Hasted and Slowed (fresh load of ravager-after-ambush, no other edit): Thy'rokh's inventory read "+1 Chatchka
+  1D6+3" and "+1 Gythka 1.5x2D4+8". An effect record added in memory (owner 2, Hasted 42): "2x1D6+3" and
+  "3x2D4+8". Made Slowed (91): "Slowed" under her portrait, AC 0 to 4, "0.5x1D6+3" and "0.5x2D4+8" (3 halves
+  halved, rounded down: 1). The game took input throughout. No save made.
+- The input freeze seen in the first try: the stuck-walker test's own memory edit. Object 17 given object 15's
+  walk entry froze input within 75 s with no dice log running, the same on the code before PR #315 (530fa354).
+  The dice log alone for 75 s on a fresh load: no reset, input fine. A quick save made while the pedestrians
+  walked (F5), loaded: they walk on, the dice log 75 s reset no one, and the inventory opened after.

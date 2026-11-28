@@ -243,6 +243,11 @@ def _op(r: _Reader) -> Op:
     return Op(at, code, COMMANDS[code](r))
 
 
+def op_at(data: bytes, at: int, field_types: bytes = b"") -> Op:
+    """The one command at AT (its .at relative to AT, 0)."""
+    return _op(_Reader(data[at:], field_types))
+
+
 def decode(data: bytes, field_types: bytes) -> List[Op]:
     """Every command in a script, in order."""
     r = _Reader(data, field_types)
