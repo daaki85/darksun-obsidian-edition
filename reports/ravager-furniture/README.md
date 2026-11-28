@@ -2,9 +2,9 @@
 
 ## Project progress
 
-All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added 14 pictures. Six cover the empty throne summoned from Limbo into El’s Temple, three different mine chests, the kitchen crates and the upright polearm stand shared by three regions. Another eight form five two-piece worktables in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added 15 pictures, including the stocked round table used four times in Volcano 1. Six cover the empty throne summoned from Limbo into El’s Temple, three different mine chests, the kitchen crates and the upright polearm stand shared by three regions. Another eight form five two-piece worktables in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All eleven inventoried Yuan-ti furniture placements have now been seen in DOSBox, including the two storage piles from the figure redraw. The wider all-area review is still open. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All eleven inventoried Yuan-ti furniture placements have now been seen in DOSBox, including the two storage piles from the figure redraw. The Volcano pass covers all 21 inventoried shelves, the set dining tables and the second torn-bed design, including its other placement in Tyr. The wider all-area review is still open. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Repairing the split beds and the Alliance storeroom
 
@@ -26,7 +26,7 @@ Pictures 2591 and 2704 in the original defect report belong to the red chair and
 
 ## Freestanding shelves
 
-The first pass lowers 19 freestanding shelves at all 54 of their placements. The first version used the 0.66 vertical scale of the Tyr furniture pass on each shelf. The later Mines 3 orb check preserves the six faceted orbs by shortening the spaces between their boards. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
+The first pass lowers 19 freestanding shelves at all 54 of their placements. The first version used the 0.66 vertical scale of the Tyr furniture pass on each shelf. The later Mines 3 orb check and Volcano shop checks protect the contents of five shelves by shortening the spaces between their boards. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
 
 ## What the first pass looks like
 
@@ -274,9 +274,23 @@ The Inquisitor’s safe is bolted to the floor. Its clamps extend before the lid
 
 The forge throne includes a skeleton whose hands release Promere’s Hammer. The two drawings meet through the weapon. They already align in both poses, so the throne keeps its original scale. The kitchen kettle and four winged statues also retain their proportions. [Forge throne, kettle and statues](mine-forge-and-statuary-live.png) · [Playtest conditions, room coordinates and scripted rewards](../../playtest/logs/2026-11-27-ravager-mine-worktables-and-forge.md)
 
+## The Volcano dining hall, shops and storeroom
+
+The dining hall in Volcano 1 used two different scales. Its four set tables had retained the tall stock drawing while the adjacent bare tables and stools were lower. Picture 1321 is an identical copy of 2624, the stocked table used in Volcano 2 and both Alliance layouts. Both now use the lowered bare table beneath the original bowls, cups and platter. The two counter designs keep the painted jugs by shortening the bases below them.
+
+![Whole Volcano maps beside Gedron and the upper castle, with reviewed rooms marked](volcano-furniture-whole-maps.png)
+
+![Stock game, previous mod and revised mod in DOSBox, beside Gedron and upper castle furnishings at the same scale](volcano-furniture-live.png)
+
+The rear barrel in the Volcano 2 southern storeroom moves down eight pixels. Its front partner sits on its original floor point. The side-by-side barrels and the neighboring pile from the earlier redraw keep their placements.
+
+All 21 original Volcano shelf placements were checked against the stock game. Four shop shelves, 2979–2982, had shortened glassware, vials or books. Removing bare rows from the wood and the spaces between boards preserves each occupied row of the original. All 14 placements of these shared shelf, counter and table designs in the Alliance headquarters were checked in play. [All 21 shelf placements in DOSBox](volcano-shelves-live.png)
+
+Another torn blanket was split across the bed pictures from the figure redraw. The head (530) and foot (531) overlap by five rows in both Volcano 1 and Tyr. The repaired blanket uses the joined 68-row drawing, lowered once to 45 visible rows. The turquoise bed nearby already has a single continuous drawing. [Both torn beds before and after repair](volcano-tyr-torn-bed-live.png) · [Playtest and room coordinates](../../playtest/logs/2026-11-27-ravager-volcano-furniture.md)
+
 ## Region work queue
 
-The scan covered all 20 shipped region files. Two regions have in-game coverage for every placement in the current furniture inventory: Mines 3 (72) and the Yuan-ti tunnels (11). The other 18 entries still have room or interaction checks. Volcano 2 and Volcano 1 together account for 21 of the original shelf placements. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Four regions now have in-game coverage for every placement currently listed in the furniture inventory: Mines 3 (72), the Yuan-ti tunnels (11), Volcano 1 (32) and Volcano 2 (46). The other 16 regions still have entries requiring room or interaction checks. The Volcano rooms have additional scenery outside the inventory, including the silver furnishings and narrow side-facing shelves. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -291,8 +305,8 @@ The scan covered all 20 shipped region files. Two regions have in-game coverage 
 | 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
-| 03D Volcano 2 | 143 | 15 | 23 | Upright polearm stand checked in play. Check the shelves and remaining room furnishings |
-| 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
+| 03D Volcano 2 | 143 | 15 | 23 | All 46 listed placements checked in play, including 15 shelves and the repaired barrel stack. Review the silver furnishings and side-facing shelves |
+| 03E Volcano 1 | 133 | 6 | 19 | All 32 listed placements checked in play, including the redrawn beds, six shelves, four set tables and both stocked counters. Review the silver furnishings and side-facing shelves |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
 | 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |

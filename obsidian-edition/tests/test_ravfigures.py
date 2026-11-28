@@ -153,7 +153,7 @@ class GameFileTests(unittest.TestCase):
         package = ravfigures.object_chunks(stock)
         grouped = [pic for _, pictures, _ in ravfigures.ASSEMBLIES for pic in pictures]
         for pic in (*ravfigures.FURNITURE, *grouped):
-            if pic == 1140:  # Occupied shelf boards have their own test below.
+            if pic in ravfigures.SHELF_SPACING:  # Occupied shelf boards have their own tests below.
                 continue
             key = ("BMP ", pic)
             percent = 82 if pic in (3172, 3173, 3174, 3558, 3795, 3796, 3797, 3798) else 66
@@ -172,6 +172,41 @@ class GameFileTests(unittest.TestCase):
                     offset = (100 * distance + percent // 2) // percent
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
+
+    def test_set_tables_match_and_keep_their_place_settings(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        feast, alternate, empty = (("BMP ", pic) for pic in (1321, 2624, 2625))
+        self.assertEqual(package[feast], package[alternate])
+        table = sequelicons.decode(package[feast])
+        original = sequelicons.decode(stock[feast])
+        bare = [[None] * 50] + sequelicons.decode(stock[empty])
+        self.assertEqual(table[-11:], sequelicons.decode(package[empty])[-11:])
+        for left, top, right, bottom, drop in ((19, 0, 41, 11, 14), (24, 13, 45, 34, 6), (9, 25, 22, 36, 5)):
+            for y in range(top, bottom):
+                for x in range(left, right):
+                    if original[y][x] != bare[y][x]:
+                        # At their reduced separation, the foreground platter covers the rear setting.
+                        front = y + drop - 6
+                        if top == 0 and 13 <= front < 34 and 24 <= x < 45 and original[front][x] != bare[front][x]:
+                            continue
+                        self.assertEqual(table[y + drop][x], original[y][x])
+        imported = {feast: b"custom catalogue art", empty: stock[empty]}
+        ravfigures._lower_set_tables(stock, imported)
+        self.assertEqual(imported[feast], b"custom catalogue art")
+
+    def test_volcano_barrel_move_is_confined_to_the_southern_stack(self):
+        with open(os.path.join(WOTR, "RGN03D.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        key = ("ETAB", 61)
+        changed = ravfigures.region_chunks("RGN03D.GFF", stock)[key]
+        records = struct.Struct("<HHBBh")
+        differences = [(a, b) for a, b in zip(records.iter_unpack(stock[key]), records.iter_unpack(changed)) if a != b]
+        self.assertEqual(len(differences), 1)
+        before, after = differences[0]
+        self.assertEqual((before[:3], before[4]), ((1200, 1392, 0), 10650))
+        self.assertEqual(after, (1200, 1400, *before[2:]))
 
     def test_mine_worktables_lower_as_complete_surfaces(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
@@ -195,12 +230,28 @@ class GameFileTests(unittest.TestCase):
             ravfigures._lower_mine_worktables(stock, imported)
             self.assertEqual(imported, expected)
 
+    def test_volcano_shelves_keep_every_occupied_row(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        for pic in (2979, 2980, 2981, 2982):
+            key = ("BMP ", pic)
+            original = sequelicons.decode(stock[key])
+            revised = sequelicons.decode(package[key])
+            _, omitted = ravfigures.SHELF_SPACING[pic]
+            for y in omitted:
+                # Between the side rails, the omitted rows contain only empty space or shelf wood.
+                self.assertTrue(all(v is None or 212 <= v <= 222 for v in original[y][7:-7]), (pic, y))
+            self.assertEqual(revised, [[None] * 64] * len(omitted) +
+                             [row for y, row in enumerate(original) if y not in omitted])
+            self.assertEqual(revised[-1], original[-1])
+
     def test_mine_shelf_preserves_all_six_loose_orbs(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
         key = ("BMP ", 1140)
         package = ravfigures.object_chunks(stock)
-        self.assertEqual(package[key], ravfigures._lower_orb_shelf(stock[key]))
+        self.assertEqual(package[key], ravfigures._lower_stocked_shelf(stock[key], 1140))
         shelf = sequelicons.decode(package[key])
         original = sequelicons.decode(stock[key])
         orb = sequelicons.decode(stock[("BMP ", 1052)])
@@ -233,19 +284,20 @@ class GameFileTests(unittest.TestCase):
                     if not rec:
                         continue
                     pic, = struct.unpack_from("<H", rec, ravfigures.PICTURE)
-                    if pic in (524, 525):
+                    if pic in (524, 525, 530, 531):
                         ax, ay = struct.unpack_from("<hh", rec, 2)
-                        # Group by the head's top left, using the foot's 39-row offset.
-                        pos = (name, x - ax, y - height - ay - (39 if pic == 525 else 0))
+                        # Both pieces share the head’s top left after removing the native overlap.
+                        offset = {525: 39, 531: 41}.get(pic, 0)
+                        pos = (name, x - ax, y - height - ay - offset)
                         pairs.setdefault(pos, []).append(pic)
         self.assertCountEqual([name for name, _, _ in pairs],
-                              ["RGN032.GFF", "RGN033.GFF", "RGN033.GFF", "RGN038.GFF"])
+                              ["RGN032.GFF", "RGN032.GFF", "RGN033.GFF", "RGN033.GFF", "RGN038.GFF", "RGN03E.GFF"])
         for parts in pairs.values():
-            self.assertCountEqual(parts, [524, 525])
+            self.assertIn(sorted(parts), ([524, 525], [530, 531]))
 
-        def assembled(chunks):
+        def assembled(chunks, head, foot, foot_height):
             canvas = [[None] * 40 for _ in range(68)]
-            for pic, offset, height in ((524, 0, 46), (525, 39, 29)):
+            for pic, offset, height in ((head, 0, 46), (foot, 68 - foot_height, foot_height)):
                 rows = sequelicons.decode(chunks[("BMP ", pic)])
                 self.assertEqual((len(rows), len(rows[0])), (height, 40))
                 for y, row in enumerate(rows, offset):
@@ -254,8 +306,9 @@ class GameFileTests(unittest.TestCase):
                             canvas[y][x] = pixel
             return canvas
 
-        full_bed = sprites.encode_frames([assembled(stock)])
-        self.assertEqual(assembled(built), sequelicons.decode(ravfigures.lowered_furniture(full_bed)))
+        for spec in ((524, 525, 29), (530, 531, 27)):
+            full_bed = sprites.encode_frames([assembled(stock, *spec)])
+            self.assertEqual(assembled(built, *spec), sequelicons.decode(ravfigures.lowered_furniture(full_bed)))
 
     def test_empty_temple_throne_keeps_the_seated_position(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:

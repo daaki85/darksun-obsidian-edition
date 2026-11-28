@@ -247,6 +247,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-racks-and-polearms.md) | The miner’s release and empty rack, two weapon tables, Yuan-ti vessels and four upright polearm stands |
 | [2026-11-27](2026-11-27-ravager-mine-and-tunnel-shelves.md) | All eleven Mines 3 and Yuan-ti shelf placements, the six-orb shelf, reagent choices and the redrawn tunnel storeroom |
 | [2026-11-27](2026-11-27-ravager-mine-kitchen-and-chests.md) | Mines 3 kitchen crates, the armor and chef’s chests, five chairs and the stone table |
+| [2026-11-27](2026-11-27-ravager-volcano-furniture.md) | Both Volcano levels’ furniture and 21 shelves, both torn red beds in Tyr and Volcano 1, and the southern barrel stack |
 | [2026-11-27](2026-11-27-ravager-mine-worktables-and-forge.md) | Five Mines 3 worktables, the Inquisitor’s safe, Promere’s Hammer, the soup kettle and four statues |
 | [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |
 | [2026-11-27](2026-11-27-docs-pictures-retake.md) | Kalzith's talk and body pictures with the outfits; which pictures the outfits change; the sequel's items read for ITEMS.md |

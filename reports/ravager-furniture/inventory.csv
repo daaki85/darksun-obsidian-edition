@@ -7,13 +7,16 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 523,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:8 033:3 038:2 045:1
 524,Head of two-piece red bed,Joined to 525 before scaling. All four beds verified in DOSBox,,032:1 033:2 038:1
 525,Foot of two-piece red bed,Joined to 524 before scaling. All four beds verified in DOSBox,,032:1 033:2 038:1
-532,Barrels and crates,"Open barrel at (677,1269) moved 7 px to meet its support",,001:1 033:4 038:1 03D:2 045:1
-533,Barrels and crates,Two Alliance barrels moved 7 and 2 px to restore their joins,,001:6 032:1 033:4 038:3 03D:2 03E:1 045:3
+530,Torn red bed / pillow and blanket,Joined to 531 for a continuous blanket. Both beds verified in Volcano 1 and Tyr,,032:1 03E:1
+531,Torn red bed / blanket and feet,Joined to 530 before scaling at both placements,,032:1 03E:1
+532,Barrels and crates,Open Alliance barrel moved 7 px. Remains at its own floor line at the base of the Volcano 2 stack,,001:1 033:4 038:1 03D:2 045:1
+533,Barrels and crates,Two Alliance barrels moved 7 and 2 px. Volcano 2 rear barrel moved 8 px onto its partner,,001:6 032:1 033:4 038:3 03D:2 03E:1 045:3
 541,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
 543,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
 544,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:4 03E:1
 545,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
 546,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
+547,Turquoise bed,Single-piece figure redraw reviewed beside the other Volcano 1 beds and in the Tyr bedroom,,032:3 033:2 03E:1
 567,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
 568,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
 569,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
@@ -69,8 +72,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1172,Freestanding shelves,Lowered and placements reviewed,,033:2
 1247,"Seats, loom and restraints",Reviewed at current scale,1247-sultan.zip,03B:1
 1251,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
+1321,Set round dining table,Four Volcano 1 tables match 2624. Intact place settings on the lowered bare tabletop,,03E:4
 1334,Freestanding shelves,Lowered and placements reviewed,,03D:1
-1342,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
+1342,"Tables, counters and benches",Shortened the bottom nine rows to retain the jug and cloth on the short counter,,03D:1
 1376,Lava spires,Retain full terrain height along the lava edge,,03F:36
 1377,Lava spires,Retain full terrain height along the lava edge,,03F:45
 1378,Lava spires,Retain full terrain height along the lava edge,,03F:47
@@ -151,13 +155,13 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2589,"Tables, counters and benches",Lowered and placements reviewed,,033:2 038:1
 2590,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:9 033:6
 2591,Red chair,Thirteen chair placements reviewed across Tyr and the Alliance,,032:9 033:4
-2624,"Tables, counters and benches",Lowered and placements reviewed,,033:2 03D:1
+2624,"Tables, counters and benches",Same stocked drawing as 1321. Intact place settings on the lowered tabletop,,033:2 03D:1
 2625,"Tables, counters and benches",Lowered and placements reviewed,,03D:5 03E:4
 2626,"Tables, counters and benches",Lowered and placements reviewed,,03D:3 03E:5
 2627,"Tables, counters and benches",Lowered and placements reviewed,,03D:5 03E:4
 2628,Freestanding shelves,Lowered and placements reviewed,,03D:4 03E:3
 2629,Freestanding shelves,Lowered and placements reviewed,,03D:4 03E:1
-2630,"Tables, counters and benches",Lowered and placements reviewed,,033:1 03D:1 03E:2
+2630,"Tables, counters and benches",Shortened the bottom 22 rows to retain the jug and cloth on the tall counter,,033:1 03D:1 03E:2
 2631,Freestanding shelves,Lowered and placements reviewed,,032:1 033:2 03D:2 03E:1
 2674,Freestanding shelves,Yuan-ti placement checked against stock in DOSBox,,036:1
 2675,Freestanding shelves,Both placements checked against stock in Mines 3 and the Yuan-ti tunnels in DOSBox,,036:1 03A:1
@@ -192,10 +196,10 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2840,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
 2962,Forge throne and skeleton,Retain both poses. Hammer and hand meet the lower picture before and after the release,,03A:1
 2963,Forge throne and skeleton,Retain both poses. Lower picture meets the upper drawing through the hammer release,,03A:1
-2979,Freestanding shelves,Lowered and placements reviewed,,033:5 03D:1
-2980,Freestanding shelves,Lowered and placements reviewed,,033:4 03D:1
-2981,Freestanding shelves,Lowered and placements reviewed,,03D:1
-2982,Freestanding shelves,Lowered and placements reviewed,,033:2 03D:1
+2979,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,033:5 03D:1
+2980,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,033:4 03D:1
+2981,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,03D:1
+2982,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,033:2 03D:1
 3072,Headquarters beds,Lowered and reviewed in the intact and ruined rooms with their separate pillows,,033:2
 3073,Loose pillow against torn bedding,Both placements lowered 11 pixels to follow the bed,,033:2
 3074,Floor pillow,Reviewed beside damaged beds and retained on the floor,,033:2

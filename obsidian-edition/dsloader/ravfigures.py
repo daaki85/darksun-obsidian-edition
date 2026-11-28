@@ -36,7 +36,8 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ravager-figures
 SKIP = "figures"  # (ravager's SKIP name: the copies without them, RAV_SKIP's control)
 MANIFEST = "manifest.json"
 FILES = ("OBJEX.GFF", "RESOURCE.GFF", "RGN03A.GFF")  # Files with imported catalogue chunks.
-REGIONS = {"RGN001.GFF": "RGN0012.GFF", "RGN033.GFF": "RGN0332.GFF", "RGN03A.GFF": "RGN03A2.GFF"}
+REGIONS = {"RGN001.GFF": "RGN0012.GFF", "RGN033.GFF": "RGN0332.GFF", "RGN03A.GFF": "RGN03A2.GFF",
+           "RGN03D.GFF": "RGN03D2.GFF"}
 PICTURE = 12  # (OJFF: the object's picture's number, a word)
 KINDS = ("BMP ", "CBMP", "SCMD", "ETAB")  # (the chunks DATA may hold)
 CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see above)
@@ -52,8 +53,8 @@ DAMAGED_CRATES = (3795, 3796, 3797, 3798)
 FURNITURE_SCALES = dict.fromkeys(SHALLOW_STORAGE + DAMAGED_CRATES, 0.82)
 STORAGE = (532, 533, 1014, 1015, 1016, 1135, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
            2769, 2770, 3364) + SHALLOW_STORAGE
-TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 2627,
-          2630, 2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
+TABLES = (515, 517, 628, 629, 630, 2050, 2585, 2589, 2625, 2626, 2627,
+          2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
 SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 789, 2218,
                     2590, 2591, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
                     3629, 3699, 3793, 3826, 3829, 3835, 3836, 3870)
@@ -61,7 +62,7 @@ OPENABLE = (631, 1112, 1113, 1136, 2825, 3250)  # Two stored states, each with i
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 # Only these bottom rows take the Tyr scale. Keep cushion faces, brazier smoke and the tips of the polearms intact.
-BASE_ROWS = {2166: 16, 2167: 16, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43}
+BASE_ROWS = {1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43}
 
 # Each assembly uses the same floor line for the pictures and their attached pieces.
 # The four placement fields are stock object, x, y and the new y. Other placements
@@ -88,6 +89,7 @@ ASSEMBLIES = (
         (9495, 1629, 1284, 1294), (9491, 1639, 1313, 1317), (9637, 1625, 1254, 1269),
     )),
     ("RGN03A.GFF", (2785, 2786), ((10347, 223, 737, 747),)),
+    ("RGN03D.GFF", (532, 533), ((10650, 1200, 1392, 1400),)),
     (None, (2794, 2795), ()),  # Weapons cross the join in both the Yuan-ti tunnels and Mines 3.
 )
 
@@ -246,17 +248,61 @@ def lowered_furniture(chunk: bytes, base_rows: Optional[int] = None, scale: floa
     return sprites.encode_frames(frames)
 
 
-def _lower_orb_shelf(chunk: bytes) -> bytes:
-    """Shorten the gaps between the boards without flattening the six loose-orb drawings."""
+# Each entry gives the stock frame height and the rows of bare wood or space to remove.
+# Keep the vessels, the edge of each board, and the original floor-contact row.
+SHELF_SPACING = {
+    1140: (50, (14, 15, 16, 17, 31, 32, 33, 48)),
+    2979: (58, (10, 12, 13, 14, 31, 32, 53, 55, 56)),
+    2980: (57, (19, 21, 22, 23, 24, 25, 34, 35, 37, 38, 54, 55)),
+    2981: (51, (11, 12, 13, 15, 16, 28, 29, 31, 32, 33, 34, 45, 46, 48, 49)),
+    2982: (62, (17, 18, 19, 20, 31, 33, 34, 35, 36, 57, 59, 60)),
+}
+
+
+def _lower_stocked_shelf(chunk: bytes, picture: int) -> bytes:
+    """Shorten the spaces between boards while retaining the goods painted onto each tier."""
     from . import sequelicons, sprites
+    height, omit = SHELF_SPACING[picture]
     if struct.unpack_from("<H", chunk, 4)[0] != 1:
         return chunk
     rows = sequelicons.decode(chunk)
-    if (len(rows), len(rows[0])) != (50, 64):
+    if (len(rows), len(rows[0])) != (height, 64):
         return chunk
-    # Top, middle, bottom board, then the original floor-contact row.
-    tiers = rows[:14] + rows[18:31] + rows[34:48] + rows[49:]
-    return sprites.encode_frames([[[None] * 64] * (len(rows) - len(tiers)) + tiers])
+    tiers = [row for y, row in enumerate(rows) if y not in omit]
+    return sprites.encode_frames([[[None] * 64] * len(omit) + tiers])
+
+
+def _lower_set_tables(old: gff.Chunks, new: gff.Chunks) -> None:
+    """Set the bowls, goblets and platter on the lowered round tabletop at their original size."""
+    from . import sequelicons, sprites
+    empty = ("BMP ", 2625)
+    if empty not in old or ("SCMD", 2625) in new:
+        return
+    bare = sequelicons.decode(old[empty])
+    if (len(bare), len(bare[0])) != (51, 50):
+        return
+    # The loaded drawing has one extra row above the empty table and the same floor row.
+    original = [[None] * 50] + bare
+    lowered = [[None] * 50] + sequelicons.decode(lowered_furniture(old[empty]))
+    for picture in (1321, 2624):
+        key = ("BMP ", picture)
+        if key not in old or new.get(key) != old[key] or ("SCMD", picture) in new:
+            continue
+        if struct.unpack_from("<H", old[key], 4)[0] != 1:
+            continue
+        stocked = sequelicons.decode(old[key])
+        if (len(stocked), len(stocked[0])) != (52, 50):
+            continue
+        rows = [r.copy() for r in lowered]
+        # Compare against the bare wood to recover each setting's outline. Back to front
+        # keeps the platter and its foreground goblet together where their edges touch.
+        for left, top, right, bottom in ((19, 0, 41, 11), (24, 13, 45, 34), (9, 25, 22, 36)):
+            drop = round((52 - bottom) * 0.34)
+            for y in range(top, bottom):
+                for x in range(left, right):
+                    if stocked[y][x] != original[y][x]:
+                        rows[y + drop][x] = stocked[y][x]
+        new[key] = sprites.encode_frames([rows])
 
 
 def _lower_mine_worktables(old: gff.Chunks, new: gff.Chunks) -> None:
@@ -282,10 +328,10 @@ def _lower_mine_worktables(old: gff.Chunks, new: gff.Chunks) -> None:
                 new[key] = lowered_furniture(old[key], base_rows=16)
 
 
-def _lower_split_bed(old: gff.Chunks, new: gff.Chunks) -> None:
+def _lower_split_bed(old: gff.Chunks, new: gff.Chunks, head_id: int, foot_id: int, foot_height: int) -> None:
     """Resample the assembled bed, then split it back across the two stock drawing areas."""
     from . import sequelicons, sprites
-    head, foot = ("BMP ", 524), ("BMP ", 525)
+    head, foot = ("BMP ", head_id), ("BMP ", foot_id)
     for key in (head, foot):
         if key not in old or key not in new or ("SCMD", key[1]) in new:
             return
@@ -295,10 +341,10 @@ def _lower_split_bed(old: gff.Chunks, new: gff.Chunks) -> None:
             return  # Preserve a different catalogue redraw.
     top = sequelicons.decode(old[head])
     bottom = sequelicons.decode(old[foot])
-    # At all four placements the foot starts 39 rows below the head, overlapping seven rows.
-    if (len(top), len(bottom), len(top[0]), len(bottom[0])) != (46, 29, 40, 40):
+    # Both bed variants have the same 68-row outline. Their feet overlap seven or five rows.
+    if (len(top), len(bottom), len(top[0]), len(bottom[0])) != (46, foot_height, 40, 40):
         return
-    overlap = 7
+    overlap = len(top) + len(bottom) - 68
     shared = [[front if front is not None else back for back, front in zip(upper, lower)]
               for upper, lower in zip(top[-overlap:], bottom[:overlap])]
     joined = top[:-overlap] + shared + bottom[overlap:]
@@ -327,7 +373,9 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
         if gone:
             raise FigureError(f"{f}: the import took out {gone[:5]}")
         if f == "OBJEX.GFF":
-            _lower_split_bed(old, new)
+            _lower_split_bed(old, new, 524, 525, 29)
+            _lower_split_bed(old, new, 530, 531, 27)
+            _lower_set_tables(old, new)
             _lower_mine_worktables(old, new)
             for number in (*FURNITURE, *BASE_ROWS):
                 key = ("BMP ", number)
@@ -335,8 +383,8 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                 script = ("SCMD", number)
                 if key not in old or new.get(key) != old[key] or new.get(script) != old.get(script):
                     continue
-                if number == 1140 and script not in old:
-                    new[key] = _lower_orb_shelf(old[key])
+                if number in SHELF_SPACING and script not in old:
+                    new[key] = _lower_stocked_shelf(old[key], number)
                 elif script not in old or number in OPENABLE:
                     scale = FURNITURE_SCALES.get(number, 0.66)
                     new[key] = lowered_furniture(old[key], BASE_ROWS.get(number), scale)

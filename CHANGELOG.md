@@ -94,6 +94,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
 
 **Changed** (Wake of the Ravager)
+- The Volcano dining tables sit at the same height with or without a meal. Bowls, cups and counter jugs keep their shape, and the two barrels in the southern storeroom touch again. The books and glassware on four shelf designs retain their outlines. The torn red blanket in Volcano 1 and Tyr is continuous across both pieces.
 - The five stone worktables in Mines 3 sit five pixels lower. Their glassware retains its shape, including the bottle that spans two drawings.
 - The three kitchen crates in Mines 3 sit lower beside the poison box. The armor chest and the chef’s locked chest have matching proportions in both stored lid positions.
 - The lowered orb shelf in Mines 3 keeps the six blue orbs the same shape as the ones on the laboratory floor.
