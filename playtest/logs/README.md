@@ -282,7 +282,7 @@ schedules and diffs a log made or used.
 | [2026-11-28](2026-11-28-ravager-quests.md) | Wake of the Ravager: its flags found (DS:15F2h, SAVE 30), the Journal tab's quests read by the Loader, all 350 of its scripts read |
 | [2026-11-28](2026-11-28-ravager-play-checks.md) | Wake of the Ravager: the quality-of-life port played by hand (T, Shift+T, Alt, item box, Effects click, load window, Characters tab, S, EDIT's age); new characters' and level-ups' saves, View Character's DAM and the arrows label fixed; two more quests open |
 | [2026-11-28](2026-11-28-ravager-hand-checks.md) | Wake of the Ravager: the last quality-of-life rows played (shop shine, tabs, named saves, look box, F10, miss labels, dust, creation screen's THAC0, SUM, STORE/RECALL and KITS); saves worked out again at a load |
-| [2026-11-28](2026-11-28-ravager-script-fixes.md) | Wake of the Ravager's script fixes (PR #310): the ore voucher sale run in the game's interpreter (460 vouchers paid -7,818 before, 327 paid 13,080 with 133 left after); Ptar's pocket picked once in his cave (reached by a jump below its mouth and walking in): the key and 2,000 XP, and at the next look no menu |
+| [2026-11-28](2026-11-28-ravager-script-fixes.md) | Wake of the Ravager's script fixes (PR #310): the ore voucher sale run in the game's interpreter (460 vouchers paid -7,818 before, 327 paid 13,080 with 133 left after); Ptar's pocket picked once in his cave (reached by a jump below its mouth and walking in): the key and 2,000 XP, and at the next look no menu; the race and sex reads through the character's record read a thri-kreen woman's 8 and 2 (0 before) |
 
 ## files/
 
@@ -348,6 +348,7 @@ schedules and diffs a log made or used.
 | [2026-11-28-ravager-hdr.py](files/2026-11-28-ravager-hdr.py) | [The same](2026-11-28-ravager-shadows-review.md): reads or writes a word of DSCLOG2's header in the running sequel |
 | [2026-11-27-ravager-msgwatch.py](files/2026-11-27-ravager-msgwatch.py) | [The same](2026-11-27-ravager-cutscene-mouse.md): click\|key\|none SECONDS: waits for the sequel's message box (DSCLOG2's msg_waiting), grabs it, presses, and times its close |
 
+| [2026-11-28-ravager-race-sex-probe.hex](files/2026-11-28-ravager-race-sex-probe.hex) | [The same](2026-11-28-ravager-script-fixes.md): the probe for `ravprobe.py`: the active member's race and sex, through field 15 and straight |
 | [2026-11-28-ravager-to-ptar.sh](files/2026-11-28-ravager-to-ptar.sh) | [The same](2026-11-28-ravager-script-fixes.md): the sequel's party into Ptar's cave by its own mouth, the thief leading |
 | [2026-11-28-ravager-camera.py](files/2026-11-28-ravager-camera.py) | [The same](2026-11-28-ravager-script-fixes.md): reads the sequel's camera and party places; `set` puts the camera on the leader |
 | [2026-11-28-ravager-voucher-probe.hex](files/2026-11-28-ravager-voucher-probe.hex) | [The same](2026-11-28-ravager-script-fixes.md): the probe for `ravprobe.py`: the game's voucher sale of 460, then the Loader's capped one |
