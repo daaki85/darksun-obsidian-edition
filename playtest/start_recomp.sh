@@ -13,7 +13,8 @@ cd "$REPO/obsidian-edition" && python3 -c "
 from dsloader import launch
 s = launch.load_settings(); s['game_dir'] = '$GAME'; launch.save_settings(s)
 print('problem:', launch.prepare_patched_game('$GAME'))"
-cd "$GAME" && (SDL_AUDIODRIVER=dummy setsid "$DSUN" --game "$GAME" --cd "$REPO/obsidian-edition/dos" > "$WORK/dsun.log" 2>&1 < /dev/null & echo $! > "$WORK/dsun.pid")
+B=${DSUN_BUILD:-$(cd "$(dirname "$DSUN")/.." && pwd)/ds1o}   # (the program's build/ds1o, beside build/cmake: named, as the program finds it only from its own folder)
+cd "$GAME" && (SDL_AUDIODRIVER=dummy setsid "$DSUN" --game "$GAME" --build "$B" --cd "$REPO/obsidian-edition/dos" > "$WORK/dsun.log" 2>&1 < /dev/null & echo $! > "$WORK/dsun.pid")
 # (the pid is the test's own program: other dsun processes may run, headless tests of the
 #  recompiled program, and the dice log and the tools must not pick those)
 for i in $(seq 1 30); do W=$(timeout 5 xdotool search --name Recompiled | head -1); [ -n "$W" ] && break; sleep 1; done
