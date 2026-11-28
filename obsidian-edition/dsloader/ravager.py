@@ -327,6 +327,8 @@ def _stride(at: int) -> Patch:
     return Patch("sheet_stride_%x" % at, at, bytes((0x6B, modrm, GAME_SHEET_SIZE)), bytes((0x6B, modrm, 0x48)))
 
 
+SFX_VOLUME_AT = 0x4F6B4  # (DS:26B4h in the file: the game menu's sound effect volume, slider then volume)
+
 PATCHES: Tuple[Patch, ...] = (
     # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
     # 5C22h, its seed at DS:384Ah): the dice log's every roll.
@@ -1057,6 +1059,18 @@ PATCHES: Tuple[Patch, ...] = (
     # effects of that spell) with "cmp dx,-1 / jbe" (77D0Fh), an unsigned compare every spell passes
     # (the C's "spell > -1" on an unsigned): jbe made jle (logs/2026-11-23-ravager-worn.md)
     Patch("worn_spell_off", 0x77D12, bytes.fromhex("7610"), bytes.fromhex("7e10")),
+    # Resist Fire, Resist Cold, Protection from Fire and from Lightning and Fire Shield never halved a spell
+    # (the walkthrough's bugs, 2026-11-28): the damage routine's halving (85178h, SL's 7B56Fh) halves when every
+    # kind the spell does (its record's +1Ah, magic aside) is one the target's effects guard it from, but its
+    # "test [bp+0Ch],ax / jz" (85184h) halves only when the spell does some OTHER kind too, where SL's has
+    # jnz: a Fireball or a Cone of Cold was never halved, a fire-and-crushing spell was. jz made jnz.
+    Patch("protection_halves", 0x85187, bytes.fromhex("7409"), bytes.fromhex("7509")),
+    # Detonate never offered at a level up (the walkthrough's bugs): the psionicists' pop-up lists a
+    # discipline's powers through 93DA6h (a power's discipline, the power 0-33 its record 235 on), whose
+    # "or ax,ax / jle" (93DB1h) skips the 235 for power 0, Detonate, so its discipline was -1 and it never
+    # listed; the program's other copy of the routine (62043h) has jl. jle made jl (DSCLOG2's PSI_GRANT
+    # already gives Detonate at creation where the game's table does)
+    Patch("detonate_listed", 0x93DB3, bytes.fromhex("7e03"), bytes.fromhex("7c03")),
     # a member added from the roster (the ADD screen, 58CB5h) wears its items with no spell on, the
     # game putting one on only as an item is readied: DSCLOG2's JOIN_READY readies each worn item with
     # a spell (77C1Ah) at "cmp byte [13FAh],0" (58D81h), right after the character's CHAR is loaded
@@ -1222,6 +1236,11 @@ PATCHES: Tuple[Patch, ...] = (
     # The talk portraits at Shattered Lands' size (ravportraits: its window, faces and frame in the copies):
     # the face or the empty frame drawn at (8, 6). RAV_SKIP=small_portraits leaves them out with the rest.
     *ravportraits.PATCHES,
+    # The game menu's SOUND EFFECT VOLUME (DS:26B4h the slider, DS:26B5h the driver's volume) starting at
+    # full, not the game's half, which the emulated card's mixer took 16 dB (GOG's DOSBox) or 24 dB
+    # (DOSBox-X) under the recordings while the CD music played at full: the speech barely heard
+    # (sfxvolume: a loaded game's in the roster)
+    Patch("sfx_volume_full", SFX_VOLUME_AT, bytes.fromhex("643f"), bytes.fromhex("ff7f")),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).
@@ -1658,6 +1677,28 @@ SCRIPT_DETOURS = tuple(
 SCRIPT_FIXES.update({f"vouchers_{script}_take": (script, at, bytes.fromhex("5c7fff910b90"), bytes.fromhex("5c8200910b90"))
                      for script, at in ((143, 0xD5A), (144, 0xC84))})
 
+#   ambush_warning_*: a ranger leading the party never had warning of the Draxans' ambush at the volcano's
+#   pass (GPL 234 at 2BAh) or in the side tunnel (GPL 187 at 12A0h): each runs the tracking roll (GPL 24 at
+#   949h), which tells its success in flag 70 (as GPL 39, 236, 238 and 245 read it), and then tests flag 424,
+#   which nothing sets. Flag 70 read instead (the flag in its word form, the same length). A thief's warning
+#   (its own roll) was right.
+SCRIPT_FIXES.update({f"ambush_warning_{script}": (script, at, bytes.fromhex("18cd01a8"), bytes.fromhex("18cd0046"))
+                     for script, at in ((234, 0x2BA), (187, 0x12A0))})
+#   potion_clock_*: Xarax's potions (GPL 229, the hours left in global number 113, counted down by GPL 197 and
+#   a rest's GPL 218 while number 112, the potion, is set) shared their clock with the earth temple's own count
+#   (GPL 200, which sets 113 to 100 as its area starts and counts it down, back to 100 at 0) and GPL 325 to 328's
+#   states (1 to 3): a potion ordered could come at once, a hundred hours late or, while the temple's count ran,
+#   never. The potions' clock is number 160 (the scripts use 0-150; the Loader 198 and 199).
+POTION_CLOCK = ((229, (0xF9E, "188771d78f01"), (0xFC8, "5000738771"), (0x1454, "168201d38f188771"),
+                 (0x1526, "18e28771d78f00e1"), (0x15E7, "168f008771"), (0x1687, "188771d78f01"),
+                 (0x16A6, "5000738771")),
+                (197, (0xB8, "18e28771d98f00e1"), (0xC3, "038771")),
+                (218, (0x31A, "18e28771db8f08e1"), (0x325, "7b87718f08"), (0x32D, "168f008771")))
+POTION_CLOCK_NUMBER = 160
+SCRIPT_FIXES.update({f"potion_clock_{script}_{at:x}": (script, at, bytes.fromhex(was),
+                                                       bytes.fromhex(was.replace("8771", f"87{POTION_CLOCK_NUMBER:02x}")))
+                     for script, *sites in POTION_CLOCK for at, was in sites})
+
 #   race_sex_*: a character's race and sex are its own record's (field 15: `.15.41`, `.15.42`, as the sequel's
 #   scripts read them over 140 times), but 17 places read field 41 or 42 straight off the active member (or the
 #   actor, GPL 46), whose combat record has neither, so they read 0: a thri-kreen never called a "bug" or told of
@@ -1695,6 +1736,14 @@ def _through_15(was: bytes) -> bytes:
 SCRIPT_DETOURS += tuple(
     scriptfixes.Repair(script, at, bytes.fromhex(was), _through_15(bytes.fromhex(was)), f"race_sex_{script}_{at:x}")
     for script, at, was in RACE_SEX)
+
+#   potion_batch: Xarax's "batch of 5" (flag 506, set by his batch question, GPL 229 at 1516h) was never cleared,
+#   so once a batch was made every later potion came five at a time for one's price (and a batch said yes to
+#   after "Shall I start on it?" was answered no stayed set with nothing ordered). Cleared as each order is
+#   priced (at 1326h, "A potion of ", before the batch question): a new order is asked only with none pending.
+SCRIPT_DETOURS += (scriptfixes.Repair(229, 0x1326, bytes.fromhex("4f00739205828386fe9a77ee41bf320060"),
+                                      bytes.fromhex("168f00cd01fa" "4f00739205828386fe9a77ee41bf320060"),
+                                      "potion_batch"),)
 
 #   TEXT_FIXES: typos in the sequel's text (the sweep's word list: every string through a dictionary; the
 #   dialects, the yuan-ti's hisses and the run-together words of the mind flayer's victim are meant and left),
@@ -2152,6 +2201,55 @@ def mod_types_table(types: bytes) -> bytes:
     return bytes(out) + b"".join(wotr_type(t) for t in npcitems.TYPES[:MOD_TYPES] + SL_EXTRA_RECORDS)
 
 
+# Xarax's potion of free action (the walkthrough's bugs, 2026-11-28): his potions (GPL 229) are the sequel's
+# objects 31900-31930, but the one of free action, 31922, was never made: its 24,000 was paid and nothing
+# came (the give and the create of a missing object do nothing). Made as the potion beside it, Cure Serious
+# Wounds (31921: the same type, picture and price class), with Free Action's power (175, as the item's +2 and
+# +10h have it: the spell + 1, the fruit's, 31971) and the Cloak of Bravery potion's value (31920's +6).
+FREE_ACTION_POTION, POTION_TEMPLATE, BRAVERY_POTION = 31922, 31921, 31920
+FREE_ACTION_POWER = 175 + 1  # (Free Action, DATA 175: the item's power the spell + 1)
+FREE_ACTION_POTION_FIX = "free_action_potion"
+
+
+def free_action_potion(chunks: gff.Chunks) -> gff.Chunks:
+    """The potion of free action's OJFF and RDFF (FREE_ACTION_POTION) for OBJEX.GFF's CHUNKS, from the potion
+    beside it; none where the game has it already or its template isn't the GOG release's."""
+    from . import dataitems
+    if ("RDFF", FREE_ACTION_POTION) in chunks or ("OJFF", FREE_ACTION_POTION) in chunks:
+        return {}
+    try:
+        recs, tail = dataitems.records(chunks[("RDFF", POTION_TEMPLATE)])
+        value = dataitems.records(chunks[("RDFF", BRAVERY_POTION)])[0][0].data[6:8]
+        icon = chunks[("OJFF", POTION_TEMPLATE)]
+    except (KeyError, IndexError, ValueError, gff.GffError, struct.error):
+        return {}
+    item = bytearray(recs[0].data)
+    if len(item) < 0x16 or struct.unpack_from("<h", item, 0)[0] != -POTION_TEMPLATE:
+        return {}
+    struct.pack_into("<h", item, 0, -FREE_ACTION_POTION)
+    struct.pack_into("<H", item, 2, FREE_ACTION_POWER)
+    struct.pack_into("<H", item, 0x10, FREE_ACTION_POWER)
+    item[6:8] = value
+    rdff = dataitems.chunk([recs[0]._replace(number=0, data=bytes(item)), *recs[1:]], tail)
+    return {("RDFF", FREE_ACTION_POTION): rdff, ("OJFF", FREE_ACTION_POTION): icon}
+
+
+# The crystal rod (object 30046, name 174, a loot item of two people's: no power, no script uses it) has an item
+# record but no OJFF, so no picture: in a body's or the party's slots it looked like an empty cell (the
+# walkthrough's bugs, 2026-11-28). Given the Rod's picture (object 31201's OJFF, the sequel's rod of the same
+# look), its record as it is.
+CRYSTAL_ROD, ROD_PICTURE = 30046, 31201
+CRYSTAL_ROD_FIX = "crystal_rod_picture"
+
+
+def crystal_rod_picture(chunks: gff.Chunks) -> gff.Chunks:
+    """The crystal rod's OJFF (CRYSTAL_ROD) for OBJEX.GFF's CHUNKS, the rod's (ROD_PICTURE); none where it has one
+    or isn't the game's object."""
+    if ("OJFF", CRYSTAL_ROD) in chunks or ("RDFF", CRYSTAL_ROD) not in chunks or ("OJFF", ROD_PICTURE) not in chunks:
+        return {}
+    return {("OJFF", CRYSTAL_ROD): chunks[("OJFF", ROD_PICTURE)]}
+
+
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
@@ -2194,6 +2292,14 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     if retyped:  # (Dragonsbane of SL's metal: RAV_OBJECT_TYPES; its copy of the type weighed below)
         new.update(retyped)
         done.append("object_types")
+    potion = {} if FREE_ACTION_POTION_FIX in skip else free_action_potion(chunks)
+    if potion:  # (Xarax's potion of free action: FREE_ACTION_POTION)
+        new.update(potion)
+        done.append(FREE_ACTION_POTION_FIX)
+    rod = {} if CRYSTAL_ROD_FIX in skip else crystal_rod_picture(chunks)
+    if rod:  # (the crystal rod's picture: CRYSTAL_ROD)
+        new.update(rod)
+        done.append(CRYSTAL_ROD_FIX)
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")

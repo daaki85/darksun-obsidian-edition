@@ -255,6 +255,7 @@ schedules and diffs a log made or used.
 | [2026-11-28](2026-11-28-ravager-temple-prison-room.md) | Original and modded coiled fixture at the same camera in the El’s Temple prison room |
 | [2026-11-28](2026-11-28-ravager-silt-sea-giants.md) | All twelve Silt Sea Giants furnishings, Generoe rocking at home and the village giant’s standing artwork in two native rooms |
 | [2026-11-28](2026-11-28-ravager-volcano-core-spires.md) | All 128 Volcano Core spires, the shorter DOSBox trial and the separate collapsible rocks |
+| [2026-11-28](2026-11-28-ravager-voice-volume.md) | The sequel's quiet speech: the game menu's SOUND EFFECT VOLUME starts at half, which the emulated mixer makes 24 dB (DOSBox-X) or 16 dB (GOG's DOSBox) under the CD music; the sequel now starts at full, Shattered Lands at 79 in DOSBox-X (as loud as GOG's at 63), the roster set to match; the volume's bytes, the menu by key, `sbmixer=false` tried and dropped |
 | [2026-11-27](2026-11-27-ravager-volcano-furniture.md) | Both Volcano levels’ furniture and 21 shelves, both torn red beds in Tyr and Volcano 1, and the southern barrel stack |
 | [2026-11-27](2026-11-27-ravager-mine-worktables-and-forge.md) | Five Mines 3 worktables, the Inquisitor’s safe, Promere’s Hammer, the soup kettle and four statues |
 | [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |
@@ -277,6 +278,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-view-and-pace.md) | Wake of the Ravager: the view in fights still while a walker is on screen, the whole party spread after a load and fight (6 still gathers), steady pace counting (DSCLOG2 sites 230-234); the other QoL controls checked |
 | [2026-11-28](2026-11-28-ravager-creation-age.md) | Wake of the Ravager: the creation screen's age (rolled, kept by CON and RECALL, carried by DONE), no retrace wait with a screen up, no "Out of arrows" after a chatkcha throw |
 | [2026-11-28](2026-11-28-outfits-vs-stock.md) | The class outfits beside the stock people in both games (slave pens, the fountain, Tyr's street and the Roost); grabbing the sequel's screen in its own pixels and colours |
+| [2026-11-28](2026-11-28-ravager-walkthrough-bugs.md) | Wake of the Ravager's reported bugs: Detonate at a level up, Protection from Fire halving a Fireball, an Ioun stone's box with the new spells on (each with a control) |
 | [2026-11-28](2026-11-28-outfit-colours.md) | Codex's outfit colour pass (steady material layers) in both games; outfitlive.py now sets the palette |
 | [2026-11-28](2026-11-28-ravager-save-pages.md) | Wake of the Ravager: more saves, pages 2 to 4 and QUICK turned with PgDn and PgUp, the page's name under EXIT, a save and load on page 2 |
 | [2026-11-28](2026-11-28-ravager-journal-freeze.md) | Wake of the Ravager: its global numbers found (DS:15F6h, SAVE 31) for the journal's place in a save; DSCLOG2's notes for the freeze report |
@@ -353,3 +355,4 @@ schedules and diffs a log made or used.
 | [2026-11-28-ravager-to-ptar.sh](files/2026-11-28-ravager-to-ptar.sh) | [The same](2026-11-28-ravager-script-fixes.md): the sequel's party into Ptar's cave by its own mouth, the thief leading |
 | [2026-11-28-ravager-camera.py](files/2026-11-28-ravager-camera.py) | [The same](2026-11-28-ravager-script-fixes.md): reads the sequel's camera and party places; `set` puts the camera on the leader |
 | [2026-11-28-ravager-voucher-probe.hex](files/2026-11-28-ravager-voucher-probe.hex) | [The same](2026-11-28-ravager-script-fixes.md): the probe for `ravprobe.py`: the game's voucher sale of 460, then the Loader's capped one |
+| [2026-11-28](2026-11-28-memory-pass-play.md) | The memory pass: both helpers' changes against the old builds, screen for screen |

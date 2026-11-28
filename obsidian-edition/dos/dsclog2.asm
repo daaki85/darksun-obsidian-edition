@@ -121,8 +121,15 @@ tail_start:
 tail_sig db 'DSCLOG2 TAIL', 0, 0, 0, 0  ; (so that nothing of the Loader's is at the tail's offset 0)
 NAMES_ROOM  equ 160                 ; (ITEM_NAMES: SITE_NAME's)
 NAME_KEPT   equ 16                  ; (each: 15 letters at most and a NUL, as DSCLOG's EXTRA_NAMES)
-item_names times NAMES_ROOM * NAME_KEPT db 0    ; (first in the tail, zeros in the file though a buffer: the
-tail_tables:                        ;   emulator tests' way back, a HLT at CS:FFF0, lands in it, not in a table)
+item_names times NAMES_ROOM * NAME_KEPT db 0    ; (first in the tail, zeros in the file though buffers, with
+; LBL_SLOTS after: the emulator tests' way back, a HLT at CS:FFF0, lands in them, not in a table, as in DSCLOG)
+LBL_SLOTS  equ 4                    ; (LABELS': a slot for each label the Loader writes)
+LBL_ROW    equ 16
+LBL_H_MOST equ 11
+LBL_MASK   equ LBL_ROW * LBL_H_MOST
+LBL_SIZE   equ 8 + 2 * LBL_MASK
+lbl_slots times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1834:+1838)
+tail_tables:
 section tailz follows=tail vfollows=tail align=16     ; (then its buffers, zeros in the file: the same segment)
 tailz_start:
 section install follows=tailz vstart=0 align=16
@@ -4964,7 +4971,7 @@ site_table:
         dw rs_click                         ; 83 SITE_RS_CLICK (6DE85h: a button on the creation screen: STORE and RECALL)
         dw greq_load                        ; 84 SITE_GREQ_LOAD (7DA30h: a loaded save's GREQ number: the quick saves' own)
         dw gear_done                        ; 85 SITE_GEAR_DONE (6E2F2h: DONE has given a new character the game's gear: the Loader's)
-        dw site_none                        ; 86 (none here)
+        dw ns_info                          ; 86 SITE_NS_INFO (9AA95h: an item's INFO text: no new spell's on an item's own effect)
         dw cr_picks                        ; 87 SITE_CR_PICKS (6ED55h: a new member's spells and powers given: picked on the game's windows)
         dw psi_grant                       ; 88 SITE_PSI_GRANT (6E9C9h, 6E9F7h: a new member's power given: a pick, or kept on EDIT)
         dw site_none                        ; 89 (none here)
@@ -5262,7 +5269,12 @@ ns_cmp:
         jz .new
         dec ax                      ; (an item's power: the spell + 1)
 .new:   call ns_new
-        pop ax
+        jnc .old
+        test byte [cs:si + 4], NS_PLUS1
+        jz .old
+        mov bx, [cs:si + 6]
+        call ns_book                ; (an item's power: a new spell's only on a scroll or a book)
+.old:   pop ax
         pop bx
         jnc .cmp
         mov ax, NS_AS
@@ -5272,6 +5284,58 @@ ns_cmp:
         pop ax
         jmp acid_flags
 ns_entry times 10 db 0         ; (NS_CMP's entry found, copied from the tail)
+; NS_BOOK: CF set if the item an NS_PLUS1 compare reads the power of is a wizard's scroll or spellbook (type
+; NS_BOOK_TYPE, the game's and the mod's scrolls', spellbooks' and rods'): the item at the game's ES:BX, or (BX,
+; the entry's displacement, not 0) the item numbered by the word at the game's [BP+BX]. The game's own effects of an item
+; (powers 140h to 147h: the psionic powerstone's 146h, the Ioun stones' 142h, a staff's 143h...) take the
+; powers the new spells' scrolls have (141h to 146h): on any other item the power is the game's effect
+; (the walkthrough's bugs, 2026-11-28: the stones' effect never taken off with the rule, their pictures the
+; new spells'). DI NS_CMP's frame; DS the game's; all registers kept.
+NS_BOOK_TYPE equ 77
+ns_book:
+        push ax
+        push bx
+        push es
+        or bx, bx
+        jnz .index
+        mov es, [ss:di]             ; (the game's ES and BX)
+        mov bx, [ss:di + 18]
+        jmp .type
+.index: add bx, [ss:di + 10]        ; ([BP+disp], the game's BP: the item's number)
+        imul ax, [ss:bx], ITEM_SIZE
+        les bx, [ITEMS_PTR]
+        add bx, ax
+.type:  cmp word [es:bx + ITEM_TYPE], NS_BOOK_TYPE
+        stc
+        je .out
+        clc
+.out:   pop es
+        pop bx
+        pop ax
+        ret
+; - NS_INFO (site 86): the item box's INFO (9A94Eh, [BP+6] the item's +2 word, the spell + 1, its caller's SI
+;   the item at [BP-0Eh]), its "movzx eax,di" (9AA95h) before the SPIN text is looked up: a number a new
+;   spell's text has (141h to 146h, ravspells' SPIN 321-326) on an item that isn't a wizard's scroll or book
+;   (NS_BOOK) is one of the game's own item effects, which have no text: NS_NO_TEXT, so the box says UNKNOWN as
+;   the game's does, not a new spell's description (the lemon, the powerstone, Ioun stones; 2026-11-28).
+NS_NO_TEXT   equ 0x7FFF               ; (no SPIN chunk has it)
+ns_info:
+        pushad
+        push es
+        mov di, sp
+        movzx eax, word [ss:di + 2]     ; (the game's DI)
+        dec ax                          ; (the spell + 1)
+        call ns_new
+        inc ax
+        jnc .put
+        mov bx, -0x0E                   ; (the item's number at the game's [BP-0Eh])
+        call ns_book
+        jc .put
+        mov eax, NS_NO_TEXT
+.put:   mov [ss:di + 30], eax           ; (the game's EAX)
+        pop es
+        popad
+        iret
 section tail
 ns_cmp_table:
 %include "ns_cmp_table.inc"
@@ -12333,47 +12397,37 @@ ef_line:
         SHARED_ef_put
 
 ; THE KITS ON THE EFFECTS SCREEN: EF_LINES_OF's kit lines, by the KITS section's KIT_PLACE and KIT_AT (the
-; sequel's sheet: the kit byte at +3Dh, the race +12h, the classes +1Bh, their levels +1Eh). The names in CS
-; (DSCLOG's TAIL_SEG's).
+; sequel's sheet: the kit byte at +3Dh, the race +12h, the classes +1Bh, their levels +1Eh). The names are
+; the tail's, as DSCLOG's (KIT_NAMES and KIT_SHORT, kit_names_table.inc, read through TAIL_FS).
 ; EF_KIT_LINE: CS:SI the line naming kit AL (EF_KIT_AT's, not 0: "KIT: RAVAGER"), a long name shorter
-; (EF_KIT_SHORT), " (ASLEEP)" after it if the kit of the class at place DI sleeps (a human's first class,
+; (KIT_SHORT), " (ASLEEP)" after it if the kit of the class at place DI sleeps (a human's first class,
 ; until the class it has now is of a higher level). Others kept.
 ef_kit_line:
         push ax
         push cx
         push di
-        mov si, ef_kit_short
-.short: cmp byte [cs:si], 0
+        push fs
+        call tail_fs
+        mov si, kit_short
+.short: cmp byte [fs:si], 0
         je .long
-        cmp [cs:si], al
+        cmp [fs:si], al
         je .found
 .skip:  inc si
-        cmp byte [cs:si], 0
+        cmp byte [fs:si], 0
         jne .skip
         inc si
         jmp .short
 .found: inc si
         jmp .name
-.long:  movzx cx, al            ; (the kit's place in EF_KIT_NAMES, from 1: (class - 1) * 3 + kit)
-        and cl, 3
-        shr al, 2
-        dec al
-        mov ah, 3
-        mul ah
-        add cx, ax
-        mov si, ef_kit_names
-.next:  dec cx
-        jz .name
-.past:  cs lodsb
-        or al, al
-        jnz .past
-        jmp .next
+.long:  call kit_name_ptr
 .name:  mov di, ef_kit_text + 5 ; (after "KIT: ")
-.char:  cs lodsb
+.char:  fs lodsb
         mov [cs:di], al
         inc di
         or al, al
         jnz .char
+        pop fs
         pop cx                  ; (the place)
         push cx
         jcxz .out               ; (asleep: a later place, its level not passed by the first's)
@@ -12395,33 +12449,34 @@ ef_kit_line:
         pop cx
         pop ax
         ret
-; Each class's kits (kitpages.KITS), the creation screen's classes in order, three each; then the
-; multiclass groups', three to each
-ef_kit_names db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
-        db 'GROVE WARDEN', 0, 'LIFEBINDER', 0, 'WANDERER', 0
-        db 'MYRMIDON', 0, 'SENTINEL', 0, 'RAVAGER', 0
-        db 'ARENA CHAMPION', 0, 'TWIN-BLADE', 0, 'BRUTE', 0
-        db 'SCHOLAR', 0, 'BATTLE MAGE', 0, 'ARCANIST', 0
-        db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
-        db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
-        db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
-        db 'BATTLE DANCER', 0, 0, 0
-        db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
-        db 'WILDERNESS AVENGER', 0, 0, 0
-        db 'RESCUER', 0, 0, 0
-        db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
-        db 'SPELLARCHER', 0, 0, 0
-        db 'TITAN MIND', 0, 0, 0
-        db 'POISONER', 0, 0, 0
-        db 'SPIRIT CALLER', 0, 0, 0
-        db 'WASTELAND SEER', 0, 0, 0
-        db 'WILD FURY', 0, 0, 0
-; Shorter names for the line (kitpages.SHORT): the kit (class x 4 + kit + 1), the name. 0 ends it.
-ef_kit_short db 17, 'CHAMPION', 0, 33, 'SWASHBUCK', 0, 5, 'ELEMENTAL', 0
-        db 9, 'WARDEN', 0, 22, 'BATTLMAGE', 0, 25, 'M-BENDER', 0
-        db 26, 'M-WARRIOR', 0, 37, 'B-DANCER', 0, 41, 'SHADOWBLD', 0
-        db 42, 'M-SCOUT', 0, 45, 'W-AVENGER', 0, 53, 'G-FIGHTER', 0
-        db 57, 'SPELLARCH', 0, 69, 'S-CALLER', 0, 73, 'WASTE SEER', 0, 0
+
+; KIT_NAME_PTR: SI kit AL's name in KIT_NAMES (AL not 0), in the tail (TAIL_FS), as DSCLOG's. Others kept.
+kit_name_ptr:
+        push ax
+        push cx
+        push fs
+        call tail_fs
+        movzx cx, al            ; (the kit's place in KIT_NAMES, from 1: (class - 1) * 3 + kit)
+        and cl, 3
+        shr al, 2
+        dec al
+        mov ah, 3
+        mul ah
+        add cx, ax
+        mov si, kit_names
+.skip:  dec cx
+        jz .out
+.past:  fs lodsb
+        or al, al
+        jnz .past
+        jmp .skip
+.out:   pop fs
+        pop cx
+        pop ax
+        ret
+section tail                    ; (the kits' names: the tail's, as DSCLOG's, 2026-11-28's memory pass)
+%include "kit_names_table.inc"
+section image
 ef_asleep    db ' (ASLEEP)', 0
 ef_kit_text  db 'KIT: '
              times 24 db 0          ; (the longest name, 14, and " (ASLEEP)")
@@ -17029,13 +17084,17 @@ dk_ask:
         add al, cl
         mov dx, dk_blank
         call dk_banned
+        mov [cs:di + 2], cs     ; (a blank row: the helper's; a kit's name: the tail's)
         jc .row
         push si
-        call dk_name
+        call kit_name_ptr
         mov dx, si
         pop si
+        push fs
+        call tail_fs
+        mov [cs:di + 2], fs
+        pop fs
 .row:   mov [cs:di], dx
-        mov [cs:di + 2], cs
         sub di, 4
         dec cl
         jnz .opt
@@ -17067,28 +17126,6 @@ dk_ask:
         mov [es:bx + KIT_BYTE], cl
         inc word [cs:dual_kits]
 .ret:   ret
-
-; DK_NAME: CS:SI kit AL's name (EF_KIT_NAMES: the creation class x 4 + the kit). Others kept.
-dk_name:
-        push ax
-        push cx
-        movzx cx, al            ; (its place there, from 1: (class - 1) * 3 + kit)
-        and cl, 3
-        shr al, 2
-        dec al
-        mov ah, 3
-        mul ah
-        add cx, ax
-        mov si, ef_kit_names
-.next:  dec cx
-        jz .out
-.past:  cs lodsb
-        or al, al
-        jnz .past
-        jmp .next
-.out:   pop cx
-        pop ax
-        ret
 
 ; DK_MENU: AX the row picked on the game's three-choice menu (DK_FAR), its title CS:DX, its rows DK_OPTS
 ; (far). ES:BX kept; others but CX, SI changed.
@@ -17232,11 +17269,7 @@ probe_cast:
 ; places them (LABEL_TICK) and has where one was drawn again by the game's routine when it goes or
 ; moves (LABEL_ERASE). DSCLOG draws the whole view again when it scrolls; here the two places a label
 ; can be then (where it was, and where the game's copy of the screen moved it) are drawn again.
-LBL_SLOTS  equ 4
-LBL_ROW    equ 16
-LBL_H_MOST equ 11
-LBL_MASK   equ LBL_ROW * LBL_H_MOST
-LBL_SIZE   equ 8 + 2 * LBL_MASK
+; (LBL_SLOTS, LBL_ROW, LBL_H_MOST, LBL_MASK, LBL_SIZE: at the tail's start, where LBL_SLOTS is)
 LBL_TOP    equ 40               ; (screen rows above: the game's boxes, in a fight)
 CAM_X      equ 0x1408           ; DS: the view's top left on the map (SL's 1178h)
 CAM_Y      equ 0x140A
@@ -19336,9 +19369,7 @@ l_on_map:
         ret
 
 align 2
-section tailz
-lbl_slots times LBL_SLOTS * LBL_SIZE db 0 ; (the Loader's: LABELS, the header's +1834:+1838)
-section image
+
 
 
 

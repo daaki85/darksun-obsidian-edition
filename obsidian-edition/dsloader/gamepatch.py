@@ -1367,6 +1367,10 @@ PATCHES = (
                         "eb14")),  # jmp to mov byte [si],0
     *(_new_as_okay(offset, jump) for offset, jump in NEW_AS_OKAY
       if offset not in {o for o, _ in AMMO_OK_SITES}),  # (those three: ammo_okay_*)
+    # The game menu's SOUND EFFECT VOLUME (DS:232Eh the slider, DS:232Fh the driver's volume) starting
+    # at 79 of 127 in DOSBox-X alone, not the game's 63, which plays the effects 8 dB quieter there than
+    # in GOG's DOSBox (SFX_VOLUME_DBX; sfxvolume: a loaded game's in the roster)
+    Patch("sfx_volume_dosbox_x", 0x4AC8E, bytes.fromhex("643f"), bytes.fromhex("9f4f")),
 )
 
 
@@ -1395,6 +1399,7 @@ SPELLS_MANUAL = ("bestow_curse_save", "blood_flow_save", "flaming_sphere_negates
                  "tari_kind", "tari_bite", "shadow_cold", "greater_shadow_class",
                  "shadow_drain")  # the spells and psionics as the manual has them (spells_manual)
 SPELL_TO_HIT = ("spell_hit", "spell_hit_stub")  # missile and hostile touch spells roll to hit (spell_to_hit)
+SFX_VOLUME_DBX = ("sfx_volume_dosbox_x",)  # the sound effects' starting volume, in DOSBox-X alone
 PARTY_SPREAD = ("party_spread", "party_gather")  # the whole party in view after a load and a fight
 
 

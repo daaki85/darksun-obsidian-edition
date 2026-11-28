@@ -8,7 +8,7 @@
                                                (1-17) and levels, the best levels (+39h) the same, so each new level
                                                is a new one (its hit die, its extras)
   python3 ravlevel.py powers MEMBER [all]     the member's psionic powers known (selector 370h's +9CDh, 22h a member,
-                                               bit 1 known, 34 powers); "all" marks them all known, a test edit
+                                               bits 1-7 its number, 0 unknown, 34 powers); "all" marks them all known, "forget N" power N unknown, test edits
   python3 ravlevel.py counts NAME...           DSCLOG2's words NAME (its counters: sb_count, kt_count, sh_mages,
                                                veiled_count ...), from a symbol map of dsclog2.asm
   python3 ravlevel.py foes HP                  every foe's (creature +15h 7) hit points HP, a test edit
@@ -95,5 +95,9 @@ elif cmd == 'powers':
     at = (ds + 0x3E71 - 0x47E0) * 16 + 0x9CD + m * 0x22   # (DSCLOG2's POW_SEG:POW_OFF, POW_SIZE a member)
     if len(sys.argv) > 3 and sys.argv[3] == 'all':
         g.write(at, bytes(b | 2 for b in g.read(at, 34)))
+    elif len(sys.argv) > 4 and sys.argv[3] == 'forget':   # (a test edit: power N unknown)
+        n = int(sys.argv[4])
+        g.write(at + n, bytes((g.read(at + n, 1)[0] & 1,)))
     p = g.read(at, 34)
-    print('member', m, 'powers known', sum(1 for b in p if b & 2), 'of 34:', [i for i, b in enumerate(p) if b & 2])
+    print('member', m, 'powers known', sum(1 for b in p if b >> 1), 'of 34:', [i for i, b in enumerate(p) if b >> 1],
+          'their numbers', {i: b >> 1 for i, b in enumerate(p) if b >> 2})

@@ -457,3 +457,15 @@ nothing past its +41h. DONE copies it into the party's 48h sheet. The boxes: hit
 (x1, y1, x2, y2). STORE (112,230), RECALL (172,230), DONE (271,217) in game coordinates. **Which missile weapons
 use ammunition**: bit 3 of the type's first byte (the game's count at 5D3BAh); the sequel's sling and chatkcha
 have none.
+
+**Reported bugs' checks** (2026-11-28, logs/2026-11-28-ravager-walkthrough-bugs.md): `ravprobe.py` runs once a
+load (Reyhan's talk replaced; reload before the next probe); a psionicist's power bytes (selector 370h +9CDh,
+22h a member) hold the power's number times 2 (`ravlevel.py powers`; `forget N` clears one); an XP award is
+split between the classes, so level one class by its own share. The active effects: the count a word at
+DS:2100h, 10 bytes each at (load + 3E71h):24Dh (owner, caster, spell, the effect's id, ...); an entry added
+there with the owner's member number takes effect (Protected vs Fire, id 77, spell 138). The damage
+routine's halving is at 85178h (SL's 7B56Fh). Item powers 140h-147h are the game's own effects (77CDBh's
+take-off, the box's icon at 9A7D4h and 9A9C5h; the powerstone's 146h tested at 99C56h as it is used): the
+mod's new spells' scrolls share 141h-146h, which DSCLOG2's NS_BOOK tells apart by the item's type (77, the
+scrolls' and spellbooks'). DSCLOG2's rules are 0 until the Loader or the dice log attaches.
+

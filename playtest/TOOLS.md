@@ -16,6 +16,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `bodyitems.py` | each Dead Body on the map (object 1101 or the thri-kreen's 2666), its things: item, name, type, plus, power, value, name number and +02h, and the type's worn place, weight and flags. |
 | `boxclick.sh` | click a waiting message away by clicking ON it (160, 20, the speech box at the top): a click wherever the pointer happens to be (after a drag, say) didn't always count (2026-11-01) |
 | `buildcheck.py [NAME...]` | checks the DSCLOG running in DOSBox is the build in obsidian-edition/dos. |
+| `buildcheck_syms.py` | symbols() of obsidian-edition/dos/dsclog.asm as built: {label: image or tail offset} and {equ: value}, from nasm's symbol map (for scwatch.py and the like). |
 | `cachelist.py [all]` | the game's picture cache: the slots taken, the STALE ones, and with "all" every slot. |
 | `camera.py [X Y]` | read the camera (the view's top-left, DS:1178h), or set it to X, Y (map units) to look somewhere the view won't scroll to by itself (it does not follow the leader everywhere) |
 | `canuse.py MEMBER TYPE...` | whether the kit rules (restrict.kit_forbids) let party member MEMBER use each item type, and pick it as a weapon spec |
@@ -121,21 +122,21 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravdice.py [--all] SECONDS [OUT]` | the Loader's dice log for Wake of the Ravager (dsloader.ravlog.RavDiceLog: the sequel's layout, its memory read only) attached to the running sequel ($WORK/rav.pid), its lines printed (and appended to OUT) as they... |
 | `ravds.py [--fuzzy] HEX...` | Shattered Lands data-segment offsets to Wake of the Ravager's: for each SL instruction using the offset (mov/cmp/les/lea... |
 | `ravfig.py [0\|1]` | Wake of the Ravager's figure shadows (DSCLOG2's FIGURE SHADOWS) in the running game ($WORK/rav.pid): prints the header's fig_shadows (+1960), the floor passes they were drawn in (+1962), the shadows cast (+1964) and... |
-| `ravinvfig.py [FIG C1 C2 C3 [RACE]]` | Wake of the Ravager: the creature named $WHO (default Thy, a name's start) its figure (+10h: 0 human man ... 13 thri-kreen), its sheet's classes (+1Bh, 1-17) and race (+12h), printed or set (memory only: never save after); to see the inventory's class pictures, click another portrait and back |
 | `ravfight.py [state\|end\|wait N\|until N\|cast X Y LEVELS\|attack\|fight [S]\|tabfight [S]]` | Wake of the Ravager's fight by its memory. |
 | `ravfirst.py` | a sequel party member's wizard spells and psionic powers as the game holds them, and DSCLOG2's first spells' and powers' counts (the running sequel, $WORK/rav.pid; |
 | `ravfixes.py [OUT] [--skip=NAME,...]` | a copy of Wake of the Ravager ($RAV, default $WORK/rav) in OUT (default $WORK/ravfix, hard links but for the two files changed and those the game writes) with the mod's bug fixes that carry over unchanged: five of... |
-| `ravjump.py REGION COL ROW` | a jump for a test to any region of Wake of the Ravager: Reyhan's talk (the Harbinger's Roost) made the script command 5Eh (move the party to REGION, square COL, ROW; REGION is the region file's hex number, 0x34 for RGN034, the Pyramid: a number with no file quits the game to DOS printing its name) in the Loader's `dos/GPLDAT2.GFF`; after `ravload.sh ravager-roost`, the look pointer on Reyhan (game 150,128). The region loads whole (its creatures and scripts); a save edited to another region doesn't. Never save after. |
-| `ravprobe.py HEX` | a script probe: Reyhan's talk (ravjump.py's place) replaced by the commands HEX, then return and exit; after `ravload.sh ravager-roost`, the look pointer on Reyhan (game 150,128) runs it, its prints read back by `ravtext.py`. For what a fixed script does in the game's own interpreter (logs/2026-11-28-ravager-script-fixes.md). Never save after. |
 | `ravgo.py [x\|y TARGET]... [PID]` | walk Wake of the Ravager's leader with the arrow keys until its world x (or y) is within 10 of each TARGET in turn (the leader: the party's map object 0-3 on screen; |
 | `ravhold.sh [FOLDER]` | a real Hold Person in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the held-target rule (DSCLOG2's HELD_HIT, HELD_DAMAGE): ravstart.sh FOLDER (default $WORK/rav; |
+| `ravinvfig.py [FIG C1 C2 C3 [RACE]]` | Wake of the Ravager: the creature named $WHO (default Thy, a name's start) its figure (+10h: 0 human man ... |
 | `ravitems.py N... [--worn]` | Wake of the Ravager's combatant N's items, as its helper reads them: the item number, type, worn slot (+13h), plus (+16h), power (the word at +10h) and the type's material (+4), flags (+0) and armour byte (+0Bh). |
+| `ravjump.py REGION COL ROW` | a jump for a test to any region of Wake of the Ravager, the way the game itself moves the party there: Reyhan's talk in the Harbinger's Roost (GPL 140, the part a talk runs, from +45) made the script command 5Eh... |
 | `ravkeys.py` | R, F10 and Alt in the running sequel ($WORK/rav.pid): DSCLOG2's words for them and the game's. |
 | `ravkits.py` | the kits in the running sequel ($WORK/rav.pid; |
 | `ravknow.py SPELL [LEVEL]` | a test edit (never saved): Wake of the Ravager's first party member (Ar'anda in the opening party; |
 | `ravlevel.py` | the level cap by XP in the running sequel ($WORK/rav.pid; |
 | `ravload.sh NAME [FOLDER]` | Wake of the Ravager from the save in saves/NAME (SAVE01.SAV, CHARSAVE.GFF, DARKSAVE.GFF copied into FOLDER, default $WORK/rav, as slot 1), started as the Loader starts it (RAV_LOADER=1; |
 | `ravloot.py` | looting with T, selling with S and M/U/I in the running sequel ($WORK/rav.pid): DSCLOG2's LOOT_KEY and SELL_KEY fields (its header's +1846 to +1859, DSCLOG's), the shop loop's passes and OVERHEAD (from `nasm -l`'s... |
+| `ravprobe.py HEX` | a script probe for a test in Wake of the Ravager: Reyhan's talk (GPL 140 from +45, ravjump.py's place, in the Loader's obsidian-edition/dos/GPLDAT2.GFF) replaced by the script commands HEX, then return and exit. |
 | `ravquick.py` | the quick saves in the running sequel ($WORK/rav.pid): DSCLOG2's QUICK SAVES (its header's +1904 on, MAIN_TICKS at +260) and the game's words the Loader writes for them. |
 | `ravring.py OUT SECONDS [PID]` | follows Wake of the Ravager's helper (DSCLOG2, header "DSCLOGR1") and appends every new ring entry (192 bytes, DSCLOG's ENTRY LAYOUT) to OUT as a hex line, polling 5 times a second, for SECONDS. |
 | `ravscare.sh [FOLDER]` | Scare in Wake of the Ravager's first fight (the Draxans' ambush in Tyr), for the saving throw's fixes: ravstart.sh FOLDER (default $WORK/rav; |
@@ -161,6 +162,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `savediff.py A.SAV B.SAV [-v]` | two saves (or any two GFF files) compared chunk by chunk (dsloader/gff.py's read_gff): the chunks only one has, and for each chunk both have that differs, its size in each and how many bytes differ (with -v, the... |
 | `scroll.py DX DY` | drag the map view with the middle mouse button by DX, DY game pixels (the user's advice, 2026-11-01): the way to see past walls, where the view won't scroll by itself. |
 | `scrolltest.py [shinobi] [give]` | member 0 made an 8th-level Shinobi (memory only: never save after) and the defilers' scrolls (defilerscrolls.scroll) given to members 0 and 2. |
+| `scwatch.py [SECONDS]` | DSCLOG's shadow cache (SHADOW CACHE, the far block's FAR_SC: SC_SLOTS slots) watched while the game runs, every second: the slots filled (a slot's first word not 0), the next to fill (SC_NEXT), and how many times the... |
 | `setarrows.py MEMBER N` | the member's quiver stack's count made N, in memory (never save after; |
 | `setcount.py [N]` | read (and with N, write) the arena's visit count, the game's number 12 (4: the next trip is Scar's). |
 | `setitem.py ITEM TYPE\|obj=N\|rec=HEX` | makes item ITEM (its number in the item table) a plain item of type TYPE in memory. |
