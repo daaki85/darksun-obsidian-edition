@@ -1606,6 +1606,11 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
     #   bits against 606 (25Eh: ranger, gladiator, druid and three clerics), a slip for 608 (260h: fighter,
     #   gladiator, ranger, the game's warriors as at GPL 11's E97h), so a fighter wasn't called one.
     "ptar_warrior": (46, 0x111D, bytes.fromhex("025e"), bytes.fromhex("0260")),
+    #   caster_mask: a talk in the forest (254 at B30h) says "I'm not scared to have a magician along" when the
+    #   class bits meet 398 (18Eh: psionicist, preserver and three of the four clerics), so an air cleric or a
+    #   druid heard "We could use another sword-arm"; no other test leaves one cleric out. 415 (19Fh, the
+    #   casters, as GPL 195 at B80h and 46 at E36h test them).
+    "caster_mask": (254, 0xB39, bytes.fromhex("018e"), bytes.fromhex("019f")),
     #   ptar_let_go: Ptar's talk offers "I let Magnolia go!" when global number 41 is 10 or 10 (46 at 4Ch);
     #   GPL 40 sets 10 or 11 as she is freed (at 46Fh, 477h, by whether he saw it), so the second is 11.
     "ptar_let_go": (46, 0x59, bytes.fromhex("8f0a"), bytes.fromhex("8f0b")),

@@ -270,7 +270,7 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | **Ptar's key** (Humbleton) | Picking the sleeping giant's pocket could be done again and again: a key to Magnolia's chains and 2,000 XP each time, and he still had the key when killed or asked for it | Once: after it his pockets are empty, his body has no second key, and he says he can't find it |
 | **Ore vouchers** (the mines' cashiers) | Past 327 vouchers the sum went negative, so cashing them in took money away (460 vouchers: a total of -19,536 and -7,818 paid) | A sale takes 327 vouchers at most, its sums right; the rest stay for the next sale |
 | **DEBUG messages** on screen | "DEBUG : got to here!", "DEBUG: sur_main" and two more of the developers' messages printed in play | Not printed |
-| Ptar's **"warrior"** and **"I let Magnolia go!"**, a camp **peon's look** | A druid or cleric was called a warrior and a fighter wasn't; the taunt missed one of the two ways she is freed; one peon had no look text | As meant ([the report](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/ravager-script-bugs-2026-11-28.md)) |
+| Ptar's **"warrior"** and **"I let Magnolia go!"**, a camp **peon's look**, a **"magician"** in the forest | A druid or cleric was called a warrior and a fighter wasn't; the taunt missed one of the two ways she is freed; one peon had no look text; an air cleric or a druid was told "we could use another sword-arm" | As meant ([the report](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/ravager-script-bugs-2026-11-28.md)) |
 
 ## Saved games
 

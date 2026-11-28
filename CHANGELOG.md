@@ -67,7 +67,7 @@ voucher cashiers paid a negative sum past 327 vouchers, so cashing them in took 
 at most, the rest kept for the next); four developers' DEBUG
 messages printed in play (a creature seeing the party, Surrakina's talk, Kalak's pyramid); Ptar called a druid or a
 cleric "warrior" and not a fighter; his "I let Magnolia go!" missed one of the two ways she is freed; one of a camp's
-peons had no look text. **Dev:** `ravager.SCRIPT_FIXES` takes a region's master script too (`("MAS ", 52)`), and
+peons had no look text; an air cleric or a druid wasn't a "magician" in a forest talk. **Dev:** `ravager.SCRIPT_FIXES` takes a region's master script too (`("MAS ", 52)`), and
 `ravager.SCRIPT_DETOURS` longer fixes through `scriptfixes.repaired` (now given its repairs and length limit);
 tests that every fixed script decodes, stays short enough and jumps onto commands.
 

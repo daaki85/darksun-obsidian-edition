@@ -24,6 +24,7 @@ decode every fixed script whole (`test_ravager`'s `test_script_fixes_decode`, `t
 | 4 | Low | GPL 46 at 1114h (Ptar) | "I will not kill you for saying this, warrior" tested the class bits against 606 (25Eh: ranger, gladiator, druid and the earth, fire and water clerics), a slip for 608 (260h: fighter, gladiator, ranger, the warriors as GPL 11 at E97h tests them): a fighter wasn't called a warrior, a druid was. | 608. |
 | 5 | Low | GPL 46 at 4Ch (Ptar) | "I let Magnolia go!" is offered when global number 41 is `10 or 10`; GPL 40 sets 10 or 11 as she is freed (46Fh, 477h), so one way of freeing her never got the taunt. | `10 or 11`. |
 | 6 | Low | GPL 45 at CDBh (a camp's leaders and peons) | Each peon kind is given its look handler (the leaders -137, -131, -135, -133, their peons -138, -132, -136, -134); the last peon's went to -133, its leader, so peon -134 had no look text. | -134. |
+| 7 | Low | GPL 254 at B30h (a talk in the forest) | "I'm not scared to have a magician along" tested the class bits against 398 (18Eh: psionicist, preserver and three of the four clerics), leaving out the air cleric and the druid, who heard "We could use another sword-arm"; no other class test in the scripts leaves one cleric out. | 415 (19Fh, the casters, as GPL 195 at B80h and 46 at E36h test them). |
 
 ## Found, waiting for room (they make a script longer)
 
@@ -51,10 +52,6 @@ decode every fixed script whole (`test_ravager`'s `test_script_fixes_decode`, `t
 
 ## Probable, left as the game has them
 
-- **GPL 254 at B30h**: "I'm not scared to have a magician along" tests the class bits against 398 (18Eh:
-  psionicist, preserver and three of the four clerics), leaving out the air cleric and the druid, who hear
-  "another sword-arm"; most likely 415 (19Fh, the casters, as GPL 195 at B80h and 46 at E36h test them),
-  but not a one-digit slip like #4, so left for a decision.
 - **Unreachable talk**: 56 global flags are tested but set by no script (Shattered Lands has 42 such:
   mostly leftovers). The ones that hide something whole: 288 (the psurlon's "I've seen psurlons there
   already", GPL 112; it sets 287 as the party agrees, which nothing reads), 688 (the plague's sufferer
@@ -74,7 +71,7 @@ decode every fixed script whole (`test_ravager`'s `test_script_fixes_decode`, `t
   ELSE and loop jump on a command (the reader's own check).
 - No test of the form `x != a or x != b` (Shattered Lands' GPL 44) and one `x == a or x == a` (#5).
 - No class bit compared whole (`== 80h`); the class masks are the casters, warriors, thieves and rangers
-  but for #4 and GPL 254's 398.
+  but for #4 and #7.
 - Rewards: of the 125 calls of script 27's award routines and the scripts' own awards, only Ptar's (#2)
   sets a flag that nothing reads; the others are behind a test of their own or end their talk.
 - Things players report that aren't the scripts: Bohimur stuck if not followed closely (his walk), a mines
