@@ -284,6 +284,8 @@ def frames(role, combat, model=2095):
         else:
             heads = archive.read(f"Base/{tag}-head") if model == 2099 else None
         pictures = archive.read(f"{prefix}/{tag}")
+        finish_key = f"{prefix}/{tag}-material"
+        material = archive.read(finish_key) if finish_key in archive.namelist() else None
         dye = f"{prefix}/{tag}-dye"
         try:
             cloaks = archive.read(dye)
@@ -419,4 +421,13 @@ def frames(role, combat, model=2095):
                 keep = foreground if model == 2099 else foreground | trim
                 plate[bit] = tuple(point for point in cells if point not in keep)
         poses.append(frame._replace(armor_trim=frozenset(trim), equipped_cape=cape, plate_regions=plate))
+    # The saved masks were fitted on the original pigments. Composite the
+    # final lights and shadows after determining trim and equipment ownership.
+    if material is not None:
+        for f, pose in enumerate(poses):
+            finish = art.decode_frame(material, f)[2]
+            for y, row in enumerate(finish):
+                for x, ink in enumerate(row):
+                    if ink is not None:
+                        pose.image[y][x] = ink
     return tuple(poses)

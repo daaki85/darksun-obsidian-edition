@@ -17,6 +17,7 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import outfits
+import outfitfinishes
 import humanfolds
 import thiefhood
 from elfcloak import SWING_EDGES, lifted_hem, paint_swing
@@ -410,6 +411,7 @@ def finish_archive(game, source, output, *, keep_cloak_dyes=False):
                     aux = [stream(name + "-regions"), stream(name + "-cloak"),
                            stream(("Base/" + tag if female else name) + "-head"),
                            stream("Base/" + tag) if female else None]
+                    finished = (model, role) in ((2095, "Priest"), (2099, "Druid"))
                     frames, dyes = [], []
                     for f in range(14 if cb else 15):
                         rows = game.fr(model + cb, f)
@@ -439,6 +441,8 @@ def finish_archive(game, source, output, *, keep_cloak_dyes=False):
                         finish_class_color(model, role, paint, masks[0], folds, masks[2])
                         if model in (2095, 2099):
                             humanfolds.finish(rows, paint, masks[0], masks[3], model, role, pose)
+                        if finished:
+                            outfitfinishes.apply(paint, model, role, pose)
                         frames.append(paint)
                         dyes.append(folds)
                     data = sprites.encode_frames(frames)
@@ -446,8 +450,12 @@ def finish_archive(game, source, output, *, keep_cloak_dyes=False):
                     # A paint-only revision can retain the fitted equipment
                     # surface, including any hand-painted pose corrections.
                     dye_data = src.read(dye_name) if keep_cloak_dyes else sprites.encode_frames(dyes)
+                    if (model, role) == (2099, "Druid"):
+                        dye_data = outfitfinishes.mask_chunk(dye_data, model, role, cb, "-dye")
                     dst.writestr(ZipInfo(dye_name), dye_data, ZIP_DEFLATED)
                     dst.writestr(ZipInfo(original), raw, ZIP_DEFLATED)
+                if female and name in ("Druid/walk-regions", "Druid/combat-regions"):
+                    data = outfitfinishes.mask_chunk(data, 2099, "Druid", tag.startswith("combat"), "-regions")
                 dst.writestr(ZipInfo(name), data, ZIP_DEFLATED)
         os.replace(temp_path, output)
     finally:

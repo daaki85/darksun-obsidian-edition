@@ -343,6 +343,13 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   height stretched: a pixel at y in a capture is at y x 1.2 in a grab. Take a pixel's coordinates
   from the same kind of picture the check uses ([panel.sh read the wrong row this
   way](HISTORY.md#the-window-size-and-pixel-checks)).
+- **Grab the window, not the screen**: `import -window $(xdotool search --class dosbox | tail -1)`. A crop of
+  the root window misses: after `ravload.sh` the sequel's 640x480 window doesn't sit at the screen's corner
+  ([2026-11-28](logs/2026-11-28-outfit-colours.md)).
+- **A dressed figure checked with `outfitlive.py`** matches the Loader's copy only with the portrait palette set
+  (`spritegear.set_palette`, which the tool now does): without it the steady-colour remap is skipped on the
+  tool's side and every dressed figure reads "as built [False, False]"
+  ([2026-11-28](logs/2026-11-28-outfit-colours.md)).
 - **Pixel checks** go through `pixmatch.py` (colours within 3, a row either way, for the
   recompiled program); it uses PIL, or ImageMagick where PIL is broken ("cannot import name
   '_imaging'").
