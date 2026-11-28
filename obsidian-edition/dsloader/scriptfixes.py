@@ -301,12 +301,13 @@ REPAIRS = (
 )
 
 
-def repaired(script: int, code: bytes) -> bytes:
-    """CODE (GPL SCRIPT) with the repairs that fit it: a longer one run from after the script's end
-    (after an exit, so a script that ran off its end still stops there), its bytes at AT a jump
-    there and exits, and it a jump back."""
+def repaired(script: int, code: bytes, repairs=None, longest: int = 0) -> bytes:
+    """CODE (GPL SCRIPT) with the repairs that fit it (REPAIRS, or Wake of the Ravager's), no longer
+    than LONGEST (else the game's: SCRIPT_BUFFER less a margin): a longer one run from after the
+    script's end (after an exit, so a script that ran off its end still stops there), its bytes at AT
+    a jump there and exits, and it a jump back."""
     out, added = bytearray(code), bytearray()
-    for r in REPAIRS:
+    for r in (REPAIRS if repairs is None else repairs):
         if r.script != script or out[r.at:r.at + len(r.was)] != r.was or len(r.now) < len(r.was):
             continue
         if len(r.now) > len(r.was) and len(r.was) < 3:  # (no room there for the jump, 3 bytes)
@@ -322,7 +323,7 @@ def repaired(script: int, code: bytes) -> bytes:
             detour[i:i + 2] = (int.from_bytes(detour[i:i + 2], "big") + start).to_bytes(2, "big")
         added += detour
         out[r.at:r.at + len(r.was)] = (bytes((JUMP,)) + start.to_bytes(2, "big")).ljust(len(r.was), bytes((EXIT,)))
-    if len(out) + len(added) > _longest():
+    if len(out) + len(added) > (longest or _longest()):
         return code
     return bytes(out + added)
 

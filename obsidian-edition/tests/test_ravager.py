@@ -566,6 +566,11 @@ class GameFileTests(unittest.TestCase):
                 self.assertEqual(bytes(script[offset:offset + len(original)]), original)
                 script[offset:offset + len(original)] = replacement
                 fixed[key] = bytes(script)
+            from dsloader import scriptfixes
+            for number in {r.script for r in ravager.SCRIPT_DETOURS}:
+                key = ("GPL ", number)
+                fixed[key] = scriptfixes.repaired(number, fixed.get(key, own[key]), [
+                    r for r in ravager.SCRIPT_DETOURS if r.script == number], ravager.SEQUEL_LONGEST)
             faces = {k for k in own if k[0] == "PORT"}  # (made smaller: ravportraits)
             self.assertEqual(set(gpl), set(own))
             self.assertEqual({k for k in own if own[k] != gpl[k] and k[0] != "GFFI"}, set(fixed) | faces)
@@ -646,7 +651,8 @@ class GameFileTests(unittest.TestCase):
 
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES) | {ravportraits.SKIP})
+        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES) | {r.what for r in ravager.SCRIPT_DETOURS}
+                                          | {ravportraits.SKIP})
         self.assertEqual((same, done), (data, []))
 
     def test_script_fixes_decode(self):
@@ -661,12 +667,32 @@ class GameFileTests(unittest.TestCase):
             with self.subTest(name):
                 key = ravager.script_key(chunk)
                 self.assertEqual(len(original), len(replacement))
-                self.assertEqual(len(scripts[key]), len(own[key]))
+                if key not in {("GPL ", r.script) for r in ravager.SCRIPT_DETOURS}:
+                    self.assertEqual(len(scripts[key]), len(own[key]))
+                self.assertLessEqual(len(scripts[key]), ravager.SEQUEL_LONGEST)
                 ops = gpl.decode(scripts[key], types)
                 starts = {o.at for o in ops}
                 for o in gpl.walk(ops):
                     if o.code in (0x3E, 0x3F, 0x64) and o.args[0][0] == "n":
                         self.assertIn(o.args[0][1], starts, f"{o.code:02X}h at {o.at:X}h")
+
+    def test_vouchers_sold_327_at_most(self):
+        """Each cashier caps the vouchers counted at 327 before the game's sums (its total, vouchers times
+        100, stays a 16-bit number), and takes as many as it counted, not every one."""
+        from dsloader import gpl
+        fixed, _ = ravager.script_fixed(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
+        scripts, types = gpl.load_scripts(fixed)
+        for number, at, take in ((143, 0xC54, 0xD5A), (144, 0xAE7, 0xC84)):
+            with self.subTest(number):
+                ops = gpl.decode(scripts[("GPL ", number)], types)
+                by = {o.at: o for o in ops}
+                self.assertEqual(by[at].code, 0x64)
+                detour = [o for o in ops if o.at >= by[at].args[0][1]][:5]
+                self.assertEqual([(o.code, o.args) for o in detour[:3]], [
+                    (0x18, [("expr", [("var", 0x82, 0), ">", ("n", 327)])]), (0x3E, [("n", detour[3].at)]),
+                    (0x16, [("n", 327), ("var", 2, 0)])])
+                self.assertEqual(detour[3].code, 0x67)
+                self.assertEqual(by[take].args[0], ("var", 0x82, 0))
 
     def test_ptar_key_is_taken_once(self):
         """What asks whether Ptar's key is gone reads the flag his picked pocket sets (131), and nothing

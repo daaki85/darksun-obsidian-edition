@@ -6,9 +6,10 @@ slip Shattered Lands' scripts had (`dsloader/scriptfixes.py`, DEVELOPMENT-CONTEN
 bugs"). What each finding meant to do was checked against the scripts around it and, where a walkthrough
 says what happens in play, against the owner's private walkthrough (nothing of it is quoted here).
 
-Branch `claude/ravager-script-bugs`. The fixes are in `dsloader/ravager.py`'s `SCRIPT_FIXES`, each a change
-of the same length: the sequel's script buffer is the game's 10,000 bytes and its largest script 9,985, so
-no fix may grow a script until the buffer is raised (being done in `claude/ravager-engine-fixes`).
+Branch `claude/ravager-script-bugs`. The fixes are in `dsloader/ravager.py`'s `SCRIPT_FIXES` (changes of the same length) and
+`SCRIPT_DETOURS` (a longer one, run from after the script's end): the sequel's script buffer is the game's
+10,000 bytes and its largest script 9,985, so a script may grow only while it stays under that (the buffer
+is being raised in `claude/ravager-engine-fixes`).
 
 Not yet seen in play: each fix is checked against the game's bytes as the copy is made, and the tests
 decode every fixed script whole (`test_ravager`'s `test_script_fixes_decode`, `test_ptar_key_is_taken_once`).
@@ -17,7 +18,7 @@ decode every fixed script whole (`test_ravager`'s `test_script_fixes_decode`, `t
 
 | # | Severity | Where | The bug | The fix |
 |---|---|---|---|---|
-| 1 | High | GPL 143 at C54h, GPL 144 at AE7h (the ore voucher cashiers) | The total, vouchers times 100, is a 16-bit number: past 327 vouchers it goes negative, and the city's share is worked out from it, so a big stack paid a negative sum (460 vouchers: -9,768) and cashing in took money away. | The share and the pay are each the vouchers times their rate (144: 50 and 50, or 70 and 30 once flag 377 is set; 143: 60 and 40): right up to 655 vouchers at once. The grand total the cashier names still wraps past 327 (only words). |
+| 1 | High | GPL 143 at C54h, GPL 144 at AE7h (the ore voucher cashiers) | The total, vouchers times 100, is a 16-bit number: past 327 vouchers it goes negative, and the city's share is worked out from it, so a big stack paid a negative sum (460 vouchers: -9,768) and cashing in took money away. | A sale counts at most 327 vouchers and takes only those (the take of every voucher took as many as were counted), so the game's own sums are right for any stack; the rest stay for another sale. The cap runs from after the script's end (Shattered Lands' detour, `scriptfixes.repaired`): 143 and 144 are 3,676 and 8,968 bytes, 27 more each, under the game's largest. |
 | 2 | High | GPL 47 at 374h, GPL 29 at 352h, GPL 46 at 215h (Ptar, Humbleton) | The sleeping giant's pocket picked gives the key to Magnolia's chains and 2,000 XP and sets flag 131 (the Journal's "key taken"); but what asks whether the key is gone reads flag 82, which no script sets: the giant's menu, his body's key and his "I no find key" when asked for it. So the pocket could be picked again and again, a key and 2,000 XP each time, and he still had the key. | The three read 131. |
 | 3 | Medium | GPL 25 at Dh and 35h; GPL 254 at 9Fh; MAS 52 at A8h | Developers' messages printed in play: "DEBUG : got to here!" and "DEBUG : here we are now!" as one of GPL 81's creatures sees the party, "DEBUG: sur_main" in Surrakina's talk, "DEBUG: Killer is defiled." in Kalak's pyramid. | Each print jumped over (the jump and fill the `inn_rest` fix uses). |
 | 4 | Low | GPL 46 at 1114h (Ptar) | "I will not kill you for saying this, warrior" tested the class bits against 606 (25Eh: ranger, gladiator, druid and the earth, fire and water clerics), a slip for 608 (260h: fighter, gladiator, ranger, the warriors as GPL 11 at E97h tests them): a fighter wasn't called a warrior, a druid was. | 608. |

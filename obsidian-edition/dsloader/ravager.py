@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravarrows, ravdress, ravfigures, ravportraits, ravspells, ravui
+from . import game, gamepatch, gff, ravarrows, ravdress, ravfigures, ravportraits, ravspells, ravui, scriptfixes
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -1613,19 +1613,6 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
     #   leaders' kinds -137, -131, -135, -133, the peons' -138, -132, -136, -134); the last peon's (CDBh)
     #   went to -133, its leader, so peon -134 said nothing when looked at.
     "peon_look": (45, 0xCE0, bytes.fromhex("910085"), bytes.fromhex("910086")),
-    #   vouchers_*: the two ore voucher cashiers (GPL 143, 144) work in 16-bit numbers: the total, vouchers
-    #   times 100, goes negative past 327 vouchers, and the city's share is worked out from it, so 460
-    #   vouchers paid -9,768 (as players found): the money went down. Now the share and the pay are each
-    #   the vouchers times their rate (144: 50 and 50, or 70 and 30 with flag 377; 143: 60 and 40), right
-    #   up to 655 vouchers (the grand total said still wraps past 327). Same lengths: some numbers in their
-    #   longer forms (90h a word, 8Bh a dword).
-    "vouchers_144": (144, 0xAE7, bytes.fromhex(
-        "168200d38f64820218cd0179d78f003e0b0616e28202d48f0ae1d38f0582013f0b1616e28202d48f0ae1d38f07820167"
-        "168202d282018203"), bytes.fromhex(
-        "168200d38f64820218cd0179d78f003e0b0b168200d39000328201168200d39000328203"
-        "3f0b1e168200d38f468201168200d38f1e820367")),
-    "vouchers_143": (143, 0xC54, bytes.fromhex("168200d38f64820116e28201d48f0ae1d38f068202168201d282028203"),
-                     bytes.fromhex("168200d39000648201168200d38b0000003c8202168200d39000288203")),
     #   debug_*: developers' messages the game prints: "DEBUG : got to here!" and "DEBUG : here we are now!"
     #   as a creature of GPL 81's sees the party (GPL 25 at Dh, 35h), "DEBUG: sur_main" in Surrakina's talk
     #   (254 at 9Fh), "DEBUG: Killer is defiled." in Kalak's pyramid (MAS 52 at A8h). Each print is jumped
@@ -1639,6 +1626,25 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
     "debug_pyramid": (("MAS ", 52), 0xA8, bytes.fromhex("4f0062920589161558ee904bd3b3665e4834f341932e6d3b32e45c0c"),
                       bytes.fromhex("6400c4") + b"\x61" * 25),
 }
+
+
+# Fixes that need more room: scriptfixes.Repair's, run from after the script's end (scriptfixes.repaired),
+# each script kept no longer than the game's largest, which runs (GPL 202, 9,985 bytes, in the game's
+# buffer of 10,000; one of 10,000 ends in "BAD GPL EXIT", as in Shattered Lands).
+#   vouchers_*: the two ore voucher cashiers (GPL 143 at C54h, 144 at AE7h) work in 16-bit numbers: the
+#   total, vouchers times 100, goes negative past 327 vouchers, and the city's share is worked out from
+#   it, so 460 vouchers paid -9,768 (as players found): the money went down. Now a sale takes at most 327
+#   (those the cashier counts: the take of every voucher, 32767, at D5Ah and C84h, takes that many), so
+#   the total, the share and the pay are the game's own sums and right; the rest stay for another sale.
+SEQUEL_LONGEST = 9985
+_CAP_VOUCHERS = bytes.fromhex("188200d90147" "3e000e" "1601478200" "67")  # (if v2[0] > 327: v2[0] = 327; the
+# IF's address from the detour's start, its ENDIF at 0Eh)
+SCRIPT_DETOURS = tuple(
+    scriptfixes.Repair(script, at, bytes.fromhex("168200d38f64" + total), _CAP_VOUCHERS + bytes.fromhex("168200d38f64" + total),
+                       f"vouchers_{script}", relocate=(7,))
+    for script, at, total in ((143, 0xC54, "8201"), (144, 0xAE7, "8202")))
+SCRIPT_FIXES.update({f"vouchers_{script}_take": (script, at, bytes.fromhex("5c7fff910b90"), bytes.fromhex("5c8200910b90"))
+                     for script, at in ((143, 0xD5A), (144, 0xC84))})
 
 
 def script_key(chunk) -> Tuple[str, int]:
@@ -1663,15 +1669,33 @@ def script_fixed(data: bytes, skip=frozenset(), palette=None) -> Tuple[bytes, Li
         if name not in skip:
             out[at:at + len(original)] = replacement
             done.append(name)
+    from . import icons
+    added: Dict[Tuple[str, int], bytes] = {}
+    detours = [r for r in SCRIPT_DETOURS if r.what not in skip]
+    if detours:
+        chunks = gff.read_gff(bytes(out))
+        for number in sorted({r.script for r in detours}):
+            key = ("GPL ", number)
+            code = chunks.get(key)
+            if code is None:
+                raise RavagerError(f"{SCRIPT_FILE} has no script {number}: not the GOG release's")
+            mine = [r for r in detours if r.script == number]
+            if any(code[r.at:r.at + len(r.was)] != r.was for r in mine):
+                raise RavagerError(f"{SCRIPT_FILE}'s script {number} is not as its fixes expect")
+            fixed = scriptfixes.repaired(number, code, mine, SEQUEL_LONGEST)
+            if fixed == code:
+                raise RavagerError(f"{SCRIPT_FILE}'s script {number} has no room for its fixes")
+            added[key] = fixed
+            done += [r.what for r in mine]
     if ravportraits.SKIP not in skip:
-        from . import icons
         try:
-            added = ravportraits.script_chunks(gff.read_gff(bytes(out)), palette)
+            faces = ravportraits.script_chunks(gff.read_gff(bytes(out)), palette)
         except gff.GffError:
-            added = {}
-        if added:
-            return icons.with_chunks(bytes(out), added), done + [ravportraits.SKIP]
-    return bytes(out), done
+            faces = {}
+        if faces:
+            added.update(faces)
+            done.append(ravportraits.SKIP)
+    return (icons.with_chunks(bytes(out), added) if added else bytes(out)), done
 
 
 def _write_copy(game_dir: str, name: str, dest: str, fixed, skip) -> List[str]:
