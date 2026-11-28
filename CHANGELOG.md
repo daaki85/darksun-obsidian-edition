@@ -59,6 +59,13 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: saving throws, both games** (branch `claude/ravager-saves-on-load`): a loaded party's saves
+are worked out again as the game would at a level up (`savemend.py`, the dice log's `mend_saves`), so a
+sequel party made while its saves were nonsense (81/2/235/0/208), or one from before the Handbook's
+tables, is right at once; and no save goes under 2 (a high-level dwarf or halfling warrior's went under
+0 with the CON bonus, a byte of 254). **Dev**: `test_tail_reads` checks both helpers' save bands are in
+the tail and every table is read through the segment it is in (no other found wrong). DSCLOG's four scroll-learning messages move to its tail, for the segment's room.
+
 **Fixed: Wake of the Ravager, the hands-on checks of the quality-of-life port** (branch
 `claude/ravager-play-checks`). Every saving throw the sequel worked out with AD&D's tables (a new character on
 the creation screen, every level up) was nonsense since the helper's tail moved out of its segment (2026-11-27):

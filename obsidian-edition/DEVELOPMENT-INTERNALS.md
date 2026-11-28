@@ -296,7 +296,7 @@ into the Loader's copy of GPLDATA (`dsloader/itemtables.py`), so DSCLOG lost `EX
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,208 + `AFTER_INSTALL` 992) | 65,200 bytes | 65,536 | 336 bytes |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,288 + `AFTER_INSTALL` 992, 2026-11-28) | 65,280 bytes | 65,536 | 256 bytes: `test_dsclog_room`'s margin, reached; the next code moves something to the tail first |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
 | upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,490 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,692 |
 | upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,112 paragraphs | 8,182 (`UMB_ROOM`) | 70 (1,120 bytes): the limit for new code and data, the segment's and the tail's alike |

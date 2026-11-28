@@ -1345,7 +1345,9 @@ death (`PPD`), rod, staff and wand (`RSW`), petrification and polymorph
 by class and level, are on the inventory screen's panel and on View Character.
 They are the Player's Handbook's by class group and level, a psionicist's Dark
 Sun's own (a character of several classes has the best of each), set at each
-level up: PPD/RSW/PP/BW/SP
+level up and again each time a game is loaded (so a party from before is put
+right at once). A dwarf's or halfling's CON bonus comes off a warrior's, but no
+save goes below 2. PPD/RSW/PP/BW/SP:
 
 | Group | Level: saves |
 |---|---|

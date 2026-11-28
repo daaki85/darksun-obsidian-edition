@@ -6,6 +6,7 @@
 ; helper's: SAVE_BASE reaches them through TAIL_SEG).
 SAVE_BAND       equ 6                   ; (a band: its first level, then the five saves)
 SAVE_ROGUES     equ 3                   ; (the game's group of thieves and psionicists)
+SAVE_LEAST      equ 2                   ; (the lowest save SAVE_BASE gives: AD&D's best, a 1 always failing)
 SAVE_PSI_SET    equ 4                   ; (SAVE_BANDS' psionicists' set)
 SAVE_THIEF      equ 17                  ; (the class numbers)
 SAVE_PSIONICIST equ 12
@@ -16,7 +17,8 @@ SAVE_PSIONICIST equ 12
 ; no more than its table's third byte, AD&D's last save, taken off in "cbw / sub ax,[bp-2]", [BP-2]
 ; that improvement plus a dwarf's or halfling's CON bonus; DI the creature). With RULE_HI_TABLES, AL
 ; the Handbook's save plus the game's improvement worked out again, so the game's sum is the
-; Handbook's less the race's bonus; for the rogues, the better of a thief's save at its thief level and
+; Handbook's less the race's bonus, but SAVE_LEAST at least (a dwarf fighter's PPD at 13th, 5, less CON 18's
+; 5 was 0, and at 17th 254: a byte under 0, a save never made; 2026-11-28); for the rogues, the better of a thief's save at its thief level and
 ; a psionicist's (Dark Sun's table) at its psionicist level, from the sheet (the game lumps the two at
 ; the best level of either). The best of the groups is the game's (its "jle" keeps the lowest). The
 ; rule off, the game's byte. Others kept.
@@ -40,17 +42,15 @@ save_base:
         mov ax, di                      ; the game's improvement, which it takes off:
         dec ax                          ;   (level - 1) x rate / 100, the third byte at most
         movsx dx, byte [es:bx + 0x6D]
-        imul dx
-        cwd
-        push si
-        mov si, 100
-        idiv si
-        pop si
+        imul dx                         ; (at most 29 x 82: a byte's quotient)
+        mov dl, 100
+        idiv dl
+        cbw
         movsx dx, byte [es:bx + 0x6E]
-        cmp ax, dx
+        cmp dx, ax
         jle .imp
-        mov ax, dx
-.imp:   xchg dx, ax                     ; (DX the improvement)
+        mov dx, ax
+.imp:                                   ; (DX the improvement)
         pop ax                          ; (the creature)
         mov bx, cx
         cmp cx, SAVE_ROGUES
@@ -98,8 +98,13 @@ save_base:
 .group: mov ds, [cs:tail_seg]
         call band_save
         mov cl, al
-.sum:   mov al, cl                      ; the Handbook's, and the game's improvement
-        add al, dl
+.sum:   mov al, [bp - 2]                ; (what the game takes off: the improvement and a dwarf's or a
+        add al, SAVE_LEAST              ;   halfling's CON bonus, which could take a warrior's save under 0,
+        add cl, dl                      ;   a byte of 254 that no roll makes: a save SAVE_LEAST at least)
+        cmp cl, al                      ; the Handbook's, and the game's improvement
+        jl .least
+        mov al, cl
+.least:
         inc word [cs:save_count]
         pop es
         pop ds

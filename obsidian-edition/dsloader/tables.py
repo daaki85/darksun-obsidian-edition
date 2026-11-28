@@ -194,9 +194,14 @@ def class_saves(classes: Sequence[Tuple[int, int]]) -> tuple:
     """A character's five saves from its (class, level) pairs (the game's class numbers: 1-8 priests,
     9, 10 and 13-16 warriors, 11 the preserver, 12 the psionicist, 17 the thief): the best of each
     class's, as SAVE_BASE makes them (the game keeps the best of its groups)."""
-    groups = {**{c: 0 for c in range(1, 9)}, 9: 1, 10: 1, 11: 2, 12: 3, **{c: 1 for c in range(13, 17)}, 17: 3}
-    rows = [rav_saves(groups[c], level, c == PSIONICIST_CLASS) for c, level in classes if c in groups and level > 0]
+    rows = [rav_saves(CLASS_GROUPS[c], level, c == PSIONICIST_CLASS) for c, level in classes
+            if c in CLASS_GROUPS and level > 0]
     return tuple(min(row[k] for row in rows) for k in range(5))
 
 
 PSIONICIST_CLASS = 12
+THIEF_CLASS = 17
+# the games' class groups (SL's 420h:10h + the class, the sequel's 4D0h:10h): clerics and druids (1-8)
+# priests 0, fighters, gladiators and rangers (9, 10, 13-16) warriors 1, the preserver (11) wizards 2, the
+# psionicist and the thief (12, 17) rogues 3
+CLASS_GROUPS = {**{c: 0 for c in range(1, 9)}, 9: 1, 10: 1, 11: 2, 12: 3, **{c: 1 for c in range(13, 17)}, 17: 3}

@@ -314,6 +314,7 @@ class LevelCapTests(unittest.TestCase):
         mu.mem_write(GAME_DS * 16 + 0x19C5, struct.pack("<HH", SHEET, SHEET_SEG))
         base, rate, last = game_table[group * 5 + save]
         improve = min((level - 1) * rate // 100, last) + race_bonus
+        mu.mem_write(SS * 16 + BP - 2, struct.pack("<h", improve))  # (the game's [BP-2], which it takes off)
         self.call(mu, "save_base", es=GROUPS, ebx=group * 15 + save * 3, ecx=group, esi=save, edi=0)
         self.assertEqual((mu.reg_read(r.UC_X86_REG_CX), mu.reg_read(r.UC_X86_REG_SI)), (group, save))
         return struct.unpack("b", bytes((mu.reg_read(r.UC_X86_REG_AL),)))[0] - improve
@@ -328,6 +329,9 @@ class LevelCapTests(unittest.TestCase):
                         self.assertEqual(self.save(8, group, level, save), tables.rav_saves(group, level)[save])
         self.assertEqual(self.save(8, 1, 12, 0, race_bonus=5), tables.rav_saves(1, 12)[0] - 5)
         self.assertEqual([self.save(0, 1, 12, s) for s in range(5)], [11, 11, 11, 13, 11])
+        # (no save under 2, SAVE_LEAST: a dwarf fighter's with CON 18 at 13th and 30th; a byte of 254 before)
+        self.assertEqual([self.save(8, 1, 13, s, race_bonus=5) for s in range(5)], [2, 2, 2, 2, 3])
+        self.assertEqual([self.save(8, 1, 30, s, race_bonus=5) for s in range(5)], [2, 2, 2, 2, 2])
 
     def test_psionicist_saves(self):
         """A psionicist's saves Dark Sun's (Table 8) at its psionicist level, to 30th; a psionicist/thief the
