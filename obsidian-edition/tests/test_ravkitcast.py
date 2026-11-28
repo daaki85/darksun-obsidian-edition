@@ -16,7 +16,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import game, kitpages, kits, ravager, ravlog  # noqa: E402
+from dsloader import game, kitpages, kits, ravager, ravlog, ravspells  # noqa: E402
 from test_ravkits import ASM, characters, wotr_sheet  # noqa: E402
 from test_ravsphere import sphere_bytes  # noqa: E402
 
@@ -272,15 +272,15 @@ class KitCastTests(unittest.TestCase):
         """EL_SPHERE's answer (sites 90-92) is ravager.casts for every kit with a priest class (the druids'
         Lifebinder and Wilderness Avenger, the cleric's Healer): a Healer's cleric casts the sphere of the
         cosmos's spells (the druids' 20h) but no harming one, a Lifebinder knows no harming spell and an
-        Avenger no healing one, though the game says yes; the cosmos's extra spells (COSMOS_MORE) none yet."""
+        Avenger no healing one, though the game says yes; the cosmos's extra spell (COSMOS_MORE) Restore Youth."""
         from test_ravsphere import ElSphereTests
         runner = ElSphereTests("test_el_sphere")
         runner.mu, runner.sym = self.mu, self.sym
         for combatant in range(4):  # (ElSphereTests' combatants: N is creature N + 5, its sheet N)
             self.mu.mem_write((GDS + FIGHTERS_SEG) * 16 + 0xC33 + 3 * combatant, struct.pack("<BH", 2, combatant + 5))
             self.mu.mem_write(CREATURES * 16 + (combatant + 5) * 0x31 + 4, struct.pack("<H", combatant))
-        self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["cosmos_more"], 4), b"\xff" * 4)
-        self.assertEqual(set(ravager.RAV_COSMOS_MORE), {"Whirlwind", "Restore Youth"})
+        self.assertEqual(self.mu.mem_read(TSR * 16 + self.sym["cosmos_more"], 4), struct.pack("<HH", 327, 0xFFFF))
+        self.assertEqual(ravager.RAV_COSMOS_MORE, {"Restore Youth": ravspells.RESTORE_YOUTH})
         spells = sorted({s for s in ravager.PRIEST_SPELLS if self.spheres[s] & ravager.DRUIDS}
                         | ravager.RAV_NO_HARM | ravager.RAV_AVENGER_NO_HEAL | {0x73, 0x79, 0x86})
         barred, cosmos = 0, 0

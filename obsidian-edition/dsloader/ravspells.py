@@ -29,7 +29,7 @@ import os
 import struct
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import art, game, gff, spelltexts
+from . import art, game, gff, spelltexts, wotrart
 from .gamepatch import Patch
 
 FIRST = 320  # (past the sequel's 320 records: DATA 0-319)
@@ -42,6 +42,8 @@ NAMES = {GRACE: b"CAT'S GRACE", CLAW: b"ERDLU CLAW", FOG: b"FOGBOLT", REFLECT: b
          SPOOK: b"SPOOK", FRIENDS: b"FRIENDS"}
 SHORT_NAMES = {GRACE: b"CATGRACE", CLAW: b"ERDLUCLW", FOG: b"FOGBOLT", REFLECT: b"REFLIMAG",
                SPOOK: b"SPOOK", FRIENDS: b"FRIENDS"}
+WHIRLWIND, RESTORE_YOUTH = range(FIRST + 6, FIRST + 8)
+PRIEST_TEMPLATES = ((WHIRLWIND, game.WHIRLWIND_SPELL, 22), (RESTORE_YOUTH, game.RESTORE_YOUTH_SPELL, 194))
 STRENGTH, ENLARGE, CHARM, MIRROR = 23, 5, 2, 19
 TEMPLATES = {GRACE: STRENGTH, CLAW: ENLARGE, FOG: CHARM, REFLECT: MIRROR, SPOOK: CHARM, FRIENDS: STRENGTH}
 HASTE, SHOCKING_GRASP, FOG_CLOUD, MAGIC_MISSILE = 29, 10, 15, 8
@@ -115,7 +117,6 @@ def _sl_palette(sl_dir: str) -> List[Tuple[int, int, int]]:
 
 def _icon_colours(chunks: gff.Chunks) -> List[int]:
     """The palette numbers the sequel's own spell icons use (ICON 21000-21268, PLNR): safe on its screens."""
-    from . import wotrart
     used = set()
     for (kind, number), data in chunks.items():
         if kind == "ICON" and ICON_BASE <= number < ICON_BASE + FIRST:
@@ -166,6 +167,28 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
     out: Dict[Tuple[str, int], bytes] = {("DATA", spell): record(resource, spell) for spell in SPELLS}
     out.update(icons_for(resource, sl_dir))
     out.update(texts())
+    palette = art.palette_colours(resource[wotrart.PALETTE])
+    stable = [(p, palette[p]) for p in _icon_colours(resource)] or list(enumerate(palette))[1:]
+    youth_icon = art.plnr_frames([wotrart.drawn("Restore Youth", stable)])
+    # (Whirlwind's: Sand Storm's, Shattered Lands' borrowing, but the sequel has Sand Storm itself: its icon
+    # tinted as Shattered Lands' fallback is, so the two differ on a priest's list)
+    sand = [[p or None for p in row] for row in wotrart.decode_plnr(resource["ICON", wotrart.ICONS["Whirlwind"]])]
+    whirl_icon = art.plnr_frames([wotrart.tinted(sand, palette, stable, wotrart.FALLBACKS["Whirlwind"][1])])
+    for spell, original, template in PRIEST_TEMPLATES:
+        data = bytearray(_record(resource, template))
+        if spell == WHIRLWIND:
+            data[0x17] = WHIRL_AREA
+            data[0x19] = 66                 # Cannot Move, intercepted on a failed save
+            data[4:7] = bytes((0, 1, 0))       # one round per caster level
+            data[0x1A:0x20] = bytes((8, 2, 0, 0x11, 8, 0xA1))
+        else:
+            data[0x1C:0x1F] = bytes(3)         # the touch restores years, not HP
+            data[CAST_SOUND] = _record(resource, 148)[CAST_SOUND]
+        name = game.PRIEST6_SPELLS[original].upper().encode("ascii")
+        data[RECORD:] = name.ljust(NAME, b"\0") + name.replace(b" ", b"")[:8].ljust(SHORT, b"\0")
+        out["DATA", spell] = bytes(data)
+        out["ICON", ICON_BASE + spell] = whirl_icon if spell == WHIRLWIND else youth_icon
+        out["SPIN", spell + TEXT_BASE] = spelltexts.TEXTS[original + 1].encode("ascii") + b"\r\n"
     return out
 
 
@@ -173,6 +196,9 @@ def chunks(resource: gff.Chunks, sl_dir: Optional[str] = None) -> Dict[Tuple[str
 VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h, then the site's number)
 NS_CMP, NS_KNOW, NS_LEVEL, NS_LIST = 140, 141, 142, 143
 NS_CAST, NS_EFFECT, NS_ABILITY, NS_CLAW = 144, 145, 146, 147
+PRIEST_SPHERE = 222
+WW_SETUP, WW_GATE, WW_DRAW = 225, 226, 227
+WHIRL_AREA = 125
 NS_SCROLL, NS_LEARN = 148, 149  # (a scroll's teaching, CHOOSE A SPELL's)
 NS_INFO = 86  # (an item box's INFO text: a site the table had free; the new spells' SPIN numbers, 321-326, are
 # the game's own item effects' too (140h-147h), which have no text: on an item that isn't a scroll or book the
@@ -269,12 +295,29 @@ def effect_patch() -> Patch:
     return Patch("ns_effects", EFFECT_RECORDS_FILE + GRACE_EFFECT * EFFECT_RECORD, bytes(len(data)), data)
 
 
+# The 6th-level priest spells' spheres as Shattered Lands' (game.PRIEST6_MASKS, the player's guide's 6th-level
+# priest spells): the sequel's sphere bytes (selector 3D0h:7D3h, a byte a spell: 1 air, 2 earth, 4 fire, 8 water,
+# 20h the druids') of 208-214, Blade Barrier the air's (the sequel's 20h, every druid's), Sunstroke the fire's alone
+# (5, air's and fire's) and Wall of Thorns the earth's (20h); Fire Seeds (fire), Heal and Harm (the druids'),
+# Heartseeker (earth's and water's) and Waters of Life (water) the same in both. With Whirlwind (the air's) and
+# Restore Youth (the druids') each element has two, as in Shattered Lands. Left out with the new spells' rule
+# (ravager.skipped), as Whirlwind and Restore Youth are.
+SPHERES_FILE = 0x5200 + 0x41F1 * 16 + 0x7D3  # (the table in DSUN.EXE: the header's 5200h, the segment's)
+BLADE_BARRIER, SPHERES_SKIP = 208, "priest6_spheres"
+SPHERES_WAS, SPHERES_NOW = bytes.fromhex("20042020 0a0520".replace(" ", "")), bytes.fromhex("01042020 0a0402".replace(" ", ""))
+
+
 def program_patches() -> List[Patch]:
     """The program's patches for them (ravager.PATCHES'): DSCLOG2's sites 140-149 and 86 and the effect records."""
     return [
         Patch("ns_list", 0x6254F, bytes.fromhex("33f63b7efe"), site_bytes(NS_LIST, 5)),
         Patch("ns_know", 0x62625, bytes.fromhex("837e0873"), site_bytes(NS_KNOW, 4)),
         Patch("ns_level", 0x62AD0, bytes.fromhex("83fa73"), site_bytes(NS_LEVEL, 3)),
+        Patch("ww_setup", 0x5203, bytes.fromhex("2e8916c402"), site_bytes(WW_SETUP, 5)),
+        Patch("ww_draw", 0x26FA8, bytes.fromhex("bea80c8b4710"), site_bytes(WW_DRAW, 6)),
+        Patch("ww_gate", 0x7F6E4, bytes.fromhex("8b7606"), site_bytes(WW_GATE, 3)),
+        Patch("priest_sphere", 0x62BC6, bytes.fromhex("26848cd307"), site_bytes(PRIEST_SPHERE, 5)),
+        Patch(SPHERES_SKIP, SPHERES_FILE + BLADE_BARRIER, SPHERES_WAS, SPHERES_NOW),
         *cmp_patches(),
         Patch("ns_cast", 0x656D0, bytes.fromhex("8b460e8946e2"), site_bytes(NS_CAST, 6)),
         Patch("ns_effect", 0x6623B, bytes.fromhex("817e0ef5007507c746ee0200eb05c746ee6200"), site_bytes(NS_EFFECT, 19)),

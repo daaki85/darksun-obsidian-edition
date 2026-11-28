@@ -378,9 +378,8 @@ sf_backs   dw 0                 ; +2024 ... and the first targets put back as th
 trip_saves dw 0                 ; +2026 a trikal specialist's hits that asked a save against paralysis ...
 trips      dw 0                 ; +2028 ... and the targets tripped (CAH_HIT, counted)
         times 2060 - ($ - hdr) db 0  ; (+2030 to +2059: this block's, free)
-cosmos_more dw 0xFFFF, 0xFFFF   ; +2060 two spells more a Healer's cleric casts as the sphere of the cosmos's
-                                ;      (HEALER_COSMOS), FFFFh none: for Whirlwind and Restore Youth, their
-                                ;      sequel numbers once those spells are ported (kits.RAV_COSMOS_MORE)
+cosmos_more dw NS_YOUTH, 0xFFFF ; +2060 two spells more a Healer's cleric casts as the sphere of the cosmos's
+                                ;      (HEALER_COSMOS), FFFFh none: Restore Youth (ravager.RAV_COSMOS_MORE)
 kc_levels  dw 0                 ; +2064 spells' levels a kit changed (KIT_CAST_LEVEL, counted) ...
 kc_cures   dw 0                 ; +2066 ... cures it made stronger (KIT_CURE) ...
 kc_causes  dw 0                 ; +2068 ... Cause Wounds stronger (AV_CAUSE) ...
@@ -1051,10 +1050,37 @@ acid_burn:
 
 ; ACID_ONCE: "cmp word [bp-0Ah],0" (651FEh; 4 bytes) where a spell's damage (64F5Fh) puts the record's
 ; effect ([BP-0Ah]) on the target it hurt: during an Acid burn (ACID_BURNING, then cleared) none, as if
-; the record had none; else the compare made, its flags returned.
+; the record had none; else the compare made, its flags returned. For Whirlwind ([BP+0Ah], the spell: a
+; save made never comes here) its Cannot Move never put on: its creature [BP+6] swept (SL's SWEPT_MARK): one
+; yet to act loses this round's turn at once (SWEPT_NOW), else (or at the round's start, WW_ROUND, before
+; the initiative) it is tangled, losing its next (CAH_MOVE's); recorded (KIND_SWEPT, dicelog's: the creature).
+KIND_SWEPT equ 11
+ww_round db 0                           ; (1 while WW_PASS does Whirlwind's damage at a round's start)
 acid_once:
         pushad
         push es
+        cmp word [bp + 0x0A], NS_WHIRL
+        jne .acid
+        mov bx, [bp + 6]
+        cmp bx, TANGLE_MOST
+        jae .no_effect
+        cmp byte [cs:ww_round], 0
+        jne .next_turn
+        call swept_now                  ; (CF: its turn taken at once)
+        jc .swept
+.next_turn:
+        mov si, bx
+        call tangle_bit
+        or [cs:tangled + si], al
+.swept: mov ax, bx                      ; (recorded: KIND_SWEPT, the creature)
+        mov si, sp
+        add si, 28
+        mov word [cs:kind], KIND_SWEPT
+        call record
+.no_effect:
+        xor ax, ax                      ; (ZF set: "none", the record's Cannot Move never put on)
+        jmp .flags
+.acid:
         cmp byte [cs:acid_burning], 0
         je .test
         mov byte [cs:acid_burning], 0
@@ -1097,8 +1123,15 @@ acid_round:
         call tangle_clear               ; (the cahulaks' tangles: none at a fight's start)
         call tu_clear                   ; (and no failed turnings)
         mov word [cs:poison_used], 0    ; (and each Poisoner's weapon poisons again: POISON_HIT)
+.on:    test byte [cs:rules], RULE_NEW_SPELLS
+        jz .flags
+        mov bx, sp
+        push word ww_clear_hits         ; (Whirlwind's: none of its creatures hit this round yet,
+        call tail_call
+        push word ww_start              ;   its funnels' places anew and its damage: the tail's)
+        call tail_call
+.flags:
         cmp byte [FIRST_ROUND], 0
-.on:
         pushf
         pop ax
         jmp acid_flags
@@ -1640,6 +1673,76 @@ tail_fs:
         popf
         pop ax
         ret
+
+; TAIL CODE (THE IMAGE'S PARTS): code kept in the tail, past the segment's 64 KB, run with CS the tail's (its
+; labels and its [CS:] data the tail's, as its tables'). A site's routine there has a stub here in SITE_TABLE,
+; "push word ROUTINE / jmp tail_site": TAIL_SITE goes on to it, the INT's frame as it was (it ends in IRET). A
+; routine of the segment calls one of the tail's by "push word ROUTINE / call tail_call", and one of the tail's
+; one here by "push word ROUTINE / call seg_call" (the tail's SEG_CALL); either way the registers and the flags
+; the callee leaves come back, but the flags going in are TAIL_CALL's own. The tail's code reaches the
+; segment's data through GS (SEG_GS, the tail's: GS the segment).
+tail_site:
+        pop word [cs:tail_jump]
+        push ax
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov [cs:tail_jump + 2], ax
+        pop ax
+        jmp far [cs:tail_jump]
+tail_jump dw 0, 0
+tail_call:
+        push ax
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov [cs:tail_far + 2], ax
+        pop ax
+        call far [cs:tail_far]
+        ret 2
+tail_far dw far_near_t, 0
+; FAR_NEAR (the segment's and the tail's: FAR_NEAR_S, FAR_NEAR_T): a far call's way into a near routine of
+; the same part, its offset the word under the near way back of TAIL_CALL or SEG_CALL: run with every
+; register as the caller's, then back far, the flags as it left them.
+%macro FAR_NEAR 0
+        push bp
+        mov bp, sp
+        push word %%back
+        push word [bp + 8]
+        mov bp, [bp]
+        ret
+%%back: pop bp
+        retf
+%endmacro
+far_near_s:
+        FAR_NEAR
+ww_setup_s:                             ; (Whirlwind's sites: WHIRLWIND, the tail's)
+        push word ww_setup
+        jmp tail_site
+ww_gate_s:
+        push word ww_gate
+        jmp tail_site
+ww_draw_s:
+        push word ww_draw
+        jmp tail_site
+section tail
+far_near_t:
+        FAR_NEAR
+seg_call:
+        push ax
+        mov ax, cs
+        sub ax, TAIL_PARAS
+        mov [cs:seg_far + 2], ax
+        pop ax
+        call far [cs:seg_far]
+        ret 2
+seg_far dw far_near_s, 0
+seg_gs:
+        push ax
+        mov ax, cs
+        sub ax, TAIL_PARAS
+        mov gs, ax
+        pop ax
+        ret
+section image
 
 use_draw:                       ; the selected character's slots in the USE screen's panel (SLOTS_TEXT
         push fs                 ;   and U_LINE: the tail's, FS)
@@ -3544,7 +3647,14 @@ el_own_second:
         cmp cl, 3
         ja .no
         mov si, [bp + 0x0A]
-        cmp si, PRIEST_FIRST
+        cmp si, NS_WHIRL                ; (Whirlwind, the air's: the new spells' rule on)
+        jne .native
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .no
+        test cl, cl                     ; (air: the second sphere 1 before the DEC)
+        jz .yes
+        jmp .no
+.native:cmp si, PRIEST_FIRST
         jb .no
         cmp si, PRIEST_END
         jae .no
@@ -3555,7 +3665,7 @@ el_own_second:
         shl al, cl
         test [es:si + SPHERES_OFF], al
         jz .no
-        stc
+.yes:   stc
         jmp .out
 .no:    clc
 .out:   pop es
@@ -5107,7 +5217,14 @@ site_table:
         dw ammo_okay                        ; 219 SITE_AMMO_OKAY (5CA92h, 5CAF7h, 5CB64h: the attack command's target Okay: fallen for it)
         dw save_sum                         ; 220 SITE_SAVE_SUM (66E86h: a save's d20 and modifiers added: kept in its byte)
         dw save_nat                         ; 221 SITE_SAVE_NAT (66EA3h: a natural 20 saves unless the save can't be made)
-        times 230 - ($ - site_table) / 2 dw site_none
+        dw priest_sphere                    ; 222 SITE_PRIEST_SPHERE (62BC6h: a priest spell's sphere met by the class's: Whirlwind's and Restore Youth's)
+        dw site_none                        ; 223 (none here)
+        dw site_none                        ; 224 (none here)
+        dw ww_setup_s                       ; 225 SITE_WW_SETUP (5203h: the start, before the overlays: the ground areas' table copied with Whirlwind's)
+        dw ww_gate_s                        ; 226 SITE_WW_GATE (7F6E4h: a lasting area's damage: Whirlwind's once a round a creature)
+        dw ww_draw_s                        ; 227 SITE_WW_DRAW (26FA8h: a thing drawn: of Whirlwind's copies one funnel)
+        dw site_none                        ; 228 (none here)
+        dw site_none                        ; 229 (none here)
         dw camera_walk                      ; 230 SITE_CAMERA_WALK (200B7h: a fight's figure stepped: the view kept while it is on screen)
         dw party_load                       ; 231 SITE_PARTY_LOAD (70DA6h: a game loaded with the party in one figure: spread out)
         dw party_gather                     ; 232 SITE_PARTY_GATHER (6A823h: the party put in one figure: after a fight, spread out again)
@@ -5156,6 +5273,7 @@ RULE_NEW_SPELLS equ 32
 NS_FIRST     equ 320
 NS_COUNT     equ 6
 NS_AS        equ 0x72               ; (a wizard spell's number for the compares: any below 73h)
+NS_PRIEST_AS equ 130              ; (a priest spell's, for Whirlwind and Restore Youth: one of 73h-EAh)
 NS_PRIESTS   equ 0x73
 NS_PLUS1     equ 0x80               ; (NS_CMP_TABLE's form: the operand is the spell + 1, an item's power)
 NS_KNOW_OUT  equ 0x626B0 - 0x62628  ; (the known test's way out, AL the answer, less the INT's way back)
@@ -5209,6 +5327,494 @@ ns_knows:
         pop bx
         pop ax
         ret
+; THE 6TH-LEVEL PRIEST SPELLS NEW TO THE SEQUEL (RULE_NEW_SPELLS; ravspells.WHIRLWIND, RESTORE_YOUTH, Shattered
+; Lands' 6th-level priest spells): Whirlwind (NS_WHIRL, the air's) and Restore Youth (NS_YOUTH, the druids' and a
+; Healer's, the sphere of the cosmos), numbered past the six new wizard spells, their records, icons and texts the
+; Loader's. The game's spell routines take them as priest spells (NS_CMP's NS_PRIEST_AS), its sphere test
+; (PRIEST_SPHERE, below) as their spheres', and the USE screen's 6th-level list (NS_LIST) has them for a priest
+; who casts them.
+NS_WHIRL equ 326
+NS_YOUTH equ 327
+SPHERE_AIR   equ 0x01               ; (a spell's sphere byte, SPHERES_OFF's: air)
+; PRIEST_NEW: CF set if spell AX is Whirlwind or Restore Youth and the new spells' rule is on. All kept.
+priest_new:
+        test byte [cs:rules], RULE_NEW_SPELLS
+        jz .no
+        cmp ax, NS_WHIRL
+        jb .no
+        cmp ax, NS_YOUTH
+        ja .no
+        stc
+        ret
+.no:    clc
+        ret
+; PRIEST_SPHERE (site 222): 62B45h's "test es:[si+7D3h],cl" (62BC6h: spell SI's sphere byte met by the class's
+; CL, ZF the answer): for Whirlwind and Restore Youth, past the table's end, their own spheres (air's, and the
+; druids' COSMOS_BIT as Heal's and Harm's: Shattered Lands' Restore Youth is the druids' and a Healer's, whose
+; HEALER_COSMOS has it in COSMOS_MORE); the test's flags into the INT's frame.
+priest_sphere:
+        push ax
+        mov ax, si
+        call priest_new
+        pop ax
+        jnc .native
+        cmp si, NS_WHIRL
+        jne .cosmos
+        test cl, SPHERE_AIR
+        jmp .flags
+.cosmos:test cl, COSMOS_BIT
+        jmp .flags
+.native:test [es:si + SPHERES_OFF], cl
+.flags: push bp
+        mov bp, sp
+        push ax
+        pushf
+        pop ax
+        and word [bp + 6], ~FLAGS_MASK
+        and ax, FLAGS_MASK
+        or [bp + 6], ax
+        pop ax
+        pop bp
+        iret
+; ---- WHIRLWIND (RULE_NEW_SPELLS; ravspells.WHIRLWIND, Shattered Lands' Whirlwind, the player's guide's): a funnel
+; of dust that stays where it is cast a round a caster level, 2d8 crushing to each creature in it as it is cast and at
+; each round's start (before the initiative), a save for half; one that fails is swept off its feet and loses its turn
+; (ACID_ONCE's SWEPT, recorded: KIND_SWEPT). Its record (the Loader's) has the ground area WW_AREA, which the game
+; hasn't: WW_SETUP gives the program a copy of the areas' table (selector 3D0h) with it, WW_GATE lets its damage touch
+; a creature once a round, WW_DRAW draws one funnel of its copies (whirlart's picture), turned by WW_TICK. Kept in the
+; tail (TAIL CODE: CS the tail's), reached through TAIL_SITE and TAIL_CALL; GS the segment's where it is set (SEG_GS).
+section tail
+; WW_START (ACID_ROUND's, TAIL_CALL, BX its frame): the funnels' places worked out again and Whirlwind's damage done.
+ww_start:
+        push gs
+        call seg_gs
+        call whirl_clear
+        call ww_pass
+        pop gs
+        ret
+; WW_CAST (PROBE_CAST's, TAIL_CALL): a Whirlwind cast: none of its creatures hit yet this round, its places anew.
+ww_cast:
+        call ww_clear_hits
+        jmp whirl_clear
+; WW_BIT: TANGLE_BIT's, for the tail. Others kept.
+ww_bit:
+        push cx
+        mov cx, si
+        and cl, 7
+        mov al, 1
+        shl al, cl
+        shr si, 3
+        pop cx
+        ret
+
+; The startup MOV CS:[2C4h],DX runs after DOS relocation and before the overlay
+; manager loads any code. DX holds DGROUP. Selector 3D0h covers 8BEh bytes:
+; the 112 ground areas followed by spell spheres and other native tables.
+; Copy all of it, then add an area aligned to its native 18-byte stride.
+WW_AREA equ 125
+WW_OBJECT equ 8433
+section tailz
+align 16
+ww_table times (WW_AREA + 1) * 18 db 0  ; (WW_SETUP's copy of the areas' table, selector 3D0h, with Whirlwind's)
+WW_TABLE_PARA equ ((tail_mid - tail_start) + (ww_table - tailz_start)) / 16 ; (its paragraph in the tail)
+section tail
+ww_setup:
+        push bp
+        mov bp, sp
+        pushad
+        push ds
+        push es
+        mov ax, [bp + 4]                ; program CS = load segment at startup
+        mov es, ax
+        mov [es:0x2C4], dx              ; displaced instruction
+        add ax, 0x41F1
+        mov ds, ax
+        mov ax, cs
+        add ax, WW_TABLE_PARA
+        mov es, ax
+        xor di, di
+        xor si, si
+        mov cx, 0x8BE / 2
+        cld
+        rep movsw
+        mov si, 8 * 18                  ; Stinking Cloud's ground footprint
+        mov di, WW_AREA * 18
+        mov cx, 9
+        rep movsw
+        mov word [es:WW_AREA * 18], NS_WHIRL
+        or byte [es:WW_AREA * 18 + 2], 0x10
+        mov word [es:WW_AREA * 18 + 3], WW_OBJECT
+        push cs
+        pop ds
+        mov si, ww_refs
+        mov cx, (ww_refs_end - ww_refs) / 4
+.ref:   lodsw
+        add ax, [bp + 4]
+        mov es, ax
+        lodsw
+        mov di, ax
+        mov ax, cs
+        add ax, WW_TABLE_PARA
+        stosw
+        loop .ref
+        mov word [es:di], (WW_AREA + 1) * 18 ; size of selector 3D0h
+        pop es
+        pop ds
+        popad
+        pop bp
+        iret
+; DOS relocation words for 41F1h. The last word is the overlay selector.
+ww_refs dw 0x1D40,0x37CC, 0x21E0,0x6EC, 0x21E0,0x6B8, 0x21E0,0x8DF
+        dw 0x21E0,0x8AB, 0x271D,0x671, 0x271D,0x65A, 0x271D,0x615
+        dw 0x45E8,0x3D0
+ww_refs_end:
+
+; Lasting areas can touch one target during both movement and its turn.
+; Keep a single damage roll for that target until the next round starts.
+ww_gate:
+        mov si, [bp + 6]                ; displaced target read
+        cmp word [bp + 8], NS_WHIRL
+        jne .out
+        cmp si, TANGLE_MOST
+        jae .out
+        push ax
+        push si
+        call ww_bit
+        test [cs:ww_hit + si], al
+        jnz .already
+        or [cs:ww_hit + si], al
+        pop si
+        pop ax
+.out:   iret
+.already:
+        pop si
+        pop ax
+        push bp
+        mov bp, sp
+        add word [bp + 2], 0x7F77A - 0x7F6E7
+        pop bp
+        iret
+WD_SKIP      equ 0x26FE7 - (0x26FA8 + 3)
+WT_MAX       equ 4              ; (Whirlwinds kept track of at once; a fifth takes an entry in turn)
+WT_SIZE      equ 10             ; (an entry: its thing, FFFFh none; the middle of its copies, x, y;
+wt_table times WT_MAX * WT_SIZE db 0xFF ;   the copy nearest it, x, y)
+wt_next  db 0
+wt_entry dw wt_table           ; (WHIRL_PICK's entry being worked out)
+wt_x     dw 0                   ; (WHIRL_PICK's answer, for DRAW_SITE: the entry's middle and copy)
+wt_y     dw 0
+wt_kx    dw 0
+wt_ky    dw 0
+ww_draw:
+        cmp word [bx + 0x1B], WW_OBJECT
+        jne .plain
+        test byte [es:di + 5], 0x20
+        jz .skip_original               ; (a copy off the area's middle: the funnel is drawn once)
+        push ax
+        push cx
+        call whirl_pick                 ; (CF: no copies found)
+        jc .drawn
+        mov ax, [cs:wt_kx]
+        cmp ax, [es:di]
+        jne .skip
+        mov ax, [cs:wt_ky]
+        cmp ax, [es:di + 2]
+        jne .skip
+        mov ax, [cs:wt_x]               ; (as the game puts a copy: its x less the picture's
+        movzx cx, byte [bx + 7]         ;   anchor and the camera, its y less the anchor, its
+        sub ax, cx                      ;   height and the camera)
+        sub ax, [bp + 6]
+        mov [bp - 2], ax
+        mov ax, [cs:wt_y]
+        mov cx, [bx + 8]
+        sub ax, cx
+        movzx cx, byte [es:di + 4]
+        sub ax, cx
+        sub ax, [bp + 8]
+        mov [bp - 4], ax
+.drawn: pop cx
+        pop ax
+.plain: mov si, 0x0CA8
+        mov ax, [bx + 0x10]
+        iret
+.skip:  pop cx
+        pop ax
+.skip_original:
+        push bp
+        mov bp, sp
+        add word [bp + 2], WD_SKIP
+        pop bp
+        iret
+
+whirl_clear:
+        pushf
+        push di
+        mov di, wt_table
+.each:  mov word [cs:di], 0xFFFF
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .each
+        pop di
+        popf
+        ret
+
+; WHIRL_PICK: WT_X, WT_Y the middle of thing BX's copies in the draw list (OBJ_LIST: the entries
+; of the thing with 20h), WT_KX, WT_KY the copy nearest it: from its entry in WT_TABLE, else worked
+; out and kept in a free entry (none free: one in turn, WT_NEXT). CF set if the thing has no copies.
+whirl_pick:
+        pushad
+        push es
+        mov ax, [es:di + 6]               ; native draw-list entry’s thing number
+        mov di, wt_table
+.find:  cmp [cs:di], ax
+        je .found
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .find
+        mov di, wt_table
+.free:  cmp word [cs:di], 0xFFFF
+        je .take
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .free
+        movzx di, byte [cs:wt_next]
+        inc byte [cs:wt_next]
+        and byte [cs:wt_next], WT_MAX - 1
+        imul di, di, WT_SIZE
+        add di, wt_table
+.take:  mov [cs:wt_entry], di
+        mov [cs:di], ax
+        xor ebx, ebx                    ; (the sums of x and y, and the count)
+        xor ebp, ebp
+        xor esi, esi
+        call .scan
+        or esi, esi
+        jz .none
+        mov eax, ebx
+        cdq
+        div esi
+        mov [cs:wt_x], ax
+        mov eax, ebp
+        cdq
+        div esi
+        mov [cs:wt_y], ax
+        mov si, 0xFFFF                  ; (SI: now the nearest; BP the least |dx| + |dy| so far)
+        mov bp, si
+        mov di, [cs:wt_entry]
+        mov ax, [cs:di]
+        call .scan
+        mov di, [cs:wt_entry]           ; (kept in the entry)
+        mov ax, [cs:wt_x]
+        mov [cs:di + 2], ax
+        mov ax, [cs:wt_y]
+        mov [cs:di + 4], ax
+        mov ax, [cs:wt_kx]
+        mov [cs:di + 6], ax
+        mov ax, [cs:wt_ky]
+        mov [cs:di + 8], ax
+        jmp short .done
+.found: mov ax, [cs:di + 2]             ; (from the entry)
+        mov [cs:wt_x], ax
+        mov ax, [cs:di + 4]
+        mov [cs:wt_y], ax
+        mov ax, [cs:di + 6]
+        mov [cs:wt_kx], ax
+        mov ax, [cs:di + 8]
+        mov [cs:wt_ky], ax
+.done:  pop es
+        popad
+        clc
+        ret
+.none:  mov di, [cs:wt_entry]
+        mov word [cs:di], 0xFFFF
+        pop es
+        popad
+        stc
+        ret
+.scan:                                  ; each copy: summed (SI 32 bits: a count), else the nearest
+        les di, [OBJ_LIST]
+        mov cx, [OBJ_COUNT]
+.next:  jcxz .end
+        cmp [es:di + 6], ax
+        jne .on
+        test byte [es:di + 5], 0x20
+        jz .on
+        movzx edx, word [es:di]
+        cmp si, 0xFFFF
+        jae .near
+        add ebx, edx
+        movzx edx, word [es:di + 2]
+        add ebp, edx
+        inc esi
+        jmp short .on
+.near:  sub dx, [cs:wt_x]
+        jns .dx
+        neg dx
+.dx:    mov bx, [es:di + 2]
+        sub bx, [cs:wt_y]
+        jns .dy
+        neg bx
+.dy:    add dx, bx
+        cmp dx, bp
+        jae .on
+        mov bp, dx
+        mov dx, [es:di]
+        mov [cs:wt_kx], dx
+        mov dx, [es:di + 2]
+        mov [cs:wt_ky], dx
+.on:    add di, 8
+        dec cx
+        jmp short .next
+.end:   ret
+
+; Refresh only the moving funnel's screen rectangle, at six frames per second.
+ww_time dw 0
+ww_tick:
+        mov di, wt_table
+.find:  cmp word [cs:di], 0xFFFF
+        jne .active
+        add di, WT_SIZE
+        cmp di, wt_table + WT_SIZE * WT_MAX
+        jb .find
+        ret
+.active:
+        push word on_map
+        call seg_call
+        jne .out
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        mov dx, ax
+        sub dx, [cs:ww_time]
+        cmp dx, 3
+        jb .out
+        mov [cs:ww_time], ax
+        mov di, wt_table
+.each:  mov si, [cs:di]
+        cmp si, 0xFFFF
+        je .next
+        imul si, si, THING_SIZE
+        add si, MAP_THINGS
+        cmp word [si + 0x1B], WW_OBJECT
+        je .frame
+        mov word [cs:di], 0xFFFF
+        jmp .next
+.frame: inc byte [si + 0x12]
+        and byte [si + 0x12], 3
+        mov ax, [cs:di + 2]
+        sub ax, [CAM_X]
+        movzx cx, byte [si + 7]
+        sub ax, cx
+        mov bx, [cs:di + 4]
+        sub bx, [CAM_Y]
+        sub bx, [si + 8]
+        movzx cx, byte [si + 0x13]
+        add cx, ax
+        movzx dx, byte [si + 0x14]
+        add dx, bx
+        push word redraw_rect
+        call seg_call
+.next:  add di, WT_SIZE
+        cmp di, wt_table + WT_SIZE * WT_MAX
+        jb .each
+.out:   ret
+
+ww_clear_hits:
+        pusha
+        push es
+        push cs
+        pop es
+        mov di, ww_hit
+        xor ax, ax
+        mov cx, (ww_hit_end - ww_hit) / 2
+        cld
+        rep stosw
+        pop es
+        popa
+        ret
+ww_hit times 512 / 8 db 0
+ww_hit_end:
+ww_level db 0
+ww_far   dw 0, 0
+
+; As in Shattered Lands, deal damage before initiative, visiting each target
+; in the native area membership list once. Preserve the overlay return frame
+; across the far damage call just as burn_pass does.
+ww_pass:
+        mov si, MAP_THINGS
+        mov cx, MAP_COUNT
+.find:  cmp byte [si + 0x0F], WW_AREA + 1
+        je .level
+        add si, THING_SIZE
+        loop .find
+        jmp .done                       ; (no Whirlwind on the map)
+.level: mov al, [si + 0x15]
+        mov [cs:ww_level], al
+        mov dx, -1                      ; (DX the last creature done)
+.next:  mov ax, ds
+        sub ax, DGROUP - 0x40B0
+        mov es, ax
+        mov di, 0xFFFF                  ; (DI the least creature past DX in a Whirlwind)
+        xor cx, cx
+.scan:  cmp cx, [0x2102]
+        jae .found
+        cmp cx, 84                      ; capacity checked by the native area insertion
+        jae .found
+        imul si, cx, 3
+        inc cx
+        cmp byte [es:si + 0x11], WW_AREA
+        jne .scan
+        mov ax, [es:si + 0x0F]
+        cmp dx, -1
+        je .first
+        cmp ax, dx
+        jbe .scan
+.first: cmp ax, di
+        jae .scan
+        cmp ax, MAP_COUNT
+        jae .scan
+        mov di, ax
+        jmp .scan
+.found: cmp di, 0xFFFF
+        je .done
+        mov dx, di
+        push bx
+        push dx
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, USE_STUB
+        mov [cs:ww_far + 2], ax
+        mov word [cs:ww_far], 0xD4
+        mov byte [gs:ww_round], 1
+        movzx ax, byte [cs:ww_level]
+        shr al, 5
+        push ax                         ; (the routine's last argument)
+        movzx ax, byte [cs:ww_level]
+        and al, 0x1F
+        push ax                         ; (the level)
+        push word NS_WHIRL
+        push di
+        call far [cs:ww_far]
+        add sp, 8
+        mov byte [gs:ww_round], 0
+        pop bp
+        pop ax                          ; (the way back, as the overlay manager has left it)
+        pop cx
+        pop dx
+        pop bx
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], cx
+        jmp .next
+.done:  ret
+
+
+
+
+; Return carry for either granted priest spell when the new-spells option is on.
+section image
+
 ns_cmp:
         pushad
         push es
@@ -5268,17 +5874,25 @@ ns_cmp:
         test byte [cs:si + 4], NS_PLUS1
         jz .new
         dec ax                      ; (an item's power: the spell + 1)
-.new:   call ns_new
+.new:   call priest_new         ; (Whirlwind or Restore Youth: as a priest's spell, NS_PRIEST_AS)
+        jc .book
+        call ns_new
         jnc .old
-        test byte [cs:si + 4], NS_PLUS1
-        jz .old
+.book:  test byte [cs:si + 4], NS_PLUS1
+        jz .take
         mov bx, [cs:si + 6]
         call ns_book                ; (an item's power: a new spell's only on a scroll or a book)
-.old:   pop ax
+        jnc .old
+.take:  call priest_new
+        pop ax
         pop bx
-        jnc .cmp
+        mov ax, NS_PRIEST_AS
+        jc .cmp
         mov ax, NS_AS
         inc word [cs:ns_cmps]
+        jmp .cmp
+.old:   pop ax
+        pop bx
 .cmp:   cmp ax, [cs:si + 8]
         pushf
         pop ax
@@ -5345,7 +5959,15 @@ ns_know:
         pushad
         push es
         mov ax, [bp + 8]
-        call ns_new
+        call priest_new
+        jnc .wizard
+        ; Continue at the native priest path that checks class spheres and slots.
+        mov di, sp
+        add word [ss:di + 34], 0x62662 - 0x62628
+        pop es
+        popad
+        iret
+.wizard:call ns_new
         jnc .cmp
         mov si, [bp + 6]
         call ns_knows
@@ -5365,9 +5987,14 @@ ns_level:
         pushad
         push es
         mov ax, dx
-        call ns_new
+        call priest_new
+        jnc .wizard
+        mov al, 6
+        jmp .answer
+.wizard:call ns_new
         jnc .cmp
         mov al, [cs:bx + ns_levels]
+.answer:
         mov di, sp
         mov [ss:di + 26], al        ; (the game's CL)
         add word [ss:di + 34], NS_LEVEL_OUT
@@ -5385,7 +6012,7 @@ ns_list:
         test byte [cs:rules], RULE_NEW_SPELLS
         jz .done
         test byte [bp + 0x0C], 1
-        jz .done                    ; (not the wizards')
+        jz .priests
         mov dx, [bp + 0x0E]         ; (DL the level)
         cmp dx, 1
         jl .done
@@ -5414,6 +6041,39 @@ ns_list:
 .next:  inc bx
         cmp bx, NS_COUNT
         jb .each
+.priests:
+        test byte [bp + 0x0C], 2
+        jz .done
+        cmp word [bp + 0x0E], 6
+        jne .done
+        mov ax, ds
+        sub ax, DGROUP - 0x4699
+        mov [cs:priest_known + 2], ax
+        mov bx, NS_WHIRL
+.try:   push bx
+        push cx
+        push bx
+        push word [bp + 6]
+        call far [cs:priest_known]
+        add sp, 4
+        pop cx
+        pop bx
+        test al, al
+        jz .next_priest
+        cmp cx, [bp + NS_LIST_MOST]
+        jae .done
+        cmp dword [bp + 8], 0
+        je .count_priest
+        les di, [bp + 8]
+        add di, cx
+        add di, cx
+        mov [es:di], bx
+.count_priest:
+        inc cx
+.next_priest:
+        inc bx
+        cmp bx, NS_YOUTH
+        jbe .try
 .done:  mov di, sp
         mov [ss:di + 6], cx         ; (the game's SI: the count so far)
         mov ax, [ss:di + 2]         ; (the game's DI, the level's first spell)
@@ -5421,6 +6081,8 @@ ns_list:
         pushf
         pop ax
         jmp acid_flags
+
+priest_known dw 0x7F, 0
 
 ; - NS_CAST (site 144): the spell handler's "mov ax,[bp+0Eh] / mov [bp-1Eh],ax" (656D0h), the number its
 ;   switch looks up: Cat's Grace and Friends go to Strength's case (23), as in Shattered Lands.
@@ -17290,6 +17952,11 @@ dual_kits  dw 0
 ; caster), then the move done.
 KIND_CAST equ 8
 probe_cast:
+        cmp word [bp + 0x0A], NS_WHIRL
+        jne .record
+        push word ww_cast               ; (a Whirlwind: WW_CAST, the tail's)
+        call tail_call
+.record:
         push si
         mov si, sp
         sub si, 4               ; SS:SI+6 = our return address (as RECORD wants it)
@@ -17657,6 +18324,8 @@ probe_scroll:
         call panel_tick
         popf
         call label_tick
+        push word ww_tick               ; (Whirlwind's funnels turned: WW_TICK, the tail's)
+        call tail_call
         call ring_tick
         call redraw_tick                ; (the view again for the Loader's squares and rings)
         call spread_tick                ; (the whole party in view: SPREAD_TICK)

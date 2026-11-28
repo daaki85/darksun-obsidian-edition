@@ -1373,9 +1373,9 @@ RAV_WIZARD_LAST = 0x72  # (the wizard spells, 0-72h; the priests' 73h-EAh, PRIES
 RAV_NEW_WIZARD_SPELLS = range(320, 326)  # (the mod's six new spells, ravspells.FIRST on: wizard spells)
 # A Healer's sphere of the cosmos in the sequel: the spells every druid casts and no cleric (a sphere byte with
 # DRUIDS: Cure Serious and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest), and
-# Whirlwind and Restore Youth, which Shattered Lands' Healer casts at 6th level: they aren't in the sequel yet,
-# and their numbers go here (and in DSCLOG2's COSMOS_MORE, the header's +2060) once they are ported.
-RAV_COSMOS_MORE = {"Whirlwind": None, "Restore Youth": None}
+# Restore Youth, which Shattered Lands' Healer casts at 6th level: the mod's in the sequel (ravspells.RESTORE_YOUTH,
+# the new spells' rule; DSCLOG2's COSMOS_MORE, the header's +2060, the same).
+RAV_COSMOS_MORE = {"Restore Youth": 327}
 
 
 def healer_cosmos(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
@@ -2253,8 +2253,8 @@ def crystal_rod_picture(chunks: gff.Chunks) -> gff.Chunks:
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
-                  party: Optional[Callable[[gff.Chunks], Tuple[gff.Chunks, Dict[Tuple[str, int], int]]]] = None
-                  ) -> Tuple[bytes, List[str]]:
+                  party: Optional[Callable[[gff.Chunks], Tuple[gff.Chunks, Dict[Tuple[str, int], int]]]] = None,
+                  funnel: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
     double spear's range 1 (RAV_RANGES, unless "melee_range" is), the club's, bow's and sling's material
     SL's (RAV_MATERIALS, unless "materials" is), Dragonsbane SL's metal (RAV_OBJECT_TYPES, unless
@@ -2342,6 +2342,9 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         if made:
             new.update(made)
             done.append(ravdress.SKIP)
+    if funnel and ravspells.SKIP not in skip:
+        new.update(funnel(chunks))
+        done.append("whirlwind_art")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
@@ -2454,12 +2457,26 @@ def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[s
     books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
     gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
     arrows = (lambda chunks: ravarrows.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
+    resource_path = _find_file(game_dir, RESOURCE_FILE)
+
+    def funnel(objects):
+        from glob import glob
+        from . import ravitems, whirlart
+        with open(resource_path, "rb") as f:
+            resources = gff.read_gff(f.read())
+        regions = []
+        for path in sorted(glob(os.path.join(game_dir, "RGN*.GFF"))):
+            with open(path, "rb") as f:
+                regions.extend(v for (kind, _), v in gff.read_gff(f.read()).items() if kind == "PAL ")
+        return whirlart.chunks(objects, ravitems.stable_colours(resources, regions), picture=whirlart.OBJECT)
+
+    art = funnel if resource_path else None
 
     def party(chunks):
         sources = ravdress.Sources.from_files(sl_dir, game_dir)
         return ravdress.copy_chunks(chunks, sources) if sources is not None else ({}, {})
     return _write_copy(game_dir, OBJECTS_FILE, dest,
-                       lambda d, s: objects_fixed(d, s, added, gear, arrows, party if sl_dir else None), skip)
+                       lambda d, s: objects_fixed(d, s, added, gear, arrows, party if sl_dir else None, art), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
@@ -2524,7 +2541,7 @@ def skipped(settings: dict) -> frozenset:
         | (frozenset() if pace else frozenset(gamepatch.STEADY_PACE)) \
         | (frozenset() if screens else {ravui.SKIP}) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
-        | (frozenset() if spells else {ravspells.SKIP})
+        | (frozenset() if spells else {ravspells.SKIP, "ww_setup", "ww_gate", "ww_draw", ravspells.SPHERES_SKIP})
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] = None) -> Optional[str]:
