@@ -231,6 +231,12 @@ The comparison uses the same scale for all four rooms. Look at the front panel w
 
 ![Both stored poses of the previous and revised Mines chest, the Pyramid chest and an upper castle chest for scale](mine-chest-poses.png)
 
+### Kalak’s Pyramid
+
+The two shelves in the eastern room drop from 64 to 42 visible rows. Keep the present height of the shelves, tables and six narrow chairs. The cabinet between the shelves is a passage large enough for the party to enter. Both placements of picture 2546 retain their original art. In play the eastern doors opened on first use. A second use offered passage and took the party to the Garden. The tall doorway beside the lower seating in the Shattered Lands Upper Castle gives a reference for that difference in scale.
+
+[Whole Pyramid before and after beside the Upper Castle](pyramid-furniture-whole-maps.png) · [Room comparisons and cabinet in play](pyramid-furniture-live.png) · [Measurements for all 25 placements](pyramid-placements.csv) · [Playtest](../../playtest/logs/2026-11-28-ravager-pyramid-furniture.md)
+
 The DOSBox close-ups below show the party opening the Mines chest on both builds. The map renders above show the front edge that the party partly covers.
 
 ![Matched Mines 3 DOSBox views with the loot chest closed and open before and after lowering](mines-chest-live.png)
@@ -331,14 +337,14 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Eight regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128) and Silt Sea Giants (12). Twelve regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Nine regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128) and Silt Sea Giants (12). Eleven regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
 | 001 Forest | 252 | 0 | 56 | All 60 inventoried placements checked in DOSBox. Both fruit prompts and Cleave’s cure played through. Snaggle’s bed and the chest’s raised lid checked with staged pose selection |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds, intact storage stacks and four side-facing counters checked in play. Check remaining ruined fixtures and pillows |
-| 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
+| 034 Pyramid | 152 | 0 | 23 | All 25 inventoried placements checked in DOSBox. The teleportation cabinet opens on first use and takes the party to the Garden on the second |
 | 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
 | 037 Temple | 62 | 0 | 6 | All nine listed placements checked in DOSBox, including the six braziers, both occupied furnishings and their vacated states, and the coiled fixture beside the prisoner |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |

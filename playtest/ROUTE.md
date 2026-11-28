@@ -257,4 +257,4 @@ map position. Nothing is built for it yet.
 - Wake of the Ravager, the Draxans' ambush street in Tyr (2026-11-25, logs/2026-11-25-ravager-fight-keys.md):
   no water, jug or waterskin among Alt's marks there (a scroll, sandals, the bodies).
 - Wake of the Ravager, the Pyramid (RGN034, by a jump, 2026-11-27, logs/2026-11-27-ravager-defiler-scrolls.md):
-  no water, jug or waterskin on the screens seen during the Defilers' fight.
+  no water, jug or waterskin on the screens seen during the Defilers' fight. The furniture survey also found no drinking-water source among the listed pieces. [Pyramid rooms and cabinet passage](logs/2026-11-28-ravager-pyramid-furniture.md)
