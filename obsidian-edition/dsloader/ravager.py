@@ -30,7 +30,7 @@ import os
 import struct
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
-from . import game, gamepatch, gff, ravarrows, ravdress, ravfigures, ravportraits, ravspells, ravui, scriptfixes
+from . import game, gamepatch, gff, gpl, pensasks, ravarrows, ravdress, ravfigures, ravportraits, ravspells, ravui, scriptfixes
 from .gamepatch import Patch
 
 WOTR_SIZE = 634416  # DSUN.EXE of the GOG release (1.1)
@@ -1640,14 +1640,15 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
 
 
 # Fixes that need more room: scriptfixes.Repair's, run from after the script's end (scriptfixes.repaired),
-# each script kept no longer than the game's largest, which runs (GPL 202, 9,985 bytes, in the game's
-# buffer of 10,000; one of 10,000 ends in "BAD GPL EXIT", as in Shattered Lands).
+# each script kept no longer than the Loader's script buffer runs (pensasks.LONGEST: gamepatch.SCRIPT_BUFFER,
+# the sequel's made that size too by "script_buffer", less a margin; the game's own was 10,000 bytes, its
+# largest script GPL 202's 9,985, and one of 10,000 ends in "BAD GPL EXIT", as in Shattered Lands).
 #   vouchers_*: the two ore voucher cashiers (GPL 143 at C54h, 144 at AE7h) work in 16-bit numbers: the
 #   total, vouchers times 100, goes negative past 327 vouchers, and the city's share is worked out from
 #   it, so 460 vouchers paid -7,818 (seen in play, 2026-11-28): the money went down. Now a sale takes at most 327
 #   (those the cashier counts: the take of every voucher, 32767, at D5Ah and C84h, takes that many), so
 #   the total, the share and the pay are the game's own sums and right; the rest stay for another sale.
-SEQUEL_LONGEST = 9985
+SEQUEL_LONGEST = pensasks.LONGEST
 _CAP_VOUCHERS = bytes.fromhex("188200d90147" "3e000e" "1601478200" "67")  # (if v2[0] > 327: v2[0] = 327; the
 # IF's address from the detour's start, its ENDIF at 0Eh)
 SCRIPT_DETOURS = tuple(
@@ -1656,6 +1657,126 @@ SCRIPT_DETOURS = tuple(
     for script, at, total in ((143, 0xC54, "8201"), (144, 0xAE7, "8202")))
 SCRIPT_FIXES.update({f"vouchers_{script}_take": (script, at, bytes.fromhex("5c7fff910b90"), bytes.fromhex("5c8200910b90"))
                      for script, at in ((143, 0xD5A), (144, 0xC84))})
+
+#   race_sex_*: a character's race and sex are its own record's (field 15: `.15.41`, `.15.42`, as the sequel's
+#   scripts read them over 140 times), but 17 places read field 41 or 42 straight off the active member (or the
+#   actor, GPL 46), whose combat record has neither, so they read 0: a thri-kreen never called a "bug" or told of
+#   its mandibles, a woman never "lass", "girl" or "woman", the halfling's "you're a halfling, too" and the races'
+#   insults never fitting (Shattered Lands' same slip, mended through its field 71: scriptfixes' race and sex
+#   repairs). Each read through field 15, a byte longer: a test with its IF, or a switch's head, from after
+#   the script's end.
+RACE_SEX = (
+    (31, 0x975, "18b180250129d78f063e09d4"),
+    (35, 0x1E3, "18b180250129d78f083e01fb"),
+    (46, 0x2AE, "17b180260129"),
+    (64, 0x8E7, "17b180250129"),
+    (103, 0x340, "17b180250129"),
+    (104, 0xF4D, "18b180250129d78f083e0f68"),
+    (111, 0x60D, "18b180250129d78f083e0623"),
+    (115, 0x2086, "18b18025012ad78f023e209c"),
+    (125, 0x9A5, "18b18025012ad78f023e09b8"),
+    (126, 0x339, "18b18025012ad78f023e034e"),
+    (149, 0x78F, "18b18025012ad78f023e07a5"),
+    (219, 0xFBA, "18b180250129d78f083e1008"),
+    (219, 0x1569, "17b180250129"),
+    (248, 0x25D3, "18b180250129d78f013e25f2"),
+    (254, 0xFC7, "18b180250129d78f083e0fdd"),
+    (295, 0xA79, "18b18025012ad78f023e0a8d"),
+    (307, 0xBA5, "18b18025012ad78f023e0bb9"),
+)
+
+
+def _through_15(was: bytes) -> bytes:
+    """WAS (a command reading field 41 or 42 of an object, b1h, the object's word, 1 field, the field) with
+    that field read through field 15, the character's own record."""
+    return was[:4] + bytes((2, 0x0F)) + was[5:]
+
+
+SCRIPT_DETOURS += tuple(
+    scriptfixes.Repair(script, at, bytes.fromhex(was), _through_15(bytes.fromhex(was)), f"race_sex_{script}_{at:x}")
+    for script, at, was in RACE_SEX)
+
+#   TEXT_FIXES: typos in the sequel's text (the sweep's word list: every string through a dictionary; the
+#   dialects, the yuan-ti's hisses and the run-together words of the mind flayer's victim are meant and left),
+#   each (script, the command printing it, the words, the words mended), as Shattered Lands' (scriptfixes.
+#   TEXT_FIXES). A mended string a different length is the whole command again from after the script's end
+#   (scriptfixes.text_repairs), a shorter one padded with spaces.
+TEXT_FIXES = (
+    (134, 0xC02, "acquaintence", "acquaintance"),
+    (261, 0x3E8, "acquaintence", "acquaintance"),
+    (69, 0x1142, "adressed", "addressed"),
+    (34, 0x504, "Aliance", "Alliance"),
+    (34, 0x57D, "Aliance", "Alliance"),
+    (60, 0x1894, "aproached", "approached"),
+    (242, 0x12EE, "aquaintance", "acquaintance"),
+    (161, 0xBD4, "artristry", "artistry"),
+    (65, 0x1D26, "awfull", "awful"),
+    (18, 0x284, "bracelt and a fruit hidden the niche", "bracelet and a fruit hidden in the niche"),
+    (110, 0xC0, "Youa re truly adventurous souls. Were my bretheren", "You are truly adventurous souls. Were my brethren"),
+    (136, 0x69B, "none your businees", "none of your business"),
+    (128, 0xCF9, "ceremaic", "ceramic"),
+    (105, 0x5B6, "chadelier", "chandelier"),
+    (60, 0xAB4, "headress clorored tourquoise", "headdress colored turquoise"),
+    (221, 0x1007, "comissioned", "commissioned"),
+    (155, 0x11CF, "competion's", "competition's"),
+    (88, 0x77, "cretures", "creatures"),
+    (83, 0x5AC, "embarassing", "embarrassing"),
+    (60, 0x1DE1, "encorcelled", "ensorcelled"),
+    (330, 0x1973, "endebted", "indebted"),
+    (129, 0x9B7, "formidible", "formidable"),
+    (128, 0x12EA, "infomation", "information"),
+    (113, 0xE25, "ingrediant", "ingredient"),
+    (72, 0xCFD, "ingrediants", "ingredients"),
+    (107, 0xAAD, "memmories", "memories"),
+    (243, 0x1407, "neclace", "necklace"),
+    (218, 0x6AD, "Noretmus", "Nortemus"),
+    (113, 0x4F3, "occaisionally", "occasionally"),
+    (328, 0xEBC, "occurances", "occurrences"),
+    (161, 0x20F9, "parargraph", "paragraph"),
+    (246, 0x611, "persistant", "persistent"),
+    (329, 0x52D, "poisonus", "poisonous"),
+    (74, 0xD27, "recieve", "receive"),
+    (108, 0xE82, "recieve", "receive"),
+    (109, 0x13D, "recieves", "receives"),
+    (233, 0x11B, "recieves", "receives"),
+    (64, 0xE96, "reknowned for for", "renowned for"),
+    (127, 0x1CFE, "resetd healed", "rested and healed"),
+    (225, 0x160C, "responsibilites", "responsibilities"),
+    (256, 0x15C, "ressurect", "resurrect"),
+    (328, 0x1728, "Saftey", "Safety"),
+    (250, 0xDEC, "Solurnus", "Solurnis"),
+    (91, 0x87D, "somone", "someone"),
+    (211, 0x75F, "somthing", "something"),
+    (248, 0x1879, "sorrounded", "surrounded"),
+    (132, 0x15F3, "soutwest", "southwest"),
+    (212, 0x219C, "stangers", "strangers"),
+    (184, 0x44A, "Suddlenly", "Suddenly"),
+    (77, 0x165E, "synposis", "synopsis"),
+    (140, 0xB8D, "thier", "their"),
+    (55, 0x533, "vengance", "vengeance"),
+    (107, 0x75, "Villian", "Villain"),
+    (131, 0x2BF, "waitng", "waiting"),
+    (184, 0xCE8, "weilded", "wielded"),
+    (199, 0x98, "Wthout", "Without"),
+)
+
+
+def text_repairs(script: int, code: bytes) -> List[scriptfixes.Repair]:
+    """TEXT_FIXES' for GPL SCRIPT (CODE, the game's) as scriptfixes.Repair's (scriptfixes.text_repairs);
+    raises RavagerError for a command not as its fix expects."""
+    try:
+        return scriptfixes.text_repairs(TEXT_FIXES, script, code, strict=True)
+    except gpl.ScriptError as e:
+        raise RavagerError(f"{SCRIPT_FILE}'s script {script} is not as its text fixes expect ({e})")
+
+
+def _text_name(script: int, at: int) -> str:
+    return scriptfixes.text_name(script, at)
+
+
+def script_fix_names() -> List[str]:
+    """Every script fix's name (SCRIPT_FIXES', SCRIPT_DETOURS' and TEXT_FIXES'), as a copy's SKIP takes them."""
+    return list(SCRIPT_FIXES) + [r.what for r in SCRIPT_DETOURS] + [_text_name(t[0], t[1]) for t in TEXT_FIXES]
 
 
 def script_key(chunk) -> Tuple[str, int]:
@@ -1683,14 +1804,16 @@ def script_fixed(data: bytes, skip=frozenset(), palette=None) -> Tuple[bytes, Li
     from . import icons
     added: Dict[Tuple[str, int], bytes] = {}
     detours = [r for r in SCRIPT_DETOURS if r.what not in skip]
-    if detours:
+    texts = [t for t in TEXT_FIXES if _text_name(t[0], t[1]) not in skip]
+    if detours or texts:
         chunks = gff.read_gff(bytes(out))
-        for number in sorted({r.script for r in detours}):
+        for number in sorted({r.script for r in detours} | {t[0] for t in texts}):
             key = ("GPL ", number)
             code = chunks.get(key)
             if code is None:
                 raise RavagerError(f"{SCRIPT_FILE} has no script {number}: not the GOG release's")
-            mine = [r for r in detours if r.script == number]
+            mine = [r for r in detours if r.script == number] + [
+                r for r in text_repairs(number, code) if r.what not in skip]
             if any(code[r.at:r.at + len(r.was)] != r.was for r in mine):
                 raise RavagerError(f"{SCRIPT_FILE}'s script {number} is not as its fixes expect")
             fixed = scriptfixes.repaired(number, code, mine, SEQUEL_LONGEST)
