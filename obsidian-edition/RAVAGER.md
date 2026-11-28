@@ -105,7 +105,8 @@ for a game begun before the rule.
 
 The sequel's save and load window has [more saves](FEATURES.md#more-saves) as Shattered Lands' does: four
 pages of ten (`SAVE01.SAV` to `SAVE10.SAV`, then `SAVB..`, `SAVC..` and `SAVD..`) and, in the load window, the
-QUICK page, turned with PgDn and PgUp (the page's name under EXIT: the sequel has no PAGE buttons). It opens on
+QUICK page, turned with PgDn and PgUp or a click on PGUP or PGDN under EXIT (with the page's name: the sequel has
+no PAGE buttons). It opens on
 page 1.
 
 [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) work in the sequel too

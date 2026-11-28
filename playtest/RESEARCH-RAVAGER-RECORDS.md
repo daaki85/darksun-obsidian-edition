@@ -458,6 +458,10 @@ casts preserver spells by thief level (its slots: SHINOBI_MAGE, site 190, the ki
   - **A far call in an overlay is no site**: its segment is fixed up as the overlay loads, over the site's bytes.
   - **The text routine draws into the window's picture**, so the window's own draw (2A8E:060D) goes first and
     the text after it; its y isn't the screen's (y 90 drew some 35 lines lower: y 64, x 228 is just under EXIT).
+  - **A key for the window from a click**: the game's keyboard handler (39E35h, from the keyboard's interrupt)
+    reads INT 16h and posts each key as an event (1, 0Ah, 0, the key, the shift keys) through 3464:0230. A key
+    written into the BIOS's buffer waits there until a key is pressed; posted through 3464:0230 from the mouse's
+    handler, the window takes it at once (PAGE_MOUSE).
   - The window keeps its chosen row (load+3C4Ch) when it shuts: the page-back sets it to 0 with the letter, or
     the window opens on page 1 with an empty row chosen.
 - **Played** (the log): F5, F9 and the autosave after a won fight in the sequel, GREQ 101-103 and 106 written,

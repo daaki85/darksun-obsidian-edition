@@ -27,6 +27,14 @@ QUICK page's SAVQ01 and SAVQ06 from earlier plays).
   chosen on page 2 (row 2, empty on page 1) stayed chosen, with no name below; after it, AFTER AMBUSH chosen.
 - F1, PgDn four times: PAGE 2, 3, 4, then 4 kept (no QUICK in the save window).
 
+## Clicks on PGUP and PGDN (after the coordinator's review: mouse players)
+
+- First try: the key put in the BIOS's buffer. `pg_clicks` counted 3, no page turned: the game's keyboard
+  handler only reads the buffer when a key is pressed. Then posted as the handler does (3464:0230).
+- F2, a click on PGDN (267,86): PAGE 2, PAGE TWO chosen. On PGUP (239,86): PAGE 1, AFTER AMBUSH chosen.
+- Escape, a click on the map at (267,86): the party walked (`pg_clicks` unchanged). F1, PGDN: PAGE 2 in the
+  save window.
+
 Not tried: a save of the sequel's started without the Loader on pages 2 to 4 (the game alone sees page 1 only,
 as Shattered Lands'), the named saves' copies of pages 2 to 4 in play (unit tests only).
 

@@ -17551,6 +17551,7 @@ mouse_event:                            ; AX = events, BX = buttons held, CX, DX
         mov byte [cs:msg_ended], 1
         and al, ~EVENT_PRESSES
 .drag:  call panel_event               ; (a left press on the combat log's panel: not the game's)
+        call page_mouse                 ; (... on PGUP or PGDN in the save or load window: the key)
         test byte [cs:scroll_on], SCROLL_MIDDLE
         jz .pass
         test al, EVENT_MID_PRESS        ; the wheel pressed: a drag at once
@@ -22035,6 +22036,11 @@ page_key:
 ; (PAGE_LABEL), then the routine's own "add sp,4" done under the way back. AX to DI, ES kept.
 page_open:
         inc word [cs:pg_opens]
+        push ax
+        mov ax, ds
+        add ax, PG_WINDOW
+        mov [cs:pg_win_seg], ax         ; (PAGE_MOUSE's test of the window)
+        pop ax
         pushad
         push es
         call page_label
@@ -22048,6 +22054,66 @@ page_open:
         push word [cs:pg_far]
         push word [cs:pg_near]
         iret
+
+; PAGE_MOUSE: (MOUSE_EVENT's: CX, DX where, in the game's pixels, AL the events) a left press on "PGUP" or
+; "PGDN" under EXIT, with the save or load window up (its far pointer, PG_WIN_SEG:0, cleared as it shuts), is
+; posted to the game as that key (PAGE_KEY then turns the page), and not the game's. The game's keyboard
+; handler (39E35h) posts each key it reads as an event (1, 0Ah, 0, the key, the shift keys) through
+; PG_POST_SEG:0230h; a key put in the BIOS's buffer instead waits for the next key pressed. AX's press bit
+; cleared for one; others kept.
+PG_HIT_Y0  equ 79                       ; (the screen's pixels: the "PGUP PGDN" line, a little more)
+PG_HIT_Y1  equ 93
+PG_UP_X0   equ 226                      ; PGUP's ...
+PG_DN_X0   equ 254                      ; ... and PGDN's
+PG_DN_X1   equ 282
+PG_POST_SEG equ 0x3464 - QS_DGROUP      ; (resident: an event posted, its far pointer pushed)
+PG_POST_OFF equ 0x0230
+page_mouse:
+        test al, EVENT_LEFT_PRESS
+        jz .ret
+        cmp word [cs:pg_win_seg], 0
+        je .ret
+        cmp dx, PG_HIT_Y0
+        jb .ret
+        cmp dx, PG_HIT_Y1
+        jae .ret
+        cmp cx, PG_UP_X0
+        jb .ret
+        cmp cx, PG_DN_X1
+        jae .ret
+        push ds
+        mov ds, [cs:pg_win_seg]
+        cmp dword [0], 0
+        pop ds
+        je .ret                         ; (no window up)
+        pusha
+        push ds
+        push es
+        mov word [cs:pg_event + 6], KEY_PGUP
+        cmp cx, PG_DN_X0
+        jb .post
+        mov word [cs:pg_event + 6], KEY_PGDN
+.post:  mov ax, [cs:pg_win_seg]
+        sub ax, PG_WINDOW               ; (the game's DS)
+        mov ds, ax
+        add ax, PG_POST_SEG
+        mov [cs:pg_post + 2], ax
+        mov word [cs:pg_post], PG_POST_OFF
+        pushf
+        cli
+        push cs
+        push word pg_event
+        call far [cs:pg_post]
+        add sp, 4
+        popf
+        inc word [cs:pg_clicks]
+        pop es
+        pop ds
+        popa
+        and al, ~EVENT_LEFT_PRESS
+.ret:   ret
+pg_event     dw 1, 0x0A, 0, 0, 0        ; (the key's event, as the game's keyboard handler posts it)
+pg_post      dd 0                       ; (its own: the mouse's handler may come in the middle of PG_FAR's use)
 
 ; PAGE_NOW: BL the page shown (0 to 4, by the letter in QS_LETTER: PAGE_LETTERS; another as the first).
 page_now:
@@ -22176,6 +22242,8 @@ pg_near      dw 0
 pg_near2     dw 0
 page_turns   dw 0               ; (pages turned, for a look in play)
 pg_opens     dw 0               ; (windows opened: PAGE_OPEN)
+pg_win_seg   dw 0               ; (the window's words, as PAGE_OPEN saw them: PAGE_MOUSE)
+pg_clicks    dw 0               ; (PGUP and PGDN clicked: PAGE_MOUSE)
 pg_labels    dw 0               ; (labels drawn: PAGE_LABEL)
 
 ; GREQ_SAVE (site 239, "greq_save"): "mov ax,si / inc ax" (7D8A1h, 7D8BAh; 3 bytes) where the SAVE window's

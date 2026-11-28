@@ -273,10 +273,11 @@ class HelperRig(unittest.TestCase):
     def go(self, routine, **regs):
         mu = self.mu
         mu.mem_write(self.SS * 16 + 0x7F0, struct.pack("<H", 0xFFF0))
-        for name, value in dict(cs=self.TSR, ds=self.GAME_DS, ss=self.SS, esp=0x7F0, eflags=0x2, **regs).items():
+        regs = {**dict(cs=self.TSR, ds=self.GAME_DS, ss=self.SS, esp=0x7F0, eflags=0x2), **regs}
+        for name, value in regs.items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
         mu.emu_start(self.TSR * 16 + self.sym[routine], self.TSR * 16 + 0xFFF0, count=200000)
-        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_DS)), (0x7F2, self.GAME_DS))
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_DS)), (0x7F2, regs["ds"]))
 
     def ask(self, request, greq=0):
         off = self.sym["save_text"]
@@ -554,6 +555,28 @@ class PageKeyTests(HelperRig):
                          [0x7F6, 0x700, 7, self.GAME_DS, 0x2222, 0x1111])
         self.assertEqual(self.page_calls, [("window",), ("text", "QUICK"), ("text", "PGUP PGDN")])
         self.assertEqual(self.word("pg_opens"), 1)
+
+    def test_page_mouse(self):
+        """A left press on PGUP or PGDN with the window up: the key posted as the game's keyboard handler posts
+        it (3464:0230, the event 1, 0Ah, 0, the key, 0), the press taken from the game; else nothing."""
+        mu, posted = self.mu, []
+        at = (self.LOAD + 0x3464) * 16 + 0x230
+        mu.mem_write(at, b"\xcb")
+        def post(uc, *_):
+            sp = uc.reg_read(r.UC_X86_REG_SS) * 16 + uc.reg_read(r.UC_X86_REG_SP)
+            off, seg = struct.unpack("<HH", uc.mem_read(sp + 4, 4))
+            posted.append((struct.unpack("<5H", uc.mem_read(seg * 16 + off, 10)), uc.reg_read(r.UC_X86_REG_DS)))
+        mu.hook_add(UC_HOOK_CODE, post, begin=at, end=at)
+        self.word("pg_win_seg", self.LOAD + 0x40AF)
+        for x, y, key in ((240, 86, 0x4900), (266, 86, 0x5100), (220, 86, None), (266, 70, None), (290, 86, None)):
+            posted.clear()
+            self.go("page_mouse", eax=0x0B, ecx=x, edx=y, ds=0x1234)
+            self.assertEqual(self.mu.reg_read(r.UC_X86_REG_AX), 0x0B if key is None else 0x09, (x, y))  # (DS kept)
+            self.assertEqual(posted, [] if key is None else [((1, 0x0A, 0, key, 0), self.GAME_DS)], (x, y))
+        mu.mem_write((self.LOAD + 0x40AF) * 16, bytes(4))  # (the window shut)
+        self.go("page_mouse", eax=0x02, ecx=266, edx=86, ds=0x1234)
+        self.assertEqual((self.mu.reg_read(r.UC_X86_REG_AX), posted), (0x02, []))
+        self.assertEqual(self.word("pg_clicks"), 2)
 
 
 class PatchTests(unittest.TestCase):

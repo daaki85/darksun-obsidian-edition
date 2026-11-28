@@ -1463,7 +1463,9 @@ does (search the folder, draw the ten rows, choose the first row, its name below
 name and "PGUP PGDN" under EXIT. Site 216 draws them as the window opens (in place of the `add sp,4` after
 the opening routine draws the window: the far call before it is fixed up as the overlay loads). Site 239
 gives each page's GREQ chunks their own numbers (B 200 + the slot, C 300, D 400, QUICK 100), and the load's
-GREQ read (site 84) takes the same base. The map's first pass after a window shuts puts the game's page and
+GREQ read (site 84) takes the same base. A left press on the label's PGUP or PGDN, with the window up, is
+taken in DSCLOG2's mouse handler (PAGE_MOUSE) and posted to the game as that key, through the routine its own
+keyboard handler posts keys with (3464:0230), so PAGE_KEY turns the page as for the key. The map's first pass after a window shuts puts the game's page and
 its first row back, so every window opens on page 1.
 
 How: the save names the game searches the folder for and writes a save to
