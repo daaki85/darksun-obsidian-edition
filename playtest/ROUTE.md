@@ -247,6 +247,7 @@ map position. Nothing is built for it yet.
 - Wake of the Ravager, Mines 3 dining room and Elderbrain chamber. No rest-water source identified during the [encounter checks](logs/2026-11-27-ravager-mines-diners-and-elderbrain.md).
 - Wake of the Ravager, El’s Temple scribe’s desk and the Mines 3 chest chamber. No water source identified in either room during the [basin and chest playtest](logs/2026-11-27-ravager-basin-and-chests.md).
 - Wake of the Ravager, Mines 1 (38h), bedroom beside the worktable. No water source identified during the [bed placement check](logs/2026-11-27-ravager-furniture-joins.md).
+- Wake of the Ravager, Mines 2. The western storeroom contains barrels, sacks and jars. No usable drinking-water source was identified there. [Storage room and railheads](logs/2026-11-28-ravager-mines2-rail-and-storage.md)
 - Wake of the Ravager, Mines 1 and Under Tyr. The furniture rooms contain barrels, storage jars and a small vase. These room checks identified no usable drinking-water source. [Maps and DOSBox checks](logs/2026-11-28-ravager-mines1-and-under-tyr.md)
 - Wake of the Ravager, Mosaic (3Ch), museum display room and Fletch’s bookcase. No water source identified during the [bust puzzle visit](logs/2026-11-27-ravager-mosaic-museum.md).
 - Wake of the Ravager, the first scene in Tyr (the street at the start): a red pot and a jug on the

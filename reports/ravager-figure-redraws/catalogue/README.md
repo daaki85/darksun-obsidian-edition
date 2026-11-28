@@ -2478,7 +2478,7 @@ Ours: restyled.
 
 ![Original and approved mine-opening animation beside the Shattered Lands party and worker](img/2479-miner-comparison.gif)
 
-Both poses decoded from a test copy of OBJEX.GFF at their original dimensions. The placement anchor, script, transparency and surrounding rock pixels are preserved. A live in-game check is pending. [Game-size animation](img/2479-miner-native.gif) · [Second placement at game size](img/2479-miner-second-placement.gif) · [Approved picture resource](proposals/2479-miner.zip)
+Both poses decoded from a test copy of OBJEX.GFF at their original dimensions. The placement anchor, script, transparency and surrounding rock pixels are preserved. Both miners were checked at the tunnel openings in DOSBox. [Matched stock and redrawn poses](../../ravager-furniture/mines2-storage-and-miners.png) [Game-size animation](img/2479-miner-native.gif) · [Second placement at game size](img/2479-miner-second-placement.gif) · [Approved picture resource](proposals/2479-miner.zip)
 
 ![2479 playing](img/2479.gif)
 
@@ -3653,7 +3653,7 @@ Both placements are shown with the project’s furniture treatment. All four pic
 
 ## 3613: miner with pick
 
-**Half-giant scale check.** The approved miner uses the SL half-giant body as its art reference. Object 288 has no race field. [Giant figure index](giant-figures.md)
+**Half-giant scale check.** The approved miner uses the SL half-giant body as its art reference. Object 288 has no race field. Both pick poses were verified against the installed picture in DOSBox. [Mines 2 comparison](../../ravager-furniture/mines2-storage-and-miners.png) · [Giant figure index](giant-figures.md)
 
 Ours: dressed. Shattered Lands row: dressed on this Shattered Lands body (SL 32000).
 

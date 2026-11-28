@@ -136,19 +136,19 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2442,Mosaic bust and pedestal,Horace on the destination stand in play. Script links objects 3220 and 3222. Retain current height,,0FF:1
 2443,Detached Mosaic bust,Horace detached then carried to Ellith’s stand in play. Retain bust scale,,0FF:1
 2444,Mosaic bust and pedestal,Empty stand appearance confirmed in play. Identical artwork also occurs in the empty frames of 1502 1503 and 2442,,03C:1
-2479,Miner at opening,Retain both redrawn frames and their contact with the tunnel,2479-miner.zip,039:2
-2510,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:2
-2511,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2512,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2513,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2514,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2515,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2516,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2517,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2518,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2519,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2520,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
-2521,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2479,Miner at opening,Both placements checked in DOSBox. Keep both redrawn poses against the tunnel,2479-miner.zip,039:2
+2510,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:2
+2511,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2512,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2513,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2514,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2515,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2516,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2517,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2518,Ore-car whistle,Tested Use at the northern station. Resting pose checked in DOSBox,,039:1
+2519,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2520,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
+2521,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
 2546,Teleportation cabinet,Keep full height at both endpoints. Doors and passage to the Garden verified in DOSBox,,034:2
 2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
 2573,Occupied bed,Snaggle’s catalogue figure retained on shortened frame. Scripted picture staged in the Forest,2573-snaggle-sickbed.zip,0FF:2
@@ -244,7 +244,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3554,Storage jars and sacks,Earlier redraw checked against stock at the Yuan-ti storeroom in DOSBox,,032:6 033:2 036:1 03D:1 045:1
 3555,Mine storage surroundings,Earlier redraw reviewed beside the mine pile and checked against stock in the Yuan-ti storeroom in DOSBox,,032:1 036:1 039:2 03D:1 045:1
 3558,Barrels with sacks,Lowered to 82% at five placements to keep both lids visible over the wall in Tyr,,032:2 039:1 03D:1 045:1
-3613,Miner with pick,Retain both redrawn frames and pick animation,scenery-and-miner.zip,039:1
+3613,Miner with pick,Both pick poses checked against the figure redraw in DOSBox,scenery-and-miner.zip,039:1
 3627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
 3628,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:5
 3629,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
@@ -256,7 +256,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3695,Wall-side wooden table,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:1
 3698,Plank tables,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:3
 3699,Stump stools,All listed placements checked against stock in DOSBox at matching cameras. Kept the lowered proportions,,041:2
-3733,Two-state mine fixture,Retain both states. Interaction in play pending,,039:2
+3733,Elevator winch,Both placements checked in DOSBox. The eastern winch played out and rewound the cable,,039:2
 3739,Winged statue on a plinth,Retain scale. Both round plinths seen in DOSBox,,03A:2
 3740,Winged statue,Retain scale. Both statues on the north chamber floor seen in DOSBox,,03A:2
 3766,Two-piece worktable,Lowered the joined surface five pixels. The bottle crossing the front-to-back seam remains whole in DOSBox,,03A:1

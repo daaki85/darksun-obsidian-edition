@@ -136,9 +136,17 @@ The barrel-and-sack pile in Mines 2 also appears twice in Tyr, once in Volcano 2
 
 Two separate miners were checked against the earlier figure redraw. The first pair below shows the miner at the tunnel mouth (2479) on the second step of his animation. The second pair shows the miner with the pick (3613) on the first step. Each pair holds the room and animation step fixed. Both frames of each miner differ from stock in the built file.
 
-On the Mines 2 map, twelve similar fixtures (2510–2521) each have three stored states. Picture 3733 has two states and two placements. Their art and animation scripts match the preceding build. Their use during mine travel still needs an in-game check. In Volcano 3, the three flagged spires (1376–1378) repeat at 128 placements along the lava and rocky ground. The lower map shows the patch enlarged above. Keep the spires at their terrain height.
+On the Mines 2 map, twelve similar fixtures (2510–2521) each have three stored states. Picture 3733 has two states and two placements. Their art and animation scripts match the preceding build. The rail whistles and elevator winches are identified in the live check below. In Volcano 3, the three flagged spires (1376–1378) repeat at 128 placements along the lava and rocky ground. The lower map shows the patch enlarged above. Keep the spires at their terrain height.
 
 ![Original and redrawn miners, a mine fixture, the lava spires, and both whole maps](mines2-volcano3-review.png)
+
+### Mines 2 in DOSBox
+
+Keep the barrel-and-sack pile at 82% of its original height. Beside the crate, both lids are visible and the sacks still meet the floor. Gedron’s pottery shows a similar grouping of low containers along the room edge. Both tunnel-mouth miners and the miner with the pick already use the figure redraw. The close-ups compare the same animation step in each game.
+
+The 13 rail whistles and both elevator winches retain their original scale. At the eastern winch, one use brought the platform into the shaft and played out the cable. A second use cleared the shaft and rewound the cable.
+
+[Whole maps](mines2-whole-maps.png) · [Storage and miners](mines2-storage-and-miners.png) · [Rail and elevator controls](mines2-rail-and-elevator.png) · [All 25 placements](mines2-placements.csv) · [DOSBox playtest](../../playtest/logs/2026-11-28-ravager-mines2-rail-and-storage.md)
 
 ### Volcano Core spires in DOSBox
 
@@ -345,7 +353,7 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Eleven regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 1 (23), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128), Silt Sea Giants (12) and Under Tyr (26). Nine regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Twelve regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 1 (23), Mines 2 (25), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128), Silt Sea Giants (12) and Under Tyr (26). Eight regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -356,7 +364,7 @@ The scan covered all 20 shipped region files. Eleven regions have in-game covera
 | 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
 | 037 Temple | 62 | 0 | 6 | All nine listed placements checked in DOSBox, including the six braziers, both occupied furnishings and their vacated states, and the coiled fixture beside the prisoner |
 | 038 Mines 1 | 108 | 0 | 12 | All 23 placements checked in DOSBox. The northern barrels touch again. Four empty cots now match Sicky’s figure redraw |
-| 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
+| 039 Mines 2 | 160 | 0 | 1 | All 25 placements checked in DOSBox, including three redrawn miners, 13 ore-car whistles and both winches. The eastern winch raised and lowered the elevator platform |
 | 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
