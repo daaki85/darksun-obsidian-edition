@@ -424,7 +424,9 @@ class HelperTests(unittest.TestCase):
         for n, name in zip(range(230, 240), ("camera_walk", "party_load", "party_gather", "pace_pass", "pace_draw", "cr_age_new", "cr_age_con", "flip_wait", "page_key", "greq_save")):
             self.assertEqual(word(n), self.sym[name], n)  # (the view in fights, the whole party, steady pace, the age, the flip, the save pages)
         self.assertEqual(word(216), self.sym["page_open"])  # (the save pages' label as the window opens)
-        for n in range(217, 230):
+        for n, name in zip(range(217, 222), ("ammo_cap", "ammo_turn", "ammo_okay", "save_sum", "save_nat")):
+            self.assertEqual(word(n), self.sym[name], n)  # (the engine fixes' audit: the quiver, a natural 20)
+        for n in range(222, 230):
             self.assertEqual(word(n), self.sym["site_none"], n)
         self.assertLess(self.sym["pp_icons2"], self.sym["resident_end"])
 

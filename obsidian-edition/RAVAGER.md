@@ -407,7 +407,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-28)
   shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the
   large ([its creatures](CREATURES.md#wake-of-the-ravager)).
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, and Hasted and Slowed.
-- **The game's people** wearing and wielding their gear as they come on the map.
 - **The Journal tab's open quests**: the sequel's 42 quests show once finished; five show while open (the
   errands someone asks for: most of the rest are finds and fights no one asks for). Of its scripts' other
   awards, eight are left out because what earns them wasn't established (the rest are small finds, talk

@@ -94,6 +94,7 @@ and some of the sequel's own bugs mended: [In Wake of the Ravager](#in-wake-of-t
 | The game's **people's weapons and armour** | Carried in their packs until each one's first action in a fight: until then AC 10, armour unworn, no weapon in the Look box; anyone hit before acting (an opening blow, a backstab, the first round) met no armour | Worn and in hand as they come on the map, as the game puts them on: the best weapon in the main hand, a shield or a second weapon in the other, a bow and its arrows, armour and a helm. Each counts by the same rules as the party's (and what else the mod puts on them: [the people's other gear](FEATURES.md#the-games-bugs-fixed)) |
 | **Random monsters** (a vanishing body, a survivor's warning) | How many came was worked out from the wrong monster's strength: the next one on the region's list | Worked out from the monster that comes: 1 to 6, fewer of the strong ones |
 | A fight's **music** | An attack that starts a fight asks for the music level the region gives its creature, but read it with the wrong step, so every creature but the region's first got another's level | The creature's own level (found by yuan-ti) |
+| A **long script** (more than 10,000 bytes) | Fixed there too (2026-11-28): the sequel's buffer is as big as Shattered Lands' (11,776 bytes; its longest script is 9,985) |
 
 ### Resting
 
@@ -212,8 +213,8 @@ to be read for it.
 | **Slay Living**'s description | Fixed there too (the sequel's record is the same); not yet seen in play |
 | A character's **most PSP** | Fixed there too (played: at the ambush's level ups each member's own WIS counted, not the creation screen's) |
 | **Negative Plane Protection** | Fixed there too (the save as against paralysis, poison and death); not yet seen in play |
-| **Scare**'s save | Fixed there too |
-| **"Can't save"** | Fixed there too (played) |
+| **Scare**'s save | Fixed there too, and an elf or half-elf priest saves as usual (2026-11-28; played: an elf druid of 3rd level saved) |
+| **"Can't save"** | Fixed there too (played), and a natural 20 no longer saves against it: the modifiers are added first, as in Shattered Lands (2026-11-28) |
 | **Saves that stop improving** | Fixed there too: the sequel held its saves at the table's last row, a bug of its own (below) |
 | **A psionicist's saves** | Fixed there too: Dark Sun's psionicists' table in both games |
 | **Cloak of Bravery** | Fixed there too |
@@ -228,23 +229,24 @@ to be read for it.
 | **Walls** cast by monsters | Fixed there too; not yet seen in play |
 | A **berserk** or **confused** party member | Confused: not needed (the sequel gives the side back as Confused ends). Berserk: fixed there too (the sequel's end had no case for it; played: a Draxan made berserk by Charm Mammal had its own side kept and given back as it ended; a party member's side, changed while she was berserk, back as her Berserk ran out) |
 | **Missiles from behind** | Fixed there too (melee played; a shot at a turned back not yet seen) |
-| An archer whose **quiver runs dry** | Not yet: the sequel's arrows are counted by other code, still to be found |
+| An archer whose **quiver runs dry** | Fixed there too (2026-11-28; played: Gerakis with one arrow shot a thief dead and kept his turn to walk on) |
 | A **thri-kreen's claws and bite** | Fixed there too (played: Thy'rokh's bite in the ambush) |
 | The **fire elementals** | Not needed as such: the sequel's monsters have resistances of their own |
 | The game's **people's weapons and armour** | Not needed: the sequel puts them on as they come |
 | **Random monsters** | Fixed there too |
 | A fight's **music** | Not yet: the sequel's region levels are read by other code, still to be found (its music is the CD's) |
+| A person's **scripted walk** stopped for good after a load (the Trustee's rounds) | Not yet: the sequel's table of creatures' own scripts is still to be found |
 | **Resting while poisoned** | Fixed there too (played) |
 | **DELETE** in the roster | Fixed there too; not yet seen in play (it needs more than 10 characters) |
 | The **creation screen's least scores** | Not yet: the sequel keeps the game's (the dice log says so) |
-| **XP for high prime requisites** | Not yet |
-| A **New** character's thief skills | Not yet (12 of the 24 tests found; it matters only before the game starts) |
+| **XP for high prime requisites** | Fixed there too |
+| A **New** character's thief skills | Fixed there too (2026-11-28): 23 of Shattered Lands' 24 tests (the 24th's code isn't in the sequel) |
 | **Thief skills**' equipment penalty | Fixed there too |
 | A thief skill rolled **for the whole party** | Fixed there too |
 | Items that raise or lower an **ability score** | Not needed: the sequel counts only items worn (played: a WIS item in the pack gave nothing, worn it gave +2) |
 | The **gladiator's armour optimisation** | Fixed there too (played: Gerakis with his armour in the pack got none) |
 | The **air cleric's daggers** | Fixed there too |
-| **View Character's DAM line** with a weaker material | Not yet |
+| **View Character's DAM line** with a weaker material | Fixed there too |
 | The **DAM lines** of a **hasted** or **slowed** character | Partly: the inventory's line of a slowed character is fixed; the Hasted and Slowed attacks in the mod's own DAM lines not yet |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
 | An archer's **pointer** after a shot | Fixed there too; not yet seen in play |

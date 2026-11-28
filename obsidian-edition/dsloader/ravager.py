@@ -54,6 +54,21 @@ def _sl(name: str, at: int) -> Patch:
     return Patch(name, at, p.original, p.replacement)
 
 
+# "New" counted as "Okay" (SL's NEW_AS_OKAY, gamepatch's comment): the sequel's tests for Okay, "cmp byte
+# es:[bx+14h],1" then "jz" or "jnz" on the creature table's record, each SL's found side by side (the engine
+# fixes' audit, 2026-11-28: 23 of SL's 24; its 89B75h has no counterpart), its jump made "jbe" or "ja". Left
+# as they are, as in SL: the status shown under the portrait (7A41Bh, SL's 71DB6h) and 64108h (SL's 5FCE4h);
+# and the sequel's own 5B2D7h, 5B341h, 84F04h, not SL's. The attack command's three (AMMO_OK_SITES) are the
+# ammo_okay patches.
+_OKAY_TEST = bytes.fromhex("26807f1401")  # cmp byte es:[bx+14h],1
+_OKAY_JUMPS = gamepatch._OKAY_JUMPS
+AMMO_OK_SITES = ((0x5CA92, 0x74), (0x5CAF7, 0x75), (0x5CB64, 0x74))  # (SL's 5843Fh, 584A4h, 5850Eh)
+NEW_AS_OKAY = ((0x20014, 0x75), (0x20B62, 0x74), (0x20FFD, 0x75), (0x21D6A, 0x75), (0x237E9, 0x74),
+               (0x24017, 0x74), (0x243DB, 0x74), (0x59CD2, 0x74), (0x5B605, 0x74), (0x5CA3C, 0x75),
+               (0x5CD0F, 0x74), (0x5CE4F, 0x75), (0x5E710, 0x75), (0x5F3CF, 0x75), (0x615D0, 0x75),
+               (0x74360, 0x75), (0x7F76E, 0x74), (0x8C6BA, 0x74), (0x8CB1F, 0x74), (0x8CF27, 0x74))
+
+
 # The program's changes. Each offset found by byte likeness and read side by side with Shattered
 # Lands' (playtest/logs/2026-11-19-ravager-fixes.md and -fixes-2.md); the bytes are checked as the
 # copy is made, so a wrong offset stops the copy rather than breaking the game.
@@ -1151,6 +1166,35 @@ PATCHES: Tuple[Patch, ...] = (
                         "00006bc033c41ec84003d8268b47028946fe6bc031c41ec91903d8268b4706"),
           bytes.fromhex("90909090909090" "b8f8028ec0" "26a100002603060200" "6bc033c41ec84001c3" "b8f802"
                         "803e4b04007405" "268b07eb17" "268b47028946fe6bc031c41ec91901c3268b4706" "909090")),
+    # Shattered Lands' fixes found missing by the engine fixes' audit (2026-11-28, GAME-BUGS.md), the sequel's
+    # code SL's at other addresses. Scare's save let an elf or half-elf priest below 6th level save only if it
+    # were both races at once (the save modifiers' routine, "cmp race,3 / jne fail", 84256h; SL's scare_elves at
+    # 79FEAh, the same 44 bytes on, the race at the sheet's +12h): the jne made "je" to the save.
+    _sl("scare_elves", 0x84256),
+    # ... a natural 20 saved before the modifiers were added (66E4Ah, SL's save_natural at 79B5Fh), so "can't
+    # save" (-100) saved on a 20: the "jnz" past the "jmp saved" made a "jmp", and DSCLOG2's SAVE_SUM (site 220,
+    # the sum kept in its byte) and SAVE_NAT (site 221, a natural 20 saves unless the save can't be made) at
+    # the sum (66E86h) and the bonus after it (66EA3h), SL's save_sum and SAVE_NAT on the same bytes
+    Patch("save_natural", 0x66E4E, bytes.fromhex("7503"), bytes.fromhex("eb03")),
+    Patch("save_sum", 0x66E86, _SL["save_sum"].original, _site(220, 8)),
+    Patch("save_nat", 0x66EA3, bytes.fromhex("0046fe"), _site(221, 3)),
+    # ... an archer whose quiver ran dry lost the turn with shots still due (SL's ammo_cap, ammo_turn and
+    # ammo_okay_*): the weapon attack routine's cut of the round's attacks ([bp-0Ah]) to the arrows left
+    # (5D031h) and its compare of the attacks made with them (5D32Ch, before the round is marked spent) made
+    # DSCLOG2's AMMO_CAP (site 217) and AMMO_TURN (site 218); the attack command's three tests of its target
+    # still Okay (SL's AMMO_OK_SITES) DSCLOG2's AMMO_OKAY (site 219), their jumps New as Okay's
+    Patch("ammo_cap", 0x5D031, bytes.fromhex("8b46f88946f6"), _site(217, 6)),
+    Patch("ammo_turn", 0x5D32C, bytes.fromhex("3b46f6"), _site(218, 3)),
+    *(Patch(f"ammo_okay_{n}", at, _OKAY_TEST + bytes((jump,)), _site(219, 5) + bytes((_OKAY_JUMPS[jump],)))
+      for n, (at, jump) in enumerate(AMMO_OK_SITES, 1)),
+    # ... a character not yet played (New, 0 at the creature's +14h, made Okay as the game starts) left out of
+    # the game's tests for Okay: the inventory's thief skills all 0, for one (SL's new_okay_*: NEW_AS_OKAY)
+    *(Patch(f"new_okay_{at:x}", at, _OKAY_TEST + bytes((jump,)), _OKAY_TEST + bytes((_OKAY_JUMPS[jump],)))
+      for at, jump in NEW_AS_OKAY),
+    # ... and the scripts' buffer (73318h, SL's script_buffer at 6A692h, the same routine): "push dword 10000",
+    # its size, made gamepatch.SCRIPT_BUFFER. The sequel's largest script is 9985 bytes (GPL 202): one mended
+    # past 10000 would end with "BAD GPL EXIT"
+    _sl("script_buffer", 0x73318),
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),
