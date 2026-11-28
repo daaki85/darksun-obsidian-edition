@@ -393,7 +393,7 @@ map. The game keeps no ages.
 [ages](PLAYER-GUIDE.md#ages) (the tables). How it works:
 [DEVELOPMENT-RULES.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-RULES.md#ages-and-magical-aging).
 
-**In Wake of the Ravager:** yes, and the party ages between the games ([taking the party across](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)); Restore Youth not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes, and the party ages between the games ([taking the party across](RAVAGER.md#taking-the-party-to-wake-of-the-ravager)); the hair greying on the map and Restore Youth not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 #### Dual-classing as the manual has it
 
@@ -1408,7 +1408,7 @@ palette would turn the outfits' browns grey and their plums magenta).
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#what-the-party-wears)
 (and where the picture store can't be reached, on Dark Sun Recompiled).
 
-**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** the class outfits, on the map, in a fight and on the small figures; not yet the worn gear over them, nor a second member with the same figure ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 ### Shadows
 
