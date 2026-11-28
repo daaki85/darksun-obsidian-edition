@@ -59,6 +59,13 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager, the Journal tab's quests** (branch `claude/ravager-quests`). The Quests list
+shows the sequel's own: 42 deeds read from its scripts (`dsloader/ravquests.py`), each finished by the flag set
+beside its reward (the sequel's flags at DS:15F2h, SAVE chunk 30) or by its reward's message; three show while
+open. The script reader now reads all 350 of the sequel's scripts (257 before). **Dev:** the sequel's thief and
+game-bug test rigs moved past the helper's grown tail, and the sheet test on the game's files narrows its copies
+first, so a played folder tests as a stock one.
+
 **New: Wake of the Ravager.** The inventory's party column shows each member's small figure in their class outfit,
 as Shattered Lands' does, and so does the creation screen's small figure, which changes as the class, race or sex does:
 DSCLOG2's SMALL_FIG (site 254) asks for the Loader's frame for the figure and its classes (BMP 7000h + the figure

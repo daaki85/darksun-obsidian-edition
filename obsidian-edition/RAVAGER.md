@@ -258,7 +258,10 @@ bigger character sheets) as it goes in (a game already running lists it from its
   faces), and each message box in the journal and in the dice log (`Message: YOU ALREADY KNOW THIS
   SPELL`). The journal follows the sequel's saves as Shattered Lands' does: its place is kept in the
   last two of the game's global numbers (the sequel's are at DS:15F6h, saved as SAVE chunk 31), so a game
-  loaded shows its own journal. The Journal tab's quests are Shattered Lands' alone (below). The Spells
+  loaded shows its own journal. The Journal tab's **Quests** list the sequel's own: 42 deeds read from its
+  scripts (the Elder Brain, Helmine in the drakes' nest, Fayina's debt, the halflings of the tunnels and the
+  rest), each listed once its flag is set (the sequel's at DS:15F2h, SAVE chunk 30) or its reward's message
+  is in the journal; most show only once finished (below). The Spells
   and Memory tools tabs read the sequel's spells and records. The **Freeze report** reads the sequel too:
   DSCLOG2 notes where the game was as its timer strikes.
 - **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon leaves it on in the sequel too.
@@ -405,7 +408,8 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
 - **The game's people** wearing and wielding their gear as they come on the map.
-- **The Journal tab's quests**: its table is Shattered Lands' story; the sequel's quests would need a table
-  of its own from its scripts' flags and numbers (93 of its scripts don't decode with the Loader's reader yet).
+- **The Journal tab's open quests**: the sequel's quests show once finished; what opens each (its "given"
+  flag) is read for three only, and 62 of its scripts' own awards are not in the table yet
+  (the developers' notes on the quests say what is left).
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).

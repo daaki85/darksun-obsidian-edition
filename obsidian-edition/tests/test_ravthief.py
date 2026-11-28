@@ -258,7 +258,7 @@ def real_mode_interrupt(mu, intno, _):
 class InGameCodeTests(unittest.TestCase):
     """The patched sites in the game's own code (DSUN.EXE's bytes, the Loader's patches on), INT F5h
     dispatched through DSCLOG2's SITE."""
-    CODE = 0x2000
+    CODE = 0x3000  # (past the helper at TSR: its image and tail run past 2000:0000 since 2026-11-28)
 
     @classmethod
     def setUpClass(cls):
@@ -282,6 +282,7 @@ class InGameCodeTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + self.sym["rules"], struct.pack("<H", rules))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(0xF5 * 4, struct.pack("<HH", self.sym["site_int"], TSR))
+        self.assertGreaterEqual(self.CODE * 16, TSR * 16 + len(self.image))  # (the game's code clear of the helper)
         mu.mem_write(self.CODE * 16, self.exe[start:start + 0x200])
         setup(mu)
         values = dict(cs=self.CODE, ds=GAME_DS, ss=SS, esp=0x5C0, ebp=BP, eflags=0x202)

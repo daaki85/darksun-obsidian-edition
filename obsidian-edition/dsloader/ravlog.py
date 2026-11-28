@@ -115,6 +115,9 @@ ADDRESSES: Dict[str, object] = {
     "CREATURE_SIZE": ravager.CREATURE_SIZE, "SHEET_SIZE": ravager.SHEET_SIZE, "ITEM_SIZE": ravager.ITEM_SIZE,
     "WHOSE_TURN": ravager.WHOSE_TURN, "REGION": 0x140C, "EFFECT_COUNT": 0x2100,
     "FINE_BOW_NAME": ravager.FINE_BOW_NAME,  # (the Spellarcher's Fine Bow: DSCLOG2's FINE_HIT)
+    # the game's flags and numbers: far pointers to SAVE chunks 30 (101 bytes) and 31 (200 words), SL's 1352h
+    # and 1356h (the flags' bytes in memory the same as a loaded save's chunk, 2026-11-28; RAV_NUMBERS_PTR)
+    "FLAGS_PTR": 0x15F2, "NUMBERS_PTR": 0x15F6,
     # the monsters' poison, a Poisoner's first hits (DSCLOG2's POISON_HIT): the sequel's 273 and 274 are
     # Shattered Lands' 176 and 177 by their records
     "POISON_POWERS": {273: "Poison (10 damage)", 274: "Poison (30 damage)"}, "POISON_DAMAGE": {273: 10, 274: 30},
@@ -548,6 +551,10 @@ def apply_layout() -> int:
             setattr(module, name, value)
     _SAVED.append((journal, "REGIONS", journal.REGIONS))  # (the Journal tab's headings: the sequel's regions)
     journal.REGIONS = REGIONS
+    from . import quests, ravquests  # (the Journal tab's quests: the sequel's table and its saves' chunks)
+    for name in ("QUESTS", "BY_KEY", "SAVE_FLAGS", "SAVE_NUMBERS"):
+        _SAVED.append((quests, name, getattr(quests, name)))
+        setattr(quests, name, getattr(ravquests, name))
     for name, value in (("TSR_LEARN_READ", SH_LEARN_READ), ("TSR_LEARN_SPELL_HI", SH_LEARN_SPELL_HI)):
         _SAVED.append((dicelog, name, getattr(dicelog, name)))  # (a Shinobi's scroll: DSCLOG2's own header)
         setattr(dicelog, name, value)
@@ -599,8 +606,8 @@ RAV_DEAD_STATUS = (4, 7)  # a creature's status (+14h): dying, dead (SL's 4, 5)
 RAV_POSITIONS, RAV_POSITION_SIZE = 0x67C5, 0x25
 # The game's global numbers (SL's game.NUMBERS_PTR 1356h): a far pointer at DS:15F6h to the 200 words a save
 # keeps as SAVE chunk 31 (SL's 30). The journal's head goes in the last two (journal.NUMBERS), as in SL: the
-# sequel's scripts that decode use 0-150 (tests/test_journal.py: RavScriptNumbersTests).
-RAV_NUMBERS_PTR = 0x15F6
+# sequel's scripts (all 350) use 0-150 (tests/test_journal.py: RavScriptNumbersTests).
+RAV_FLAGS_PTR, RAV_NUMBERS_PTR = ADDRESSES["FLAGS_PTR"], ADDRESSES["NUMBERS_PTR"]
 RAV_NUMBERS_CHUNK = ("SAVE", 31)
 # The regions under the open sky (stealth.daylight), by each RGNxx.GFF's own name (its RNME): forest
 # (Humbleton Forest), Tyr (its streets; its buildings' floors aren't told apart yet), Jann (the Jann
@@ -2606,6 +2613,7 @@ RavDiceLog.PASS = (
     _take("itemwatch"),  # (an item gone from the party with nothing ordinary to show for it: the item report)
     _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
     _take("journal_sync"),  # (the Journal tab: the sequel's own chain)
+    _take("quest_look"),  # (the Journal tab's quests: the sequel's flags and numbers, ravquests' table)
     _take("flush"),  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
 )
 # Shattered Lands' steps the sequel leaves out, each with why: test_ravlog fails on one in neither list.
@@ -2619,7 +2627,6 @@ PASS_LEFT_OUT = {
     "arena_ring": "Shattered Lands' arena only",
     "drawn": "Shattered Lands' story only",
     "kalzith_sold_out": "Shattered Lands' story only",
-    "quest_look": "Shattered Lands' quests only",
     "scroll": "not ported",
     "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
     "creation_lines": "the sequel's creation screen is its own step (creation)",

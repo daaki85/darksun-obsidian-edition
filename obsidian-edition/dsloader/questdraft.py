@@ -38,6 +38,22 @@ SCRATCH_AT = (251, 361)
 TEXT_NEAR = 700  # bytes either side of a reward (or a flag's use) whose text is shown
 
 
+class Rules(NamedTuple):
+    """Where a game's scripts keep their reward routines."""
+    xp_script: int  # the script with the routines
+    party: int  # its routine for each party member
+    one: int  # its routine for one person
+    number: int  # the global number the amount is put in
+    scratch: Tuple[int, int]  # the routine clearing the regions' scratch flags (offsets in xp_script)
+
+
+SHATTERED_LANDS = Rules(XP_SCRIPT, XP_PARTY, XP_ONE, XP_NUMBER, SCRATCH_AT)
+# Wake of the Ravager: script 27 has the same routines, at 112 and 148, the amount in number 3, and the
+# regions' scratch flags cleared at 228-353. Its GPLDATA.GFF has no GPLX (RESEARCH-RAVAGER-RECORDS.md),
+# and 93 of its 350 scripts don't decode with Shattered Lands' commands: they are left out (`undecoded`).
+SEQUEL = Rules(27, 112, 148, 3, (228, 353))
+
+
 class Use(NamedTuple):
     """A flag set (VALUE: the number it is set to, None when it isn't a plain number) or tested
     (SET False) by a script."""
@@ -92,8 +108,16 @@ def _flag_uses(script: Tuple[str, int], ops) -> List[Use]:
 class Flags:
     """The game's scripts' use of the flags: `uses[flag]` every place it is set or tested."""
 
-    def __init__(self, scripts: Dict[Tuple[str, int], bytes], field_types: bytes):
-        self.ops = {key: gpl.decode(data, field_types) for key, data in sorted(scripts.items())}
+    def __init__(self, scripts: Dict[Tuple[str, int], bytes], field_types: bytes, rules: Optional[Rules] = None):
+        # (no GPLX: the sequel's scripts)
+        self.rules = rules or (SHATTERED_LANDS if field_types else SEQUEL)
+        self.ops: Dict[Tuple[str, int], List[gpl.Op]] = {}
+        self.undecoded: List[Tuple[str, int]] = []  # the scripts the decoder can't read
+        for key, data in sorted(scripts.items()):
+            try:
+                self.ops[key] = gpl.decode(data, field_types)
+            except gpl.ScriptError:
+                self.undecoded.append(key)
         self.uses: Dict[int, List[Use]] = {}
         self.by_script: Dict[Tuple[str, int], List[Use]] = {}
         for key, ops in self.ops.items():
@@ -112,9 +136,10 @@ class Flags:
         return [u for u in self.uses.get(flag, []) if not u.set]
 
     def scratch(self) -> List[int]:
-        """The regions' scratch flags (cleared by script 74 as a region is entered)."""
-        return sorted({u.flag for u in self.by_script.get(("GPL ", XP_SCRIPT), [])
-                       if u.set and SCRATCH_AT[0] <= u.at <= SCRATCH_AT[1]})
+        """The regions' scratch flags (cleared by the reward script, 74 in Shattered Lands, as a region is entered)."""
+        low, high = self.rules.scratch
+        return sorted({u.flag for u in self.by_script.get(("GPL ", self.rules.xp_script), [])
+                       if u.set and low <= u.at <= high})
 
     def number_sets(self, number: int) -> List[Tuple[Tuple[str, int], int, Optional[int]]]:
         """Where global number NUMBER is set: (script, at, the plain number it is set to or None)."""
@@ -132,30 +157,31 @@ class Flags:
         before = [u for u in uses if u.at < ops[i].at]
         numbers = [(op.args[1][2], op.args[0][1], op.at) for op in ops[max(0, i - NEAR):i + NEAR + 1]
                    if op.code == SET and op.args[1][:2] == ("var", NUMBER_SET) and op.args[0][0] == "n"
-                   and op.args[1][2] != XP_NUMBER]
+                   and op.args[1][2] != self.rules.number]
         return Site(key, ops[i].at, xp, amounts, party, near, before, numbers, direct)
 
     def sites(self) -> List[Site]:
-        """Every call of script 74's reward routines, in the scripts' order."""
+        """Every call of the reward routines (script 74's in Shattered Lands), in the scripts' order."""
         out: List[Site] = []
-        amount = ("var", NUMBER_SET, XP_NUMBER)
+        r = self.rules
+        amount = ("var", NUMBER_SET, r.number)
         for key, ops in self.ops.items():
             for i, op in enumerate(ops):
-                if op.code != CALL or op.args[1] != ("n", XP_SCRIPT) or op.args[0] not in (("n", XP_PARTY), ("n", XP_ONE)):
+                if op.code != CALL or op.args[1] != ("n", r.xp_script) or op.args[0] not in (("n", r.party), ("n", r.one)):
                     continue
                 sets = [o.args[0] for o in ops[max(0, i - NEAR):i] if o.code == SET and o.args[1] == amount]
                 if not sets:  # (set further back: the last one before the call)
                     sets = [o.args[0] for o in ops[:i] if o.code == SET and o.args[1] == amount][-1:]
                 xp = sets[-1][1] if sets and sets[-1][0] == "n" else None
                 out.append(self._site(key, ops, i, xp, tuple(a[1] for a in sets if a[0] == "n"),
-                                      op.args[0] == ("n", XP_PARTY), False))
+                                      op.args[0] == ("n", r.party), False))
         return out
 
     def direct_sites(self) -> List[Site]:
-        """Every award a script gives by itself (command 21h), script 74's own aside."""
+        """Every award a script gives by itself (command 21h), the reward script's own aside."""
         out: List[Site] = []
         for key, ops in self.ops.items():
-            if key == ("GPL ", XP_SCRIPT):
+            if key == ("GPL ", self.rules.xp_script):
                 continue
             for i, op in enumerate(ops):
                 if op.code == GIVE_XP:
@@ -194,6 +220,9 @@ def draft(flags: Flags, only: Optional[int] = None) -> str:
     out.append(f"{len(sites)} reward calls in {len({s.script for s in sites})} scripts, {total} XP in all; "
                f"{len(direct)} awards given by the scripts themselves")
     out.append(f"the regions' scratch flags (no use to the table): {flags.scratch()}")
+    if flags.undecoded:
+        out.append(f"{len(flags.undecoded)} scripts don't decode and aren't read: "
+                   f"{', '.join(_name(k) for k in flags.undecoded)}")
     for site in sites + direct:
         if only is not None and site.script[1] != only:
             continue
