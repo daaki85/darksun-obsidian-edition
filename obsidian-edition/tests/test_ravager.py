@@ -56,7 +56,7 @@ class TableTests(unittest.TestCase):
                             "psionic_blast", "blast_knockout", "rl_try", "roll_store", "gear_done",
                             "price_shown", "price_afford", "price_buy", "sell_price", "sell_keep",
                             "message_window", "message_shown", "text", "message", "mouse_init", "mouse_set", "speech_wait", "fli_key", "fli_end",
-                            "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "protection_halves", "detonate_listed", "hit_spends_none", "water_of_life_lends", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
+                            "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "protection_halves", "detonate_listed", "hit_spends_none", "water_of_life_lends", "energy_kinds", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
                             "sound_3c", "sound_3e", "sfx_volume_full", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
                             "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
@@ -560,7 +560,8 @@ class GameFileTests(unittest.TestCase):
             dodged = {k[1] for k in game if k[0] == "DATA" and k[1] < ravager.SPELL_COUNT
                       and len(game[k]) == ravager.SPELL_SIZE
                       and struct.unpack_from("<H", game[k], ravager.SPELL_FLAGS)[0] & 0x86}
-            self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()} | dodged)
+            self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()} | dodged
+                             | {f[0] for f in ravager.RAV_SPELL_FIXES.values()})
             gpl = gff.read_gff(open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
             fixed = {}
@@ -865,7 +866,17 @@ class GameFileTests(unittest.TestCase):
         data = open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read()
         _, done = ravager.spell_fixed(data, ravager.skipped({"spells_manual": False}))
         self.assertEqual(set(done), {"cause_serious", "cause_critical", "brave_fear_21", "brave_fear_43",
-                                     "brave_fear_78", "brave_fear_132", "scare_save", ravager.DODGE_FIX})
+                                     "brave_fear_78", "brave_fear_132", "scare_save", ravager.DODGE_FIX,
+                                     *ravager.RAV_SPELL_FIXES})
+
+    def test_produce_fire_d6(self):
+        """Produce Fire's die (+1Eh) a d6 as Shattered Lands' record's, from the sequel's d4."""
+        data = open(os.path.join(WOTR, ravager.RESOURCE_FILE), "rb").read()
+        places = gff.index_places(data, "DATA")
+        self.assertEqual(data[places[180][1] + 0x1E], 4)
+        fixed, done = ravager.spell_fixed(data)
+        self.assertIn("produce_fire_d6", done)
+        self.assertEqual(fixed[places[180][1] + 0x1E], 6)
 
     def test_dodge(self):
         """Fire, cold and electricity: the spells the saving throw doubled the d20 for (flags 86h) carry

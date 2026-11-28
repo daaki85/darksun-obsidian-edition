@@ -1065,6 +1065,13 @@ PATCHES: Tuple[Patch, ...] = (
     # "test [bp+0Ch],ax / jz" (85184h) halves only when the spell does some OTHER kind too, where SL's has
     # jnz: a Fireball or a Cone of Cold was never halved, a fire-and-crushing spell was. jz made jnz.
     Patch("protection_halves", 0x85187, bytes.fromhex("7409"), bytes.fromhex("7509")),
+    # Energy Control shut out every spell with no kind of damage, a heal too (the walkthrough's bug): the
+    # damage routine's percentage (85052h) is 0 under the power (+9 4) when the spell's kinds are none but
+    # fire, cold, electricity and magic, "test [bp+0Ch],0FD79h / jnz", and a kind of 0 is none but those; the
+    # same code in SL (gamepatch "energy_kinds"). Now the kinds go through ax, 0 skips it, and the power's
+    # "xor si,si" is the routine's own at 851BEh (ES:BX already the target, from 8516Bh)
+    Patch("energy_kinds", 0x85192, bytes.fromhex("f7460c79fd750cc45e0826f6470904740233f6"),
+          bytes.fromhex("8b460ca979fd750b85c0740726f647090475" + "19")),
     # Detonate never offered at a level up (the walkthrough's bugs): the psionicists' pop-up lists a
     # discipline's powers through 93DA6h (a power's discipline, the power 0-33 its record 235 on), whose
     # "or ax,ax / jle" (93DB1h) skips the 235 for power 0, Detonate, so its discipline was -1 and it never
@@ -1274,6 +1281,12 @@ SPELL_FIXES: Dict[str, Tuple[int, int]] = {
     "meteors_count": (33, 0x00), "meteors_damage": (33, 0x1C), "flame_arrow_damage": (28, 0x1C),
     "chill_touch_time": (3, 0x04), "rainbow_pattern_time": (49, 0x04), "stinking_cloud_dice": (22, 0x04),
 }
+# ... and the sequel's own, (spell, field, was, now): Produce Fire 1d6 as Shattered Lands' record has it (+1Eh
+# the die, 4 in the sequel's: 1 to 4, where both manuals say 2 to 5; HOW-THE-GAME-WORKS), the user's rule of
+# 2026-11-28 that a spell in both games works as in Shattered Lands
+RAV_SPELL_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
+    "produce_fire_d6": (180, 0x1E, b"\x04", b"\x06"),
+}
 SPELL_COUNT = 320  # (DATA 0-319)
 SPELL_SIZE = 73
 # ... and the dodge (with the patch no_double): every spell record whose flags word (+1Ah) has
@@ -1476,7 +1489,7 @@ def write_patched(game_dir: str, dest: str, skip=frozenset()) -> None:
 
 
 def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
-    """RESOURCE.GFF's bytes with SPELL_FIXES applied (but those named in SKIP), and the names of those
+    """RESOURCE.GFF's bytes with SPELL_FIXES and RAV_SPELL_FIXES applied (but those named in SKIP), and the names of those
     applied. Each only where the record holds gamepatch's original bytes; anything else raises (a
     RESOURCE.GFF this module doesn't know)."""
     places = gff.index_places(data, "DATA")
@@ -1490,6 +1503,15 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
             raise RavagerError(f"{RESOURCE_FILE}'s spell {spell} is not as the fix {name} expects")
         if name not in skip:
             out[at:at + len(p.original)] = p.replacement
+            done.append(name)
+    for name, (spell, field, was, now) in RAV_SPELL_FIXES.items():
+        if spell not in places or places[spell][2] != SPELL_SIZE:
+            raise RavagerError(f"{RESOURCE_FILE} has no spell record {spell}: not the GOG release's")
+        at = places[spell][1] + field
+        if bytes(out[at:at + len(was)]) != was:
+            raise RavagerError(f"{RESOURCE_FILE}'s spell {spell} is not as the fix {name} expects")
+        if name not in skip:
+            out[at:at + len(was)] = now
             done.append(name)
     if DODGE_FIX not in skip:
         for spell in range(SPELL_COUNT):

@@ -867,7 +867,10 @@ Rules: [how spells work](PLAYER-GUIDE.md#how-spells-work) (each spell), [spell
 lists](PLAYER-GUIDE.md#spell-lists), [ages](PLAYER-GUIDE.md#ages) (Restore Youth). How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
-**In Wake of the Ravager:** the sequel's own 6th-level priest spells; Restore Youth and the mod's Whirlwind and Sunstroke not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes, with the switch (2026-11-28): the sequel's own spells sorted as Shattered Lands' (Blade Barrier
+for air, Sunstroke for fire alone, Wall of Thorns for earth), the mod's Whirlwind and Restore Youth added, and Water of Life
+passing the wounds to the caster. Sunstroke's heat and the Healer's two cosmos spells not yet ([the sequel's
+gaps](RAVAGER.md#not-in-the-sequel-yet)).
 
 ### Kalzith
 
@@ -1789,7 +1792,7 @@ Fire Seeds' burst, and Whirlwind's funnel of dust, which turns as you watch.
 How it works:
 [DEVELOPMENT-CONTENT.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#new-spells-wizard-and-6th-level-priest).
 
-**In Wake of the Ravager:** the sequel's own pictures for its own spells; Whirlwind's funnel not yet.
+**In Wake of the Ravager:** the sequel's own pictures for its own spells, and Whirlwind's funnel (2026-11-28).
 
 ### The game's bugs, fixed
 

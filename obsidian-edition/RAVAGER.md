@@ -406,8 +406,8 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-28)
   (2026-11-27), but not yet its worn gear over them, a second member with the same figure (they share the first's
   picture), nor the hair greying with [age](FEATURES.md#ages-and-magical-aging). The party column's and the creation
   screen's small figures wear the outfits too.
-- **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
-  Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
+- **Spells**: Sunstroke's heat (the sequel casts its own Sunstroke), and a Healer cleric's two more cosmos
+  spells (Heal and Restore Youth).
 - **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
   shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the
   large ([its creatures](CREATURES.md#wake-of-the-ravager)).
