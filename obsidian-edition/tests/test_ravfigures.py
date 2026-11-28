@@ -382,6 +382,27 @@ class GameFileTests(unittest.TestCase):
         struct.pack_into("<hh", custom, 2, 5, 7)
         self.assertNotIn(obj, ravfigures.object_chunks({**stock, obj: bytes(custom)}))
 
+    def test_forest_sickbeds_share_the_rails_and_floor_contact(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        empty = ("BMP ", 2574)
+        self.assertEqual(package[empty], ravfigures.lowered_furniture(stock[empty]))
+        bare = sequelicons.decode(package[empty])
+        for picture in (649, 2573):
+            rows = sequelicons.decode(package["BMP ", picture])
+            self.assertEqual(len(rows), len(bare))
+            self.assertNotEqual(rows, bare)
+            self.assertEqual(rows[-3:], bare[-3:])
+            for occupied_row, empty_row in zip(rows, bare):
+                self.assertEqual(occupied_row[:5], empty_row[:5], picture)
+                self.assertEqual(occupied_row[-5:], empty_row[-5:], picture)
+        custom = {empty: stock[empty], ("BMP ", 649): package["BMP ", 649],
+                  ("BMP ", 2573): b"a different catalogue drawing"}
+        saved = custom.copy()
+        ravfigures._lower_forest_sickbeds(stock, custom)
+        self.assertEqual(custom, saved)
+
     def test_partial_squash_keeps_the_upper_art_and_floor_line(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())
@@ -395,6 +416,8 @@ class GameFileTests(unittest.TestCase):
             # Nearest source rows measured upwards through the base, leaving the art above it intact.
             offsets = {
                 9: (0, 2, 3, 5, 6, 8),
+                11: (0, 2, 3, 5, 6, 8, 9),
+                14: (0, 2, 3, 5, 6, 8, 9, 11, 12),
                 16: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15),
                 18: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17),
                 22: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21),

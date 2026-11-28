@@ -125,6 +125,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
 
 **Changed** (Wake of the Ravager)
+- The Forest acorn and grape plants and the cup tables in the Forest and Alliance retain the detail on their shorter stands. Cleave’s bed keeps its height when he gets up. Snaggle’s painted figure fits the shared frame.
 - Jugs and dishes on seven Forest dining tables and seven side tables keep their original shapes on the lowered wood. Three rear chairs sit where their backs can be seen above the settings.
 - The silver tables and stools in both Volcano levels sit lower. The two rear seats keep their original relationship to their tables. The 12 side-facing counters in the Volcano and Alliance rooms have shorter legs beneath the original goods.
 - The Volcano dining tables sit at the same height with or without a meal. Bowls, cups and counter jugs keep their shape, and the two barrels in the southern storeroom touch again. The books and glassware on four shelf designs retain their outlines. The torn red blanket in Volcano 1 and Tyr is continuous across both pieces.

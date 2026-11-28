@@ -53,7 +53,7 @@ DAMAGED_CRATES = (3795, 3796, 3797, 3798)
 FURNITURE_SCALES = dict.fromkeys(SHALLOW_STORAGE + DAMAGED_CRATES, 0.82)
 STORAGE = (532, 533, 1014, 1015, 1016, 1135, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
            2769, 2770, 3364) + SHALLOW_STORAGE
-TABLES = (515, 517, 628, 629, 630, 2050, 2585, 2589, 2625, 2626, 2627,
+TABLES = (515, 517, 2050, 2585, 2589, 2625, 2626, 2627,
           2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
 SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 789, 2218,
                     2590, 2591, 2622, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
@@ -62,7 +62,7 @@ OPENABLE = (631, 1112, 1113, 1136, 2825, 3250)  # Two stored states, each with i
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 # Only these bottom rows take the Tyr scale. Keep cushion faces, brazier smoke and the tips of the polearms intact.
-BASE_ROWS = {1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43,
+BASE_ROWS = {628: 14, 629: 11, 630: 11, 1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43,
              3485: 18, 3486: 18}
 
 # Each assembly uses the same floor line for the pictures and their attached pieces.
@@ -374,6 +374,36 @@ def _lower_mine_worktables(old: gff.Chunks, new: gff.Chunks) -> None:
                 new[key] = lowered_furniture(old[key], base_rows=16)
 
 
+def _lower_forest_sickbeds(old: gff.Chunks, new: gff.Chunks) -> None:
+    """Match the empty bed to Cleave's lowered bed and carry Snaggle's redrawn blanket with it."""
+    import hashlib
+    from . import sequelicons, sprites
+    empty, occupied = ("BMP ", 2574), ("BMP ", 2573)
+    cleave = ("BMP ", 649)
+    if empty not in old or new.get(empty) != old[empty] or occupied not in new or cleave not in new:
+        return
+    if any(("SCMD", picture) in new for picture in (649, 2573, 2574)):
+        return
+    # The catalogue's Snaggle is painted on the stock empty frame. A different redraw owns its bed.
+    if hashlib.sha256(new[occupied]).hexdigest() != "ed981b7a1945a9e9a9b19fcd7f6fcfb04f55ad5fc405acda13fbf06ef446a75e":
+        return
+    bare = sequelicons.decode(old[empty])
+    drawn = sequelicons.decode(new[occupied])
+    if len(bare) != 36 or len(bare[0]) != 32 or drawn[-6:] != bare[-6:]:
+        return
+    lowered = lowered_furniture(old[empty])
+    rows = sequelicons.decode(lowered)
+    cleave_rows = sequelicons.decode(new[cleave])
+    if len(cleave_rows) != len(rows) or any(a[:5] != b[:5] or a[-5:] != b[-5:] for a, b in zip(cleave_rows, rows)):
+        return
+    for y, row in enumerate(drawn):
+        for x, pixel in enumerate(row):
+            if pixel != bare[y][x]:
+                rows[y + 6][x] = pixel
+    new[empty] = lowered
+    new[occupied] = sprites.encode_frames([rows])
+
+
 def _lower_split_bed(old: gff.Chunks, new: gff.Chunks, head_id: int, foot_id: int, foot_height: int) -> None:
     """Resample the assembled bed, then split it back across the two stock drawing areas."""
     from . import sequelicons, sprites
@@ -421,6 +451,7 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
         if f == "OBJEX.GFF":
             _lower_split_bed(old, new, 524, 525, 29)
             _lower_split_bed(old, new, 530, 531, 27)
+            _lower_forest_sickbeds(old, new)
             _lower_set_tables(old, new)
             _lower_mine_worktables(old, new)
             for number in (*FURNITURE, *BASE_ROWS):

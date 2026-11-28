@@ -34,15 +34,15 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 581,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:2
 626,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
-628,"Tables, counters and benches",Lowered and placements reviewed,,001:1 033:2
-629,"Tables, counters and benches",Lowered and placements reviewed,,001:1
-630,"Tables, counters and benches",Lowered and placements reviewed,,001:1
-631,Two-state storage or fixture,Both stock states lowered,,001:1
+628,Cup table,Full-size vessels on shorter legs. All three Forest and Alliance placements checked in DOSBox,,001:1 033:2
+629,Acorn plant,Preserve the fruit on its lowered support. Acorn harvest prompt checked in DOSBox,,001:1
+630,Grape plant,Preserve the fruit on its lowered support. Grape harvest prompt checked in DOSBox,,001:1
+631,Forest foot chest,Closed state and staged raised lid checked at their native offsets. No registered Use found,,001:1
 632,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 633,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 634,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:2
 635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
-649,"Occupied beds, beds and basins",Occupied catalogue pose checked in DOSBox. Healing sequence still open,649-cleave-sickbed.zip,001:1
+649,Occupied bed,Cleave’s catalogue pose and his scripted transition to the empty bed checked in DOSBox,649-cleave-sickbed.zip,001:1
 703,"Counters, stalls and attendants",Moved in play beside Fletch to uncover the book. Retain current scale,,032:1 03C:1
 785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
 787,Pavis at his writing basin,Occupied and vacated poses checked in DOSBox. Paper and rim keep their floor anchor,scenery-and-miner.zip,037:1
@@ -149,8 +149,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2520,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
 2521,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
 2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
-2573,"Occupied beds, beds and basins",Reviewed at current scale,2573-snaggle-sickbed.zip,0FF:2
-2574,"Occupied beds, beds and basins",Reviewed at current scale,,001:1
+2573,Occupied bed,Snaggle’s catalogue figure retained on shortened frame. Scripted picture staged in the Forest,2573-snaggle-sickbed.zip,0FF:2
+2574,Empty sickbed,Lowered to the occupied bed frame. Checked at the Forest placement and after Cleave’s cure,,001:1
 2585,"Tables, counters and benches",Lowered and placements reviewed,,033:1
 2589,"Tables, counters and benches",Lowered and placements reviewed,,033:2 038:1
 2590,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:9 033:6

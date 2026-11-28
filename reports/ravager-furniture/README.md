@@ -42,7 +42,7 @@ Look at the bookcase and potion shelf against the back wall. Their tops come dow
 
 The second pass lowers 61 more pictures at 217 placements in nine regions. It covers barrels, crates, counters, benches, tables, beds and seating. Three interactive fixtures have separate open and closed drawings. Both use the same bottom anchor and the shipped animation timings.
 
-The gold box marks the Mines 1 storeroom in the first two maps. In the enlarged view, compare the height of the wide worktable against the stacked crates behind it. The Forest scene shows a bed, its foot chest and a neighboring gem table. In Volcano 1, compare the proportions of the round tabletop and the stool to its right. All three rows use scene renders from the Loader's built object file.
+The gold box marks the Mines 1 storeroom in the first two maps. In the enlarged view, compare the height of the wide worktable against the stacked crates behind it. The Forest scene shows a bed, its foot chest and a neighboring grape plant. In Volcano 1, compare the proportions of the round tabletop and the stool to its right. All three rows use scene renders from the Loader's built object file.
 
 ![Whole Mines 1 map before and after, next to the Shattered Lands upper castle](mines1-whole-map.png)
 
@@ -65,6 +65,12 @@ The whole Forest is shown at one quarter of game-map resolution. The box marks t
 Seven main tables and seven small side tables now retain their full-size vessels on the lowered wood. Three rear chairs moved four to six pixels from the earlier squash so their backs remain visible. All eight main tables and 30 associated pieces were checked in the game. A hanging cloth covers the middle of one long bench in both builds. Cleave’s occupied bed uses its catalogue redraw. [Playtest and remaining Forest checks](../../playtest/logs/2026-11-27-ravager-forest-dining.md)
 
 [Whole Forest beside Gedron](forest-dining-whole-maps.png) · [Original, previous and revised rooms beside Shattered Lands](forest-dining-live.png) · [All eight tables in DOSBox](forest-dining-all-eight.png)
+
+### Forest plants and both sickbeds
+
+The two stands previously labelled gem tables hold harvestable acorns and grapes. Both plants and all three cup tables now retain the artwork on top of their shortened wooden supports. Cleave’s bed keeps its height when the Hero Flask revives him. Snaggle’s catalogue painting sits on the same shortened frame in his Forest room. The foot chest has two stored poses. The second pose was staged because we found no Use action at that placement.
+
+[Whole maps](forest-plants-whole-maps.png) · [Before and after beside Shattered Lands](forest-plants-and-cups.png) · [Beds, chest and harvest](forest-beds-and-harvest.png) · [Playtest](../../playtest/logs/2026-11-27-ravager-forest-plants-and-sickbeds.md)
 
 ## Jann, Mosaic and the Silt Sea Giants
 
@@ -312,7 +318,7 @@ The scan covered all 20 shipped region files. Four regions now have in-game cove
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
-| 001 Forest | 252 | 0 | 56 | All 60 inventoried placements located in DOSBox, including all eight dining tables and Cleave’s redrawn sickbed. Recheck the gem and cup tables, the foot chest opening and Cleave’s healing scene |
+| 001 Forest | 252 | 0 | 56 | All 60 inventoried placements checked in DOSBox. Both fruit prompts and Cleave’s cure played through. Snaggle’s bed and the chest’s raised lid checked with staged pose selection |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds, intact storage stacks and four side-facing counters checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
