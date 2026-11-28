@@ -485,6 +485,14 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
   DSCLOG2 reaches through TAIL_SEG (or TAIL_FS) must be in `section tail` or `tailz`**: its bands sat in the
   segment after the tail moved out (2026-11-27), and every save came out as the tail's bytes (81/2/235/0/208).
   The stock game (`ravager narrow` on a copy, a plain `ravstart.sh`) is the control for any number a sheet holds.
+  `tests/test_tail_reads.py` now holds that rule for both helpers (nasm's map gives each symbol's section;
+  a read through CS, FS, GS or DS loaded from TAIL_SEG of a symbol in the other part fails it); it found no
+  other table on the wrong side (2026-11-28).
+- **The saves at a load** (`savemend.py`, both games): the game's routine as Python, checked against the
+  numbers the game put in eight real sheets (the 2026-11-25 level-cap play's three, the new fighter, and
+  `ravager-after-ambush` and `pens-after-arena` after the mend, read with a scratch reader of the sheets:
+  classes, levels, race, the creature's CON). The routine's dwarf or halfling CON bonus (warriors' group
+  only) took a high-level warrior's save under 0, stored as a byte (254): SAVE_BASE now gives 2 at least.
 - **The creation screen by hand** (game coordinates, ravclick.py): the die 145,92; CON 40,154; DONE 270,182;
   after DONE a psionicist's powers window (the first icon greyed: 138,59 five times); the roster's slots
   70,56 and 121,56 (right-click: NEW or EDIT at 110,57 for the first, NEW 158,57 for the second); its exit
