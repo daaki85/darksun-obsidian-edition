@@ -426,8 +426,9 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(word(216), self.sym["page_open"])  # (the save pages' label as the window opens)
         for n, name in zip(range(217, 222), ("ammo_cap", "ammo_turn", "ammo_okay", "save_sum", "save_nat")):
             self.assertEqual(word(n), self.sym[name], n)  # (the engine fixes' audit: the quiver, a natural 20)
-        for n in range(222, 230):
-            self.assertEqual(word(n), self.sym["site_none"], n)
+        for n, name in zip(range(222, 230), ("priest_sphere", "site_none", "site_none", "ww_setup_s", "ww_gate_s",
+                                             "ww_draw_s", "site_none", "site_none")):
+            self.assertEqual(word(n), self.sym[name], n)  # (the 6th-level priest spells': Whirlwind's)
         self.assertLess(self.sym["pp_icons2"], self.sym["resident_end"])
 
     def setUp(self):

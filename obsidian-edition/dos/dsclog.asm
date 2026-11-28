@@ -13277,17 +13277,7 @@ whirl_tick:
 
 ; WHIRL_CLEAR: WT_TABLE emptied (each round's start, each cast: a thing's number is used again
 ; once its area is gone, and its copies are found again). All registers and flags kept.
-whirl_clear:
-        pushf
-        push di
-        mov di, wt_table
-.each:  mov word [cs:di], 0xFFFF
-        add di, WT_SIZE
-        cmp di, wt_table + WT_MAX * WT_SIZE
-        jb .each
-        pop di
-        popf
-        ret
+        SHARED_whirl_clear
 
 ; WHIRL_PICK: WT_X, WT_Y the middle of thing BX's copies in the draw list (OBJ_LIST: the entries
 ; of the thing with 20h), WT_KX, WT_KY the copy nearest it: from its entry in WT_TABLE, else worked

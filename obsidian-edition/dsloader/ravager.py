@@ -1071,6 +1071,22 @@ PATCHES: Tuple[Patch, ...] = (
     # listed; the program's other copy of the routine (62043h) has jl. jle made jl (DSCLOG2's PSI_GRANT
     # already gives Detonate at creation where the game's table does)
     Patch("detonate_listed", 0x93DB3, bytes.fromhex("7e03"), bytes.fromhex("7c03")),
+    # A weapon whose power is a spell spent a charge each time a hit cast it and was gone at its last (the
+    # walkthrough's bugs: Life Stealer, El's Drinker, a transferred Dagolar's Dagger...): the hit's cast
+    # (5D281h) ends with the use routine (5F0h:B6h, 7A843h) given 2, which takes a charge off (7A942h) and
+    # destroys the item at none (5F8h:43h) unless its type's +0Bh has 2 and it was given 2. Shattered Lands'
+    # hit casts the weapon's spell with no use at all (its 58BAFh), so never spends one; its use routine
+    # (721E4h) only skips a type with 2, given anything. "test [es:bx+0Bh],2 / jz" (7A929h) made to fall through
+    # to the "given 2" test: a hit's cast spends nothing; a use from the USE screen (given 1) as before,
+    # as Shattered Lands' (a wand's charges, its last one the wand). DSCLOG2's IB_CHARGES shows no charges on
+    # a weapon's box (TYPE_DICE) in step.
+    Patch("hit_spends_none", 0x7A92E, bytes.fromhex("7406"), bytes.fromhex("9090")),
+    # Waters of Life as Shattered Lands' Water of Life and the manual have it: the creature's wounds pass to the
+    # caster, who keeps 5 hit points (the sequel's simply heals: it takes poison off and runs Heal's code). The
+    # spell switch (656D0h: 81 numbers at the module's CS:28C1h, their handlers 0A2h on) sends 215 to its own
+    # handler (2060h); made Lend Health's (21EAh, 253's and Altruism's), as Shattered Lands' DSCLOG sends its
+    # Water of Life (PROBE_GRACE_CAST). With the manual's spells (RAV_SPELLS_MANUAL).
+    Patch("water_of_life_lends", 0x66CA9, bytes.fromhex("6020"), bytes.fromhex("ea21")),
     # a member added from the roster (the ADD screen, 58CB5h) wears its items with no spell on, the
     # game putting one on only as an item is readied: DSCLOG2's JOIN_READY readies each worn item with
     # a spell (77C1Ah) at "cmp byte [13FAh],0" (58D81h), right after the character's CHAR is loaded
@@ -2525,6 +2541,11 @@ def write_regions(game_dir: str, dos_dir: str, skip=frozenset()) -> List[str]:
     return done
 
 
+# The sequel's own spells made as the manual has them (the option "spells as the manual describes them", which
+# skips Shattered Lands' gamepatch.SPELLS_MANUAL too): the names of PATCHES' that it leaves out when off.
+RAV_SPELLS_MANUAL = ("water_of_life_lends",)
+
+
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
@@ -2537,7 +2558,7 @@ def skipped(settings: dict) -> frozenset:
     spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
     screens = settings.get(ravui.SETTING, True) is not False  # (Shattered Lands' screens and icons: ravui)
     pace = settings.get("steady_pace", True) is not False  # (steady pace, Shattered Lands' switch)
-    return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+    return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL) | frozenset(RAV_SPELLS_MANUAL)) \
         | (frozenset() if pace else frozenset(gamepatch.STEADY_PACE)) \
         | (frozenset() if screens else {ravui.SKIP}) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \

@@ -1923,11 +1923,14 @@ probe_item_box:
 
 ; IB_CHARGES: DX IB_CHARGES_TEXT with the charges of PROBE_ITEM_BOX's item ([BP+6]; SI its type,
 ; ES:BX its type's record) if it casts a spell with charges, else 0. Not for fruit (eaten whole) nor
-; scenery (doors: their +0Eh and +10h hold something else). DS the game's; others kept.
+; scenery (doors: their +0Eh and +10h hold something else), nor a weapon (TYPE_DICE: its hit's spell spends
+; none, ravager's "hit_spends_none", as in Shattered Lands). DS the game's; others kept.
 ib_charges:
         xor dx, dx
         cmp si, TYPE_FRUIT
         je .ret
+        cmp byte [es:bx + TYPE_DICE], 0
+        jne .ret
         push ax
         push bx
         push cx
@@ -5545,17 +5548,7 @@ ww_draw:
         pop bp
         iret
 
-whirl_clear:
-        pushf
-        push di
-        mov di, wt_table
-.each:  mov word [cs:di], 0xFFFF
-        add di, WT_SIZE
-        cmp di, wt_table + WT_MAX * WT_SIZE
-        jb .each
-        pop di
-        popf
-        ret
+        SHARED_whirl_clear
 
 ; WHIRL_PICK: WT_X, WT_Y the middle of thing BX's copies in the draw list (OBJ_LIST: the entries
 ; of the thing with 20h), WT_KX, WT_KY the copy nearest it: from its entry in WT_TABLE, else worked
