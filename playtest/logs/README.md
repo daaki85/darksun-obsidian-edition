@@ -285,6 +285,7 @@ schedules and diffs a log made or used.
 | [2026-11-28](2026-11-28-ravager-play-checks.md) | Wake of the Ravager: the quality-of-life port played by hand (T, Shift+T, Alt, item box, Effects click, load window, Characters tab, S, EDIT's age); new characters' and level-ups' saves, View Character's DAM and the arrows label fixed; two more quests open |
 | [2026-11-28](2026-11-28-ravager-hand-checks.md) | Wake of the Ravager: the last quality-of-life rows played (shop shine, tabs, named saves, look box, F10, miss labels, dust, creation screen's THAC0, SUM, STORE/RECALL and KITS); saves worked out again at a load |
 | [2026-11-28](2026-11-28-ravager-script-fixes.md) | Wake of the Ravager's script fixes (PR #310): the ore voucher sale run in the game's interpreter (460 vouchers paid -7,818 before, 327 paid 13,080 with 133 left after); Ptar's pocket picked once in his cave (reached by a jump below its mouth and walking in): the key and 2,000 XP, and at the next look no menu; the race and sex reads through the character's record read a thri-kreen woman's 8 and 2 (0 before) |
+| [2026-11-28](2026-11-28-ravager-own-party-hands.md) | The sequel's own party: Terrannus's shield out of his weapon hand at a new game (two swings with his long sword in the ambush); Ar'Anda's Effects panel lists SHADOW-WALKER and LIGHT ARMOUR CASTING; Shattered Lands' party and new characters checked, already right |
 
 ## files/
 

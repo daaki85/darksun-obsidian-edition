@@ -2357,12 +2357,22 @@ class RavDiceLog(dicelog.DiceLog):
         Crusader, their features of their own), the bytes it writes made writable while it runs."""
         from . import defaultparty
         gd = self.game
-        if gd is None or not gd.rules & (game.RULE_SPECIALIZE | game.RULE_KITS):
+        if gd is None:
             return []
+        out: List[str] = []
+        due = defaultparty.rav_hands_due(gd) if self.tsr_hdr is not None else []
+        if due and self._items_still():  # (Terrannus's shield out of his weapon hand, whatever the rules)
+            try:
+                with self._items_writable():
+                    out += defaultparty.rav_hands(gd, due)
+            finally:
+                itemgate.release(gd)
+        if not gd.rules & (game.RULE_SPECIALIZE | game.RULE_KITS):
+            return out
         before = self.guest.writable
         self.guest.writable = before + defaultparty.rav_ranges(gd)
         try:
-            return defaultparty.rav_ready(gd, gd.rules)
+            return out + defaultparty.rav_ready(gd, gd.rules)
         finally:
             self.guest.writable = before
 

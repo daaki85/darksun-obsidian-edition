@@ -286,6 +286,24 @@ class KitTests(unittest.TestCase):
         self.assertEqual(kits.own_features(wotr_sheet((9, 7, 12), (6, 6, 6), 8, 0x40)), kits.OWN_FEATURES[kits.THRI_KREEN])
         self.assertEqual(kits.own_features(wotr_sheet((11, 6, 17), (5, 5, 5), 3, 0x40)), ("Elven Shadow-walker",))
 
+    def test_own_lines(self):
+        """EF_OWN_LINES (the Effects screen's lines of the own party's features, 2026-11-28: Ar'Anda's panel was
+        empty) gives a line for each of kits.own_features; none without OWN_BIT, with KIT_OPEN or with the kits'
+        rule off."""
+        index, drawing = self.sym["ef_index"], self.sym["ef_drawing"]
+        for rules in (game.RULE_KITS >> 16, 0):
+            self.rules(rules)
+            for classes, levels, race in self.OWN:
+                for byte in (0x40, 0x00, 0xFF):
+                    sheet = wotr_sheet(classes, levels, race, byte)
+                    own = rules and byte != 0xFF and byte & 0x40
+                    with self.subTest(classes=classes, race=race, byte=byte, rules=rules):
+                        self.mu.mem_write(TSR * 16 + index, b"\0\0")
+                        self.mu.mem_write(TSR * 16 + drawing, b"\0")
+                        self.run_routine("ef_own_lines", sheet)
+                        got = struct.unpack("<H", self.mu.mem_read(TSR * 16 + index, 2))[0]
+                        self.assertEqual(got, len(kits.own_features(sheet)) if own else 0)
+
     def frame(self, cls: int, spell: int) -> None:
         """A frame for SLOT_BEHIND and BEHIND_LEAST at SS:600h: [BP+8] the class, [BP+0Ch] the spell level."""
         self.mu.mem_write(SS * 16 + 0x608, struct.pack("<HHH", cls, 0, spell))

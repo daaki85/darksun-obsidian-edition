@@ -59,6 +59,15 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager's own party, the weapon hand and the Effects panel** (branch `claude/shield-hand-fix`).
+The sequel starts Terrannus with his Shield +1 in the right hand and his Longsword +1 in the left, so he swung once a
+round whatever his specs: the Loader now swaps them as a new game starts (the dice log says so), whatever the rules.
+The same check (a shield out of the weapon hand, a lone weapon into it) runs on every new character's starting gear
+in both games, a safety net behind the sequel's fixed gear table; Shattered Lands' own party and new characters
+already started right. The sequel's Effects panel now lists the own party's features of their own, as Shattered
+Lands' does for Cilla: Ar'Anda's was empty (SHADOW-WALKER, LIGHT ARMOUR CASTING), Gerakis WILD FIGHTING, Thy'rokh
+GROVE WARDEN AC. **Dev:** `startgear.weapon_hand`, `defaultparty.rav_hands`, DSCLOG2's `EF_OWN_LINES`.
+
 **Fixed: both games, quiet speech and sound effects** (branch `claude/ravager-voice-volume`). Wake of the Ravager's
 spoken lines came out 24 dB under their recording in DOSBox-X and 16 dB under in GOG's DOSBox, while its CD music
 played at full: the game menu's SOUND EFFECT VOLUME starts at half, and the emulated Sound Blaster's mixer makes
