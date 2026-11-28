@@ -59,6 +59,19 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager, the bugs players report** (branch `claude/ravager-walkthrough-bugs`). The 49 bugs in
+the owner's walkthrough checked against the sequel's scripts and program ([the report](reports/ravager-walkthrough-bugs-2026-11-28.md)).
+Mended now: Resist Fire, Resist Cold, Protection from Fire and from Lightning and Fire Shield never halved a
+spell of fire or cold alone (the damage routine's test the wrong way round; seen in play, a saved Fireball's 11
+now 5); Detonate was never offered at a psionicist's level up; the ranger's warning of the forest ambush read a
+flag nothing sets; Xarax the alchemist's potion of Free Action was an object no file has (now made), his "an
+order is waiting" flag was never cleared and his brewing clock was shared with the earth temple's. And a mod
+bug: with the new wizard spells on, the psionic powerstone, Ioun stones and other items with an effect of their
+own were taken for a new spell's scroll (the wrong picture in their box, and their effect not ended when taken
+off); only scrolls, spellbooks and rods are now, for the picture, the spell window's text and the take-off. The crystal rod had no picture at all (an empty-looking slot): it has the sequel's rod picture now. None of these is in Shattered Lands. **Dev:** patches
+`protection_halves` and `detonate_listed`; `ravager.free_action_potion`, `POTION_CLOCK`; DSCLOG2's `NS_BOOK` and `NS_INFO` (site 86),
+`ravspells.PLUS1_ITEM`; `ravager.crystal_rod_picture`; `ravlevel.py powers MEMBER forget N`.
+
 **Dev: memory pass, both helpers** (branch `claude/helper-memory-pass`, [the report](reports/memory-pass-2026-11-28.md)).
 DSCLOG walks a creature's items once (`WORN_ALL`, `WORN_ON`) in place of four copies: 208 bytes of Shattered Lands'
 helper back, in its segment and in upper memory. DSCLOG2 keeps the kits' names in its tail, as DSCLOG does
