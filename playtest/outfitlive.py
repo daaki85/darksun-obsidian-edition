@@ -16,6 +16,11 @@ rec = gd.creature(m)
 at = game.far_pointer(g, ds, 0x1661) + struct.unpack_from('<H', rec, 4)[0] * game.SHEET_SIZE
 obj = struct.unpack_from('<H', rec, sprites.CREATURE_FIGURE)[0] + 300
 src = gff.read_gff(open(os.path.join(GAME, 'SEGOBJEX.GFF'), 'rb').read())
+# The Loader steadies outfit pixels against the portrait palette (spritegear.set_palette):
+# without it the build here differs from the Loader's copy (2026-11-28, logs/2026-11-28-outfit-colours.md).
+from dsloader import art, spritegear
+spritegear.set_palette(list(art.palette_colours(
+    gff.read_gff(open(os.path.join(GAME, 'GPLDATA.GFF'), 'rb').read())[('PAL ', 1)])))
 pics = sprites.Pictures(src)
 
 
