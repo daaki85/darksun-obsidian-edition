@@ -3215,27 +3215,15 @@ prot_scan:
         mov [cs:r_creature], ax
         mov byte [cs:p_flags], 0
         mov word [cs:p_ring], 0         ; (and P_RING2)
-        mov cx, 8                       ; its item lists, each a thing: +8, +0Ah, +0Ch
-.list:  les bx, [CREATURES]
-        add bx, [cs:r_creature]
-        add bx, cx
-        mov dx, [es:bx]
-        cmp dx, NO_THING
-        jae .next
-        mov es, [cs:r_things]
-        mov bx, dx
-        imul bx, bx, 3
-        cmp byte [es:bx+THINGS], 1
-        jne .next                       ; not an item
-        mov dx, [es:bx+THINGS+1]
-        mov byte [cs:r_left], 100
-.item:  cmp dx, NO_THING
-        jae .next
-        les bx, [ITEMS]
-        mov ax, dx
-        imul ax, ax, 0x15
-        add bx, ax
-        mov dx, [es:bx+4]               ; (the next)
+        mov word [cs:we_visit], prot_item
+        call worn_all
+        clc
+        jmp .out
+.not:   stc
+.out:   pop es
+        popad
+        ret
+prot_item:                              ; (WORN_ALL's visit: item ES:BX)
         mov si, [es:bx+0x0A]            ; the type
         mov al, [es:bx+0x11]            ; the slot
         mov ah, [es:bx+0x14]            ; the plus
@@ -3286,16 +3274,7 @@ prot_scan:
         cmp al, MATERIAL_METAL
         jne .on
         or byte [cs:p_flags], P_METAL_ARMOUR
-.on:    dec byte [cs:r_left]
-        jnz .item
-.next:  add cx, 2
-        cmp cx, 0x0E
-        jb .list
-        clc
-        jmp .out
-.not:   stc
-.out:   pop es
-        popad
+.on:    clc
         ret
 
 ; Weapon specialization (RULE_SPECIALIZE; dsloader/specialize.py). A character's chosen weapon
@@ -5305,26 +5284,12 @@ armour_worn:
         mov [cs:r_things], ax
         imul ax, dx, 0x3A
         mov [cs:r_creature], ax
-        mov cx, 8               ; its item lists, each a thing: +8, +0Ah, +0Ch
-.list:  les bx, [CREATURES]
-        add bx, [cs:r_creature]
-        add bx, cx
-        mov dx, [es:bx]
-        cmp dx, NO_THING
-        jae .next
-        mov es, [cs:r_things]
-        mov bx, dx
-        imul bx, bx, 3
-        cmp byte [es:bx+THINGS], 1
-        jne .next               ; not an item
-        mov dx, [es:bx+THINGS+1]
-        mov byte [cs:r_left], 100
-.item:  cmp dx, NO_THING
-        jae .next
-        les bx, [ITEMS]
-        imul ax, dx, 0x15
-        add bx, ax
-        mov dx, [es:bx+4]       ; (the next)
+        mov word [cs:we_visit], aw_item
+        call worn_all           ; (CF: an armour piece found)
+        pop es
+        popad
+        ret
+aw_item:                        ; (WORN_ALL's visit: item ES:BX; CF set, armour, ends the walk)
         mov al, [es:bx+0x11]    ; the slot
         cmp al, ARM_SLOT
         je .slot
@@ -5355,18 +5320,9 @@ armour_worn:
         je .on
         cmp al, 0x40
         je .on
-.worn:  pop es
-        popad
-        stc
+.worn:  stc
         ret
-.on:    dec byte [cs:r_left]
-        jnz .item
-.next:  add cx, 2
-        cmp cx, 0x0E
-        jb .list
-        pop es
-        popad
-        clc
+.on:    clc
         ret
 
 ; The character creation panel (kits.py, kitpages.py, which puts the kit windows and their
@@ -12778,28 +12734,12 @@ thorns_ac:
         jae .lists
         movsx ax, byte [bx + DEX_AC]
         add di, ax
-.lists: mov cx, 8               ; its worn item list, a thing: +8 (as the game's AC routine: not
-                                ;   the held +0Ah, nor the backpack's +0Ch)
-.list:  les bx, [CREATURES]
-        add bx, [cs:r_creature]
-        add bx, cx
-        mov dx, [es:bx]
-        cmp dx, NO_THING
-        jae .next
-        mov es, [cs:r_things]
-        mov bx, dx
-        imul bx, bx, 3
-        cmp byte [es:bx + THINGS], 1
-        jne .next               ; not an item
-        mov dx, [es:bx + THINGS + 1]
-        mov byte [cs:r_left], 100
-.item:  cmp dx, NO_THING
-        jae .next
-        les bx, [ITEMS]
-        imul ax, dx, 0x15
-        add bx, ax
-        mov dx, [es:bx + 4]     ; (the next)
-        movsx bp, byte [es:bx + 0x14]   ; the plus
+.lists: mov word [cs:we_visit], .item
+        call worn_on            ; (its worn item list, +8, as the game's AC routine: not the held
+        movsx eax, di           ;   +0Ah, nor the backpack's +0Ch)
+        pop bp
+.ret:   ret
+.item:  movsx bp, byte [es:bx + 0x14]   ; the plus (WORN_ON's visit: item ES:BX)
         mov ax, [es:bx + 0x0A]
         cmp ax, NO_THING
         jae .on
@@ -12811,14 +12751,8 @@ thorns_ac:
         movsx ax, byte [es:bx + 0x12]   ; the type's AC
         add ax, bp
         sub di, ax
-.on:    dec byte [cs:r_left]
-        jnz .item
-.next:  add cx, 2
-        cmp cx, 0x0A
-        jb .list
-        movsx eax, di
-        pop bp
-.ret:   ret
+.on:    clc
+        ret
 
 ; AREA_SITE: "mov ax,3C81h / mov es,ax / mov al,es:[bx+2]" (10 bytes; DSUN.EXE 23D32h, 23D65h,
 ; 23EBDh, 23EF0h, 28092h, 280C6h: the game's own code, not an overlay's, reading a ground picture's
@@ -17509,27 +17443,11 @@ worn_scan:
         mov [cs:r_creature], ax
         mov word [cs:ws_count], 0
         mov word [cs:ws_plus], 0
-        mov cx, 8               ; its item lists, each a thing: +8, +0Ah, +0Ch
-.list:  les bx, [CREATURES]
-        add bx, [cs:r_creature]
-        add bx, cx
-        mov dx, [es:bx]
-        cmp dx, NO_THING
-        jae .next
-        mov es, [cs:r_things]
-        mov bx, dx
-        imul bx, bx, 3
-        cmp byte [es:bx+THINGS], 1
-        jne .next               ; not an item
-        mov dx, [es:bx+THINGS+1]
-        mov byte [cs:r_left], 100
-.item:  cmp dx, NO_THING
-        jae .next
-        les bx, [ITEMS]
-        mov ax, dx
-        imul ax, ax, 0x15
-        add bx, ax
-        mov al, [es:bx+0x11]
+        mov word [cs:we_visit], .item
+        call worn_all
+        pop cx
+        ret
+.item:  mov al, [es:bx+0x11]    ; (WORN_ALL's visit: item ES:BX, its number DX)
         cmp al, [cs:ws_slot]
         jne .on
         mov ax, [cs:ws_type]
@@ -17557,14 +17475,52 @@ worn_scan:
         or ax, ax
         jle .on
         add [cs:ws_plus], ax
-.on:    mov dx, [es:bx+4]       ; the next item in the list
+.on:    clc
+        ret
+
+; WORN_ALL: WE_VISIT called for each item in creature R_CREATURE's item lists (its record's offset
+; in CREATURES; DS the game's, R_THINGS the things table's segment), each a thing: +8 worn, +0Ah held,
+; +0Ch the backpack; WORN_ON the worn list alone. Each visit has ES:BX the item's record and DX its
+; number; it keeps CX and DX (the next item is the walk's), and sets CF to end the walk (CF set
+; here then, clear when every item was visited). At most 100 items a list (R_LEFT: a list that runs
+; on in a broken save). AX, BX, CX, DX, ES changed.
+worn_on:
+        mov byte [cs:we_end], 0x0A
+        jmp short worn_walk
+worn_all:
+        mov byte [cs:we_end], 0x0E
+worn_walk:
+        mov cx, 8
+.list:  les bx, [CREATURES]
+        add bx, [cs:r_creature]
+        add bx, cx
+        mov dx, [es:bx]
+        cmp dx, NO_THING
+        jae .next
+        mov es, [cs:r_things]
+        mov bx, dx
+        imul bx, bx, 3
+        cmp byte [es:bx+THINGS], 1
+        jne .next               ; not an item
+        mov dx, [es:bx+THINGS+1]
+        mov byte [cs:r_left], 100
+.item:  cmp dx, NO_THING
+        jae .next
+        les bx, [ITEMS]
+        imul ax, dx, 0x15
+        add bx, ax
+        push word [es:bx+4]     ; (the next)
+        call [cs:we_visit]
+        pop dx
+        jc .out
         dec byte [cs:r_left]
         jnz .item
 .next:  add cx, 2
-        cmp cx, 0x0E
-        jb .list
-        pop cx
-        ret
+        cmp cl, [cs:we_end]
+        jb .list                ; (CF clear past it)
+.out:   ret
+we_visit   dw 0
+we_end     db 0
 
 r_things   dw 0
 r_creature dw 0
