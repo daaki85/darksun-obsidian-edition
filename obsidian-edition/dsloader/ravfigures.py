@@ -50,14 +50,14 @@ SHALLOW_STORAGE = (3172, 3173, 3174, 3558)
 DAMAGED_CRATES = (3795, 3796, 3797, 3798)
 # The foreground wall also hides the front row of broken crates at full Tyr scale.
 FURNITURE_SCALES = dict.fromkeys(SHALLOW_STORAGE + DAMAGED_CRATES, 0.82)
-STORAGE = (532, 533, 1014, 1015, 1016, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
+STORAGE = (532, 533, 1014, 1015, 1016, 1135, 2220, 2221, 2222, 2223, 2225, 2354, 2356,
            2769, 2770, 3364) + SHALLOW_STORAGE
 TABLES = (515, 517, 628, 629, 630, 1342, 2050, 2585, 2589, 2624, 2625, 2626, 2627,
           2630, 2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
 SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 789, 2218,
                     2590, 2591, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
                     3629, 3699, 3793, 3826, 3829, 3835, 3836, 3870)
-OPENABLE = (631, 1112, 2825, 3250)  # Two stored states, each with its original SCMD.
+OPENABLE = (631, 1112, 1113, 1136, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 # Only these bottom rows take the Tyr scale. Keep cushion faces, brazier smoke and the tips of the polearms intact.

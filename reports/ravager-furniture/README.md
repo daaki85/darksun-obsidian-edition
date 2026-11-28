@@ -2,7 +2,7 @@
 
 ## Project progress
 
-All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added three pictures: the empty throne summoned from Limbo into El’s Temple, the loot chest in Mines 3 and the upright polearm stand shared by three regions. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added six pictures. They cover the empty throne summoned from Limbo into El’s Temple, three different mine chests, the kitchen crates and the upright polearm stand shared by three regions. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
 Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All eleven inventoried Yuan-ti furniture placements have now been seen in DOSBox, including the two storage piles from the figure redraw. The wider all-area review is still open. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
@@ -246,6 +246,22 @@ The blue box marks the orb shelf. The Shattered Lands comparison is the stocked 
 
 ![Whole mine and tunnel maps in both builds, with Gedron and its potion stand for reference](mine-tunnel-shelf-maps.png)
 
+## Mines 3 kitchen, chests and loose furniture
+
+The gold squares mark the two chests. The blue square marks the kitchen crates. The Shattered Lands upper castle has a low chest between two beds, shown at the lower right for comparison.
+
+![Entire Mines 3 before and after, and the upper castle in Shattered Lands](mine-kitchen-whole-maps.png)
+
+The previous mod lowered the little box marked “Cooking poisons” and left three neighboring wooden crates at their original height. The revised crates stand 21 pixels tall, down from 31. The party can still open all three.
+
+![The same four kitchen boxes in stock Ravager, the previous mod and the revised mod](mine-kitchen-crates-live.png)
+
+The chest by the lava pool opens and gives plate armor. Unlocking the chef’s chest gives the triangular key and a scroll. It continues to show its closed lid after that interaction in both builds. The comparison shows its other stored drawing in a separate staged visit.
+
+![Both chests closed and raised in DOSBox](mine-armor-and-chef-chests.png)
+
+The five loose chairs and the stone table already use the lower drawings. Their bases align with stock in DOSBox. The separate red bowl by the side chair and the loose blue orb beside the front-facing chair remain visible. [All six furnishings in play](mine-loose-seats-live.png) · [Playtest route, interactions and capture conditions](../../playtest/logs/2026-11-27-ravager-mine-kitchen-and-chests.md)
+
 ## Region work queue
 
 The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
@@ -260,7 +276,7 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
-| 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves checked. Check the remaining loose furniture |
+| 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, five loose chairs, stone table, four kitchen boxes and both additional chests checked. Review five two-piece worktables and the three-state floor safe |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | Upright polearm stand checked in play. Check the shelves and remaining room furnishings |
