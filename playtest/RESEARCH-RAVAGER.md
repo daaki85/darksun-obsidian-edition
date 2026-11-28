@@ -308,8 +308,10 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   runs GPL 124, the cinematic and the fight).
   Region 1 (RGN001, Humbleton) square 20, 20 is inside Ptar's cave (where GPL 30 puts the party as it comes in), but the
   jump leaves the party half there (the leader stuck at the east wall, the view garbled) and the scene's triggers unset
-  (Ptar's look, 857 of GPL 47, is set by GPL 30 only through the cave's exit): a story scene entered by an exit needs a
-  save, not a jump (2026-11-28, logs/2026-11-28-ravager-script-fixes.md).
+  (Ptar's look, 857 of GPL 47, is set by GPL 30 only through the cave's exit). Jump instead to open ground beside
+  the scene's exit area (MAS N's 6Ah areas, a GMAP 0 square) and walk in: `ravjump.py 1 73 86`, the camera set, Up into
+  the mouth (73,83) and Yes brings the party whole into Ptar's cave (2026-11-28, logs/2026-11-28-ravager-script-fixes.md,
+  files/2026-11-28-ravager-to-ptar.sh).
   The Forest jump can leave the camera behind. The overhead map opens with O, and moving the pointer to the edge scrolls the scenery. Check the room landmarks before treating a capture as evidence for a furniture placement.
 - **A script probe** (2026-11-28): `ravprobe.py HEX` puts any commands in Reyhan's talk the way ravjump.py puts the
   move, then return and exit: the game's own interpreter runs them and `ravtext.py` reads back what they print. The

@@ -11,8 +11,10 @@ Branch `claude/ravager-script-bugs`. The fixes are in `dsloader/ravager.py`'s `S
 10,000 bytes and its largest script 9,985, so a script may grow only while it stays under that (the buffer
 is being raised in `claude/ravager-engine-fixes`).
 
-Not yet seen in play: each fix is checked against the game's bytes as the copy is made, and the tests
-decode every fixed script whole (`test_ravager`'s `test_script_fixes_decode`, `test_ptar_key_is_taken_once`).
+Each fix is checked against the game's bytes as the copy is made, and the tests decode every fixed script
+whole (`test_ravager`'s `test_script_fixes_decode`, `test_ptar_key_is_taken_once`). Seen in play
+(`playtest/logs/2026-11-28-ravager-script-fixes.md`): the voucher sale (460 vouchers paid -7,818 before,
+13,080 for 327 after) and Ptar's pocket (picked once, no menu at the next look).
 
 ## Fixed, by severity
 

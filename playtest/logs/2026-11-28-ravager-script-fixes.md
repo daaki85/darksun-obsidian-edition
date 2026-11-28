@@ -22,15 +22,23 @@ Money 5,000 before, 10,262 after (5,000 - 7,818 + 13,080): the game's sale took 
 pays 40 a voucher and leaves the rest for the next sale. (The report had -9,768 worked out by hand; the game
 pays -7,818, now in the report, GAME-BUGS.md and the code's note.)
 
-## Ptar's pickpocket: not reached in play
+## Ptar's pickpocket: seen working
 
-`ravjump.py 1 20 20` (RGN001, the square GPL 30 moves the party to inside Ptar's cave) did land the party in
-the cave, but half there as ravjump.py warns: the leader stuck at (322,308) at the cave's east wall, the view
-garbled, Ptar (-445, ETAB at map 75,357) out of reach, and his look trigger (857 of GPL 47) is set by GPL 30
-only as the party comes in by the cave's own exit. So the pickpocket was checked on the bytes only: the three
-places that ask whether the key is gone (GPL 47 at 374h, 29 at 352h, 46 at 215h) read flag 131, the one the
-pickpocket sets at 451h (`test_ptar_key_is_taken_once`), which is what the walkthrough's "he has the key on
-him even if you pick his pocket" says went wrong. Seeing it in play needs a save in Humbleton.
+A first try, `ravjump.py 1 20 20` (the square GPL 30 puts the party on inside the cave), left the party half
+there and Ptar's look unset: GPL 30 sets it only as the party comes in by the cave's mouth. The mouth is MAS 1's
+area (73,83), 2 by 1, whose handler (GPL 30 at 31Ah, the case of the party's column 73 or 74) runs the entry at
+72Fh. So (`files/2026-11-28-ravager-to-ptar.sh`): the jump to square (73,86) below the mouth, the camera put
+on the party (`files/2026-11-28-ravager-camera.py set`, USE opened and closed), key 1 to make Ar'Anda (member
+0, preserver, psionicist and thief) the leader, Up into the mouth, "Use the tunnel?" Yes: the party whole in
+the cave, Ptar asleep at its west end. Ar'Anda walked to him with a Space between steps (each step "Ar'Anda
+moves silently..."), and the look on Ptar:
+
+1. "The giant is sleeping." WHAT DO YOU DO? Pick his pockets / Wake him up / Do nothing
+   (`img/2026-11-28-ptar-menu.png`). 1: "You found a key!" (`img/2026-11-28-ptar-key.png`), Ar'Anda's XP
+   45,582 to 46,248 (the 2,000 split over her three classes).
+2. The look again: no menu; Ptar wakes, "Err -- umpf! Who is that? Thief! Assassin!"
+   (`img/2026-11-28-ptar-second-look.png`). In the game as shipped the menu came back every time (the
+   walkthrough's "he has the key ... even if you pick his pocket"), since the menu read flag 82.
 
 ## Learned
 
@@ -38,4 +46,6 @@ him even if you pick his pocket" says went wrong. Seeing it in play needs a save
   interpreter (its prints read back by `ravtext.py`). The ETAB's object is the number unnegated (Ptar,
   -445, is stored BD01h at +6).
 - After a jump to a region whose story scene is entered by an exit (Ptar's cave), the scene's triggers aren't
-  set: the jump's place is no substitute for the exit.
+  set: jump to open ground beside the exit's area instead (MAS N's 6Ah areas; GMAP 0 squares) and walk in. Out
+  of the Roost's talk the party is then whole (all four drawn, walking with the arrow keys).
+- In Ptar's cave each step of a thief leader brings a Move Silently message: Space, then the next step.
