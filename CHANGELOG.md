@@ -72,6 +72,14 @@ off); only scrolls, spellbooks and rods are now, for the picture, the spell wind
 `protection_halves` and `detonate_listed`; `ravager.free_action_potion`, `POTION_CLOCK`; DSCLOG2's `NS_BOOK` and `NS_INFO` (site 86),
 `ravspells.PLUS1_ITEM`; `ravager.crystal_rod_picture`; `ravlevel.py powers MEMBER forget N`.
 
+**Dev: memory pass, both helpers** (branch `claude/helper-memory-pass`, [the report](reports/memory-pass-2026-11-28.md)).
+DSCLOG walks a creature's items once (`WORN_ALL`, `WORN_ON`) in place of four copies: 208 bytes of Shattered Lands'
+helper back, in its segment and in upper memory. DSCLOG2 keeps the kits' names in its tail, as DSCLOG does
+(`kit_names_table.inc`, one table for both), with one `KIT_NAME_PTR`: 592 bytes of the sequel's segment back.
+A second pass runs ten of DSCLOG's self-contained routines from its tail (`TAIL_GO`): 1,200 bytes more of its
+segment (1,664 free now). Nothing a player sees changes (the same screens under both builds, in both games, and
+the fountain ambush fought with the moved routines). **Dev:** `playtest/scwatch.py` watches the shadow cache.
+
 **New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
 of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in
 (`build/ds2o` beside it: darksun-recompiled's new fifth build), after the same copies and widened sheets as a
