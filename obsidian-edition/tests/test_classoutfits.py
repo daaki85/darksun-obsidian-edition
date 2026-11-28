@@ -420,6 +420,15 @@ class HumanOutfitTests(unittest.TestCase):
                 for row in frame.image[y + 6:y + 9]:
                     self.assertTrue(all(c in range(69, 74) for c in row[x + 6:x + 8]))
 
+    def test_slim_jerkin_edge_and_elf_skirt_crease_in_motion(self):
+        # The narrow warm edge turns over the half-elf woman's belt in step three.
+        jerkin = classoutfits.frames("Fighter", False, 307)[5].image
+        self.assertEqual(jerkin[14 + 10][7 + 10:9 + 10], [205, 201])
+        # The paired cream ridge and umber crease swing left towards the elf's hem.
+        linen = classoutfits.frames("Cleric", False, 2061)[8].image
+        for x, y in ((2, 17), (2, 18), (1, 19)):
+            self.assertEqual(linen[y + 4][x + 4:x + 6], [199, 207])
+
     def test_male_priest_side_walk_keeps_cloth_behind_the_arm(self):
         # At full stride the ground used to show through these folds.
         cream_fold = {208, 204, 207, 205, 194, 206, 120, 121, 61, 123, 199, 125, 62, 155, 63,
