@@ -77,15 +77,17 @@ open. The script reader now reads all 350 of the sequel's scripts (257 before). 
 game-bug test rigs moved past the helper's grown tail, and the sheet test on the game's files narrows its copies
 first, so a played folder tests as a stock one.
 
-**New: Wake of the Ravager.** The inventory's party column shows each member's small figure in their class outfit,
+**New: Wake of the Ravager, the small figures in their class outfits** (branch `claude/ravager-small-figures`).
+The inventory's party column shows each member's small figure in their class outfit,
 as Shattered Lands' does, and so does the creation screen's small figure, which changes as the class, race or sex does:
 DSCLOG2's SMALL_FIG (site 254) asks for the Loader's frame for the figure and its classes (BMP 7000h + the figure
 * 256 + a bit per class group in OBJEX2.GFF, 290 of them made at the copy by `ravdress`), which INV_LOAD reads.
 
-**New: Wake of the Ravager.** The party wears its class outfits there too, on the map and in a fight:
-the Loader's copy holds each party picture as the Loader's own Shattered Lands figure with room for an outfit,
-and the dice log writes each member's outfit into it and has the game load it again (`ravdress`). Worn gear,
-a second member with the same figure, the creation preview and the small figures are still to come.
+**New: Wake of the Ravager, the class outfits** (branch `claude/ravager-class-outfits`). The party wears its
+class outfits there too, on the map and in a fight: the Loader's copy holds each party picture as the Loader's
+own Shattered Lands figure with room for an outfit, and the dice log writes each member's outfit into it and
+has the game load it again (`ravdress`). Worn gear over the outfit and a second member with the same figure
+are still to come (RAVAGER.md's "Not in the sequel yet").
 
 **New: Wake of the Ravager, the view in fights, the whole party in view and steady pace** (branch
 `claude/ravager-view-and-pace`). Three of Shattered Lands' controls the sequel lacked: in a fight the view
@@ -113,6 +115,31 @@ them. Each page's saves keep their map limits apart, and the named saves copy al
 place is kept in the last two of the sequel's 200 global numbers (found at DS:15F6h, saved as SAVE chunk 31),
 which its scripts don't use. DSCLOG2 notes where the game was as its timer strikes, as DSCLOG does, and the
 freeze report reads it and names the sequel's places (`playtest/logs/2026-11-28-ravager-journal-freeze.md`).
+
+**New: the inventory's class pictures for every race, in both games** (#285, #287, #291, #296). The inventory's
+full-length picture shows the selected character's classes for every race and every class or multiclass its
+race can take (306 pictures, and Cilla's elf Druid/Preserver/Thief), in Shattered Lands and in Wake of the
+Ravager, where they are made from the player's Shattered Lands folder in the colours no area changes
+(`RAV_SKIP=inventory_art` leaves them out). The light cloth's pinholes and the Cleric's linen were repaired
+(#291).
+
+**New: the creation screen's full-length picture is the inventory's, in both games** (#294). The picture at
+the creation screen's top left shows the painting for the classes being picked and changes with each class,
+race or sex click; with no class picked it is the game's own.
+
+**New: Wake of the Ravager's mouse as Shattered Lands'** (#295). The films and the narrated opening show the
+arrow and a click skips them; the pointer moves as fast up and down as across and keeps its place between
+screens; the middle button drags the map; NO PATH FROM HERE and the other pop-ups close on a click or key.
+
+**Fixed: Wake of the Ravager's combat log panel takes clicks, and L hides it** (#297). A click on the panel's
+header walked the party there and was mostly missed by the panel; now the panel takes it, and L shows and
+hides the panel on the map.
+
+**Fixed: shadows from the figures' feet, in both games** (#293, #307). The redrawn figures' frames have clear
+rows under the feet, so their shadows fell below them and they seemed to float (Ar'Anda most of all); a
+shadow now starts at the lowest drawn row. The sequel's air drakes and the Tarrasque cast shadows (their
+pictures are drawn another way and were skipped), and a big figure whose picture is out of memory keeps its
+shadow's foot.
 
 Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
