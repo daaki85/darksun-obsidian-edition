@@ -70,8 +70,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1170,Freestanding shelves,Lowered and placements reviewed,,033:3
 1171,Freestanding shelves,Lowered and placements reviewed,,033:3
 1172,Freestanding shelves,Lowered and placements reviewed,,033:2
-1247,"Seats, loom and restraints",Reviewed at current scale,1247-sultan.zip,03B:1
-1251,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
+1247,"Seats, loom and restraints",Both seated poses and the empty cushion checked in DOSBox,1247-sultan.zip,03B:1
+1249,Seated storyteller,Heroga and her cushion checked at the camp placement,1249-heroga-storyteller.zip,03B:1
+1251,Covered wagon and shafts,Hidden and covered states checked. Using the cart reveals the open wagon and releases its tapestry,,03B:1
 1321,Set round dining table,Four Volcano 1 tables match 2624. Intact place settings on the lowered bare tabletop,,03E:4
 1334,Freestanding shelves,Lowered and placements reviewed,,03D:1
 1342,"Tables, counters and benches",Shortened the bottom nine rows to retain the jug and cloth on the short counter,,03D:1
@@ -150,7 +151,8 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2520,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
 2521,Ore-car whistle,Retain three stored states at the railhead. Resting pose checked in DOSBox,,039:1
 2546,Teleportation cabinet,Keep full height at both endpoints. Doors and passage to the Garden verified in DOSBox,,034:2
-2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
+2570,Seated figure by campfire,Zorani’s seated redraw checked beside the coals,2570-zorani-matched-mantle.zip,03B:1
+2572,"Seats, loom and restraints",Both weaving poses and the loom checked in DOSBox,2572-utella-revised.zip,03B:1
 2573,Occupied bed,Snaggle’s catalogue figure retained on shortened frame. Scripted picture staged in the Forest,2573-snaggle-sickbed.zip,0FF:2
 2574,Empty sickbed,Lowered to the occupied bed frame. Checked at the Forest placement and after Cleave’s cure,,001:1
 2585,"Tables, counters and benches",Lowered and placements reviewed,,033:1
@@ -179,13 +181,15 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2697,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
 2698,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
 2699,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:4
-2701,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
+2701,Covered wagon and shafts,Hidden and covered states checked. Using the cart reveals the open wagon and releases its tapestry,,03B:1
 2703,"Tables, counters and benches",Lowered and placements reviewed,,033:1
 2704,Pale table,Six table placements reviewed in the Alliance,,033:6
 2732,Temple braziers,Lowered the bowls to 15 rows beneath the intact smoke and checked all six placements,,037:4
 2733,Temple braziers,Lowered the bowls to 15 rows beneath the intact smoke and checked all six placements,,037:2
-2769,Camp baskets,Lowered and reviewed beside the loom,,03B:1
-2770,Camp baskets,Lowered and reviewed beside the loom,,03B:1
+2763,Filled produce basket,Woven sides lowered at all three placements to match the empty handled basket,,03B:3
+2767,Weaving supplies basket,Lowered the woven side while preserving the top of the tools,,03B:1
+2769,Camp baskets,Shortened empty basket verified beside the matching filled baskets in DOSBox,,03B:1
+2770,Camp baskets,Shortened empty basket verified beside the matching filled baskets in DOSBox,,03B:1
 2783,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
 2784,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
 2785,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
@@ -209,6 +213,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3073,Loose pillow against torn bedding,Both placements lowered 11 pixels to follow the bed,,033:2
 3074,Floor pillow,Reviewed beside damaged beds and retained on the floor,,033:2
 3078,Torn red couch,Lowered and compared with the intact red couch,,033:2
+3114,Food tray,Retain the floor footprint and both handles alongside the jugs and goblets,,03B:1
+3115,Gold jug,Retain the handle and open mouth at game size,,03B:2
+3116,Goblet,Retain the bowl and narrow stem at game size,,03B:5
 3172,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
 3173,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
 3174,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1

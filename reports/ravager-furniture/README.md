@@ -92,13 +92,21 @@ The fourth pass changes 14 pictures at 26 placements. On the maps, the gold rect
 - **Silt Sea Giants.** The red chair drops from 49 to 33 visible rows. At the plank table, look at the stump stool and the giant standing behind it. The table keeps its 48-pixel width and both pieces sit on their original floor lines. The seven revised pictures also include the two angled wooden furnishings, the wall-side table and the low footstool. Generoe’s rocker keeps its three occupied poses and its empty drawing from the figure redraw.
 - **Mosaic.** The movable bookcase beside Fletch and Ikibod’s stocked work surface already have the earlier artwork. Eight active busts and eight corresponding displays share a common pedestal height. The [museum playtest](#live-check-in-the-mosaic-museum) covers the seven bust interactions, Terris left in place, and all eight shards of the wall mirror.
 
-The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. Both furniture columns use the figure redraw. The standing village giants use the idle frame and foot anchor from their animation script. Other pictures in these static renders use their first stored pose. The revised Jann and Giants rooms still need in-game inspection.
+The figure sheet shows the rooms from the built mod. Comparing the previous and new Loader output found changes only in the 14 selected pictures. All 26 placements produced a visible pixel change when checked individually. Both furniture columns use the figure redraw. The standing village giants use the idle frame and foot anchor from their animation script. Other pictures in these static renders use their first stored pose. The in-game checks for Jann and the Giants are recorded below.
 
 The giant behind the stump stool is Gilad, object 214 at (500, 602). He also appears at the lower edge of the red-chair view. The earlier preview selected picture 2469’s frame 0, which the mod retains from the original game. For the same facing, the approved animation script selects frame 12. Both furniture builds match the approved picture and script byte for byte. The close-up below holds the furniture fixed to show the pose correction.
 
 ![Gilad with the original pose used in the earlier preview and the approved standing pose in the corrected preview](gilad-standing-pose.png)
 
 ![Fletch, Ikibod and the Mosaic displays above Utella, the seated Sultan and Generoe](jann-mosaic-giants-figure-review.png)
+
+### Jann camp in DOSBox
+
+The two empty baskets beside Utella’s loom were already lower. Three baskets of produce and one filled with weaving supplies still had the tall woven sides. The revised art lowers the filled baskets by five pixels at the original floor line. Both handles remain visible, and the tools still hang over the rim. All four placements were checked at game size. Keep the overlapping cushions as they are. Their tops stay in contact around the Sultan, and the small front edges read as separate pillows. The round seats in the Shattered Lands upper castle provide a reference at the same scale.
+
+The wagon begins with both pieces hidden. When the camp script reveals them, the cover meets the shafts. Using the cart replaces both pieces with an open wagon and puts the tapestry on the sand. The party picked it up in both builds. The figure comparison pairs the same pose for the Sultan, Utella, Heroga and Zorani.
+
+[Whole maps and cushion rooms](jann-camp-whole-maps.png) · [Basket comparison](jann-filled-baskets.png) · [Wagon and figure captures](jann-wagon-and-figures.png) · [54 placements](jann-placements.csv) · [Playtest](../../playtest/logs/2026-11-28-ravager-jann-baskets-and-wagon.md)
 
 ### The giants’ homes in DOSBox
 
@@ -353,7 +361,7 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Twelve regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 1 (23), Mines 2 (25), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128), Silt Sea Giants (12) and Under Tyr (26). Eight regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Thirteen regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 1 (23), Mines 2 (25), Mines 3 (72), Jann (54), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128), Silt Sea Giants (12) and Under Tyr (26). Seven regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -366,7 +374,7 @@ The scan covered all 20 shipped region files. Twelve regions have in-game covera
 | 038 Mines 1 | 108 | 0 | 12 | All 23 placements checked in DOSBox. The northern barrels touch again. Four empty cots now match Sicky’s figure redraw |
 | 039 Mines 2 | 160 | 0 | 1 | All 25 placements checked in DOSBox, including three redrawn miners, 13 ore-car whistles and both winches. The eastern winch raised and lowered the elevator platform |
 | 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
-| 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
+| 03B Jann | 173 | 0 | 15 | All 54 listed placements checked in DOSBox. Four filled baskets lowered. Both wagon pieces open together and release the tapestry |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | All 57 listed placements checked in play, including 15 front-facing shelves, five side-facing counters, six silver furnishings and the repaired barrel stack |
 | 03E Volcano 1 | 133 | 6 | 19 | All 48 listed placements checked in play, including the redrawn beds, six front-facing shelves, four set tables, three side-facing counters and 13 silver furnishings |

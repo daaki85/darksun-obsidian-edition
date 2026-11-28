@@ -63,7 +63,8 @@ OPENABLE = (631, 1112, 1113, 1136, 2825, 3250)  # Two stored states, each with i
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 # Only these bottom rows take the Tyr scale. Keep cushion faces, brazier smoke and the tips of the polearms intact.
-BASE_ROWS = {628: 14, 629: 11, 630: 11, 1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43,
+BASE_ROWS = {628: 14, 629: 11, 630: 11, 1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22,
+             2763: 14, 2767: 14, 2796: 43,
              3485: 18, 3486: 18}
 
 # Each assembly uses the same floor line for the pictures and their attached pieces.
