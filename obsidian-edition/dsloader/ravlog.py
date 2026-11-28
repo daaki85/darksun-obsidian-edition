@@ -22,6 +22,7 @@ Lands' (dicelog.DiceLog), run with:
 import os
 import struct
 import sys
+import time
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
@@ -2352,6 +2353,8 @@ class RavDiceLog(dicelog.DiceLog):
                 ranges += [(sheet + game.SHEET_ABILITIES, 6), (sheet + game.SHEET_AGE, 1), (sheet + game.SPEC_SLOTS, 3)]
         self.guest.allow(ranges)
 
+    _hands_at: Optional[float] = None  # (the load whose own party's hands _party_pass has looked at)
+
     def _party_pass(self) -> List[str]:
         """The sequel's own party made ready (defaultparty.rav_ready: their weapon specs, Terrannus's
         Crusader, their features of their own), the bytes it writes made writable while it runs."""
@@ -2360,13 +2363,20 @@ class RavDiceLog(dicelog.DiceLog):
         if gd is None:
             return []
         out: List[str] = []
-        due = defaultparty.rav_hands_due(gd) if self.tsr_hdr is not None else []
-        if due and self._items_still():  # (Terrannus's shield out of his weapon hand, whatever the rules)
-            try:
-                with self._items_writable():
-                    out += defaultparty.rav_hands(gd, due)
-            finally:
-                itemgate.release(gd)
+        loaded = getattr(self, "_party_changed_at", None)
+        settled = loaded is not None and time.monotonic() - loaded >= dicelog.LOAD_SETTLE
+        if self.tsr_hdr is not None and self._hands_at != loaded and settled and not gd.in_combat():
+            # (Terrannus's shield out of his weapon hand, whatever the rules: once a load, a saved game too)
+            due = defaultparty.rav_hands_due(gd)
+            if not due:
+                self._hands_at = loaded
+            elif self._items_still():
+                try:
+                    with self._items_writable():
+                        out += defaultparty.rav_hands(gd, due)
+                finally:
+                    itemgate.release(gd)
+                self._hands_at = loaded
         if not gd.rules & (game.RULE_SPECIALIZE | game.RULE_KITS):
             return out
         before = self.guest.writable

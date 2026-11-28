@@ -59,6 +59,10 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager, Terrannus's hands in a game under way** (branch `claude/shield-hand-fix-2`). The swap
+of his shield and long sword (above) now also runs once each time a game is loaded, so a game begun before the fix
+is mended without a swap by hand. Gerakis's, Thy'rokh's and Terrannus's Effects panels seen in play.
+
 **Fixed: Wake of the Ravager's own party, the weapon hand and the Effects panel** (branch `claude/shield-hand-fix`).
 The sequel starts Terrannus with his Shield +1 in the right hand and his Longsword +1 in the left, so he swung once a
 round whatever his specs: the Loader now swaps them as a new game starts (the dice log says so), whatever the rules.

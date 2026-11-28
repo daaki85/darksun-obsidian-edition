@@ -44,8 +44,17 @@ Terrannus attacks Draxan with Longsword +1 (1d8+1): d20 = 11, needs 3+ (90%), hi
 
 Two swings with the long sword (a Crusader's warrior attacks), where the left hand gave him one.
 
-## Gaps
+## Part 2: games under way (branch `claude/shield-hand-fix-2`)
 
-- Gerakis's and Thy'rokh's new lines (WILD FIGHTING, GROVE WARDEN AC) not looked at in play (Ar'Anda's turn came
-  first): `test_ravkits.test_own_lines` runs `EF_OWN_LINES` for every own-party case.
-- A clicked portrait on the USE screen in a fight says ONLY ACTIVE CHAR CAN CAST: the panel is the active member's.
+The swap now runs once a load (`_hands_at` against `_party_changed_at`, after LOAD_SETTLE, out of a fight), not only
+before `rav_ready` marks the party. A restart with the party already marked (kit bytes 0x40/0x43 from the first
+attach, Terrannus's shield still in slot 3: the first dice log of this run was cut short) then a dice log: at 3.1 s
+after the attach "Terrannus's Longsword goes to the right hand, the weapon hand, and the Shield to the left", once.
+
+**The Effects panels** in the ambush: on the Effects screen a portrait click shows that member's panel (USE says
+ONLY ACTIVE CHAR CAN CAST). Thy'rokh: GROVE WARDEN AC, MASTER OF GYTHKA; Gerakis: WILD FIGHTING, SPECIALIZED IN LONG
+SWORD, GYTHKA, TRIKAL; Terrannus: KIT: CRUSADER, EXPERT IN LONG SWORD
+([the pictures](img/2026-11-28-ravager-own-party-effects-panels.png)).
+
+**What a play needs to know:** `ravdice.py ... | head -N` kills the dice log at the Nth line (SIGPIPE): a pass that
+waits for LOAD_SETTLE (3 s) never runs. Send it to a file and read that.
