@@ -4,7 +4,7 @@
 
 All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added three pictures: the empty throne summoned from Limbo into El’s Temple, the loot chest in Mines 3 and the upright polearm stand shared by three regions. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All eleven inventoried Yuan-ti furniture placements have now been seen in DOSBox, including the two storage piles from the figure redraw. The wider all-area review is still open. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Repairing the split beds and the Alliance storeroom
 
@@ -26,7 +26,7 @@ Pictures 2591 and 2704 in the original defect report belong to the red chair and
 
 ## Freestanding shelves
 
-The first pass lowers 19 freestanding shelves at all 54 of their placements. Each uses the 0.66 vertical scale of the Tyr furniture pass. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
+The first pass lowers 19 freestanding shelves at all 54 of their placements. The first version used the 0.66 vertical scale of the Tyr furniture pass on each shelf. The later Mines 3 orb check preserves the six faceted orbs by shortening the spaces between their boards. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
 
 ## What the first pass looks like
 
@@ -234,6 +234,18 @@ The tall polearms beside the table belong to a third, separate picture, 2796. Th
 
 [Playtest route, stock controls and rescue conditions](../../playtest/logs/2026-11-27-ravager-racks-and-polearms.md)
 
+## Mines 3 and Yuan-ti shelves
+
+The mine’s orb shelf exposed a problem with scaling the contents along with their support. Stock Ravager uses the same 14 × 10 blue orb on the shelf and on the laboratory floor. At the first-pass height of 33 pixels, the six on the shelf lost the lower part of their facets. Moving the three loaded boards closer together gives a 42-pixel shelf, down from 50, with all six orbs intact.
+
+![Stock 50-pixel shelf, first 33-pixel squash and revised 42-pixel shelf in DOSBox](mine-orb-shelf-live.png)
+
+The eight mine shelves and three tunnel shelves were each compared in DOSBox against the stock figures control. The chemical shelf still lets the party choose a reagent, and touching an orb gives the Mind Flayer’s thoughts. The two piles of jars, barrels and sacks in the Yuan-ti storeroom already use the figure redraw. Their individual containers remain visible. [All eleven shelf placements in play](mine-tunnel-shelves-live.png) · [Interactions and storeroom comparison](mine-shelf-and-tunnel-storage-live.png) · [Playtest route](../../playtest/logs/2026-11-27-ravager-mine-and-tunnel-shelves.md)
+
+The blue box marks the orb shelf. The Shattered Lands comparison is the stocked potion stand in Gedron. It shows how much detail can fit on a low stand at the original game resolution.
+
+![Whole mine and tunnel maps in both builds, with Gedron and its potion stand for reference](mine-tunnel-shelf-maps.png)
+
 ## Region work queue
 
 The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
@@ -244,11 +256,11 @@ The scan covered all 20 shipped region files. The counts below are distinct pict
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
-| 036 Yuan-ti | 104 | 3 | 5 | Both weapon displays and all three small vessels checked in play. Check the three freestanding shelves |
+| 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
 | 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
-| 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. Check the freestanding shelves and remaining loose furniture |
+| 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves checked. Check the remaining loose furniture |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | Upright polearm stand checked in play. Check the shelves and remaining room furnishings |
