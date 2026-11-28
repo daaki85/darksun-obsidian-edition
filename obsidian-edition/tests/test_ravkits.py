@@ -129,6 +129,20 @@ class KitTests(unittest.TestCase):
         self.assertEqual(kitpages.kit_ids(sheet), [kits.RAVAGER])
         self.assertFalse(self.run_routine("kit_is", sheet, eax=kits.RAVAGER)["eflags"] & 0x40)
 
+    def test_kit_names(self):
+        """EF_KIT_LINE's line (the Effects screen's) and KIT_NAME_PTR's name (the dual class's kit menu), read
+        from the tail (kit_names_table.inc, the memory pass of 2026-11-28), are kitpages' names for every kit:
+        the short one where kitpages.SHORT has it."""
+        tail = TSR + struct.unpack_from("<H", self.image, self.sym["hdr"] + 1836)[0]
+        sheet = wotr_sheet((9,), (5,), 2, 0)
+        for name, kid in kitpages.KIT_IDS.items():
+            with self.subTest(kit=name):
+                got = self.run_routine("ef_kit_line", sheet, eax=kid, edi=0)
+                line = bytes(self.mu.mem_read(TSR * 16 + (got["esi"] & 0xFFFF), 32)).split(b"\0")[0]
+                self.assertEqual(line.decode(), "KIT: " + kitpages.SHORT.get(name, name.upper()))
+                at = self.run_routine("kit_name_ptr", sheet, eax=kid)["esi"] & 0xFFFF
+                self.assertEqual(bytes(self.mu.mem_read(tail * 16 + at, 24)).split(b"\0")[0].decode(), name.upper())
+
     def test_skill(self):
         """SPEC_OF_SHEET's DL is specialize.skill with the kits for every warrior and expertise kit (and a
         plain warrior's for a control), every weapon type: a Battle Mage's, Crusader's, Mind Warrior's
