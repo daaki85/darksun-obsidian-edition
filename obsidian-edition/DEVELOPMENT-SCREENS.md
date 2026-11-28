@@ -268,9 +268,13 @@ and B3h is a field term as B1h). 42 quests: 37 by a flag set beside the
 reward, one by a number (Surrakina's bargain), four by their message alone;
 `LEFT_OUT` gives the reason for each of the other 82 calls (small finds and
 skill checks, talk checks that can be tried again, amounts shared in a
-region, flags cleared later). Three have a `given` (Arslan's errand, the
-medallion, the villager in the rubble); the walkthrough in the private
-repository helped name them, the words the project's own. Tests:
+region, flags cleared later). Five have a `given` (Arslan's errand, the
+medallion, the villager in the rubble, Fayina's debt, the hermit's student);
+the walkthrough in the private repository helped name them, the words the
+project's own. The rest were looked for on 2026-11-28 (each reward script's
+flags tested before it and set in another script, the talk beside them read):
+most are finds, fights and puzzles that no one asks for, so they have nothing
+to show before they are done. Tests:
 `tests/test_ravquests.py` (with `DSUN_WOTR`, the same checks as Shattered
 Lands' against the sequel's scripts, and none of the table's lines theirs).
 

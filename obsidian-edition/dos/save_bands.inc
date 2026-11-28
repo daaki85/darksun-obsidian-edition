@@ -2,8 +2,8 @@
 ; the Player's Handbook's Table 60 by class group (priests, warriors, wizards, rogues) and Dark Sun's
 ; Table 8 for psionicists (SAVE_PSI_SET), a band each: its first level, then paralysis, poison and death;
 ; rod, staff and wand; petrification and polymorph; breath; spell. Each set's begin with level 1.
-; Included by both before their code: SAVE_BASE_CODE (in the segment) and SAVE_BANDS_DATA (DSCLOG's in its
-; tail, DSCLOG2's in its segment: each reached through TAIL_SEG, DSCLOG2's its own segment).
+; Included by both before their code: SAVE_BASE_CODE (in the segment) and SAVE_BANDS_DATA (in the tail, each
+; helper's: SAVE_BASE reaches them through TAIL_SEG).
 SAVE_BAND       equ 6                   ; (a band: its first level, then the five saves)
 SAVE_ROGUES     equ 3                   ; (the game's group of thieves and psionicists)
 SAVE_PSI_SET    equ 4                   ; (SAVE_BANDS' psionicists' set)

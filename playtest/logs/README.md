@@ -267,6 +267,7 @@ schedules and diffs a log made or used.
 | [2026-11-28](2026-11-28-ravager-save-pages.md) | Wake of the Ravager: more saves, pages 2 to 4 and QUICK turned with PgDn and PgUp, the page's name under EXIT, a save and load on page 2 |
 | [2026-11-28](2026-11-28-ravager-journal-freeze.md) | Wake of the Ravager: its global numbers found (DS:15F6h, SAVE 31) for the journal's place in a save; DSCLOG2's notes for the freeze report |
 | [2026-11-28](2026-11-28-ravager-quests.md) | Wake of the Ravager: its flags found (DS:15F2h, SAVE 30), the Journal tab's quests read by the Loader, all 350 of its scripts read |
+| [2026-11-28](2026-11-28-ravager-play-checks.md) | Wake of the Ravager: the quality-of-life port played by hand (T, Shift+T, Alt, item box, Effects click, load window, Characters tab, S, EDIT's age); new characters' and level-ups' saves, View Character's DAM and the arrows label fixed; two more quests open |
 
 ## files/
 

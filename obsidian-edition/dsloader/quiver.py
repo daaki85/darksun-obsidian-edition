@@ -34,12 +34,15 @@ def shooter(gd: game.GameData, member: int) -> bool:
 
 
 def word(gd: game.GameData, stack: bytes) -> str:
-    """The stack's kind in a word for its label: its name's last ("Arrows", "Stones")."""
+    """The stack's kind in a word for its label: its name's last, made plural ("Arrows", "Stones": Wake of
+    the Ravager names its arrows "Arrow", which read "Arrow: 24 left")."""
     try:
         name = gd.item_label(stack, gd.item_type_record(stack)).split()
     except (struct.error, IndexError, ValueError):
         name = []
-    return name[-1] if name else "Arrows"
+    if not name:
+        return "Arrows"
+    return name[-1] if name[-1][-1:].lower() == "s" else name[-1] + "s"
 
 
 def left_label(gd: game.GameData, member: int, last: Optional[bytes] = None) -> Optional[str]:
