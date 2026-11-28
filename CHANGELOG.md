@@ -550,6 +550,9 @@ DOSBox-X).
   stock foot line, its walk steps through its poses square by square (played), and the fire drake is
   the stock dragon's size (played). The mod's copy of the catalogue (`reports/ravager-figure-redraws/`)
   brought up to the same revision.
+- The ten shopkeepers of Tyr (picture 691, two armourers, two weaponers, six salespeople) are Codex's
+  redraw on Shattered Lands' human body, with the sequel merchant's pale shoulder wrap, coral sash and dark
+  hair (re-packed; the catalogue's 691 package moved here from the private repository).
 
 **New: Shattered Lands' screens and icons in the sequel**
 - `dsloader/ravui.py` puts Shattered Lands' 45 interface pictures and 221 icons (130 from another number:

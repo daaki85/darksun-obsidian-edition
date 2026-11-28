@@ -213,7 +213,7 @@ The original comparison below shows the retail Elf on both Shattered Lands rows.
 
 **Artwork approved for the player-created male elf only.** Object 304 is the Elf character-creation slot. The older preview below shows the approved body and pose with the retail head.
 
-**Approved split.** The importer assigns the Obsidian male Elf on picture 3961 to object 304 only. It installs the shipped walking, combat and script chunks on 691 for the ten Human merchants, including when importing over an earlier party-art swap. Live character creation is pending.
+**Approved split.** The importer assigns the Obsidian male Elf on picture 3961 to object 304 only. The ten Human merchants retain picture 691. The approved merchant redraw below uses that existing split. Live character creation is pending.
 
 ![691 playing](img/691.gif)
 
@@ -221,11 +221,15 @@ The original comparison below shows the retail Elf on both Shattered Lands rows.
 
 ### 691 in the original game · Human merchants
 
-Two armorers, two weaponers and six salespeople also reference 691. The game records all ten as Human (race code 1). Keep their original artwork on 691. Any future merchant redraw gets a separate review.
+**Redraw approved for all ten shopkeepers.** The two armorers (152, 322), two weaponers (153, 323) and six salespeople (154, 155, 320, 321, 324, 325) all have race 1, Human. One outfit on Shattered Lands human picture 2095 carries the Ravager merchants’ dark hair, pale shoulder wrap and coral sash. The wrap follows the chest as the arms pass in front, with a folded sash end at the hip. The comparison includes the earlier detached study and the Shattered Lands human in matching facings.
 
-**Detached Human merchant study.** [Review the separate NPC proposal](merchant-batch.md#shared-merchant-figures). The approved player-only split is documented above.
+![Original, earlier study, proposed merchant and Shattered Lands human in four facings with all ten shop records at game size](img/691-merchants-comparison.png)
 
-**Current proposal.** [Review the revision](merchant-batch-contrast.md#tyr-street-comparison).
+[Watch walk-to-rest, melee and bow in four facings](img/691-merchants-motion.gif) · [Inspect all 27 drawings](img/691-merchants-frames.png) · [Download the approved 691 package](proposals/691-human-merchants.zip)
+
+The merchant package selects picture 691 alone. The package replaces the 14 base and 13 combat drawings in place and includes the original 73-step script byte for byte. The toward idle in slot 16 uses base 0, away uses base 1, and right and left share base 2 with the shipped mirror flag. The floor strip stages all ten shop records on Tyr street tiles at 1× using RGN032 palette 50. Both a fresh import and an upgrade from the stock-merchant catalogue retained all ten assignments and the approved elf on 3961. Comparing the two catalogue versions after import found changes only in BMP 691 and CBMP 691. A shop encounter in the imported mod still needs a playtest.
+
+[Earlier merchant batch](merchant-batch.md#shared-merchant-figures) · [Contrast study](merchant-batch-contrast.md#tyr-street-comparison) · [Shipped 691 package used before this proposal](approved/691-human-merchants-stock.zip)
 
 ## 692: Half-giant female party figure (object 309)
 
