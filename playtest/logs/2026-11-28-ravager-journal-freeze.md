@@ -13,7 +13,17 @@ DS is at **DS:15F6h** (SL's 1356h); DS:15F2h points 70h bytes before them (SL's 
 Words 198 and 199 written (12345678h) and read back through the pointer, then put back to 0 and DOSBox stopped
 without a save (the rule: no save after a memory edit). The game's own saves carry the block as it is in memory
 (the quick save with word 82 set), and a load fills it from the chunk, so a head written by the Loader goes
-with each save. Not played: the Loader's dice log attached with the journal following a load.
+with each save.
+
+## The journal across a save and a load (the Loader attached)
+
+`ravload.sh ravager-after-ambush`, then the Loader's `ravlog.RavDiceLog` attached (a script like `ravdice.py`,
+quick saves off, its journal in a scratch file), an entry added as a message box would be ("FIRST NOTE"):
+the journal's head 1, and the game's numbers 198-199 read 1 a pass later. F1, PgDn to page 4, a row, "JOURNAL ONE",
+Return: SAVD02.SAV's SAVE 31 holds 1 at word 198. "SECOND NOTE" added: head 2, the game's 2. F2, PgDn (page 2's
+PAGE TWO, made before the Loader wrote any head) loaded: head 0, the journal empty (a game begun). F2, PgDn twice
+(page 4, JOURNAL ONE chosen) loaded: head 1, the chain "FIRST NOTE" alone (the second note is the other branch's).
+SAVD02 removed from the folder afterwards.
 
 The sequel's scripts: 257 decode, using numbers up to 150; in the 93 that don't, the bytes 87h C6h (number 198)
 come 11 times, and 27 times in the 257 where no script uses 198: chance bytes.
