@@ -413,14 +413,14 @@ class PassTests(unittest.TestCase):
         ravlog.apply_layout()
         sheet = bytearray(game.SHEET_SIZE)
         sheet[game.SHEET_RACE], sheet[game.SHEET_CLASSES], sheet[game.SHEET_LEVELS] = 2, 9, 15
-        self.assertEqual(tracker.xp_cap(), ravager.RAV_XP_CAP)
-        self.assertEqual(tracker.xp_share(bytes(sheet)), ravager.RAV_XP_CAP)
+        self.assertEqual(tracker.CAP, ravager.RAV_XP_CAP)
+        self.assertEqual(tracker.SHARE(bytes(sheet)), ravager.RAV_XP_CAP)
         sheet[game.SHEET_CLASSES + 1], sheet[game.SHEET_LEVELS + 1] = 17, 15
-        self.assertEqual(tracker.xp_share(bytes(sheet)), ravager.RAV_XP_CAP // 2)
+        self.assertEqual(tracker.SHARE(bytes(sheet)), ravager.RAV_XP_CAP // 2)
         self.assertEqual(tracker.cap_why(bytes(sheet)), f", {ravager.RAV_XP_CAP:,} shared by 2 classes")
         ravlog.restore_layout()
-        self.assertEqual((tracker.CAP, tracker.SHARE), (None, None))
-        self.assertEqual(tracker.xp_cap(), game.XP_CAP)
+        self.assertEqual((tracker.CAP, tracker.SHARE), (game.XP_CAP, game.xp_share))
+        self.assertEqual(tracker.CAP, game.XP_CAP)
 
     def test_the_sequels_item_watch(self):
         """The missing-item report runs in the sequel (PASS's itemwatch step) with the sequel's item types

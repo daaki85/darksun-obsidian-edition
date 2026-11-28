@@ -152,6 +152,20 @@ class DresserTests(unittest.TestCase):
         # (nothing changed: nothing written again)
         self.assertEqual(dresser.update(), [])
 
+    def test_a_reconnect_loads_nothing_anew(self):
+        """A new RavDresser (the dice log connected again) finding the copy already dressed so: nothing written
+        and no cache slot made stale, as Shattered Lands' Dresser (_same_in_copy)."""
+        gd = self._game([0])
+        self.assertEqual(ravdress.RavDresser(gd, _Sources(), self.path).update(), [300])
+        gd2 = self._game([0])
+        with open(self.path, "rb") as f:
+            before = f.read()
+        self.assertEqual(ravdress.RavDresser(gd2, _Sources(), self.path).update(), [])
+        with open(self.path, "rb") as f:
+            self.assertEqual(f.read(), before)
+        cache = (gd2.load_seg + ravdress.CACHE_SEG) * 16 + ravdress.CACHE_OFF
+        self.assertEqual(struct.unpack("<H", gd2.guest.read(cache + ravdress.CACHE_ENTRY, 2))[0], 25)
+
     def test_no_copy(self):
         dresser = ravdress.RavDresser(self._game([0]), _Sources(), self.path + ".none")
         self.assertEqual(dresser.update(), [])

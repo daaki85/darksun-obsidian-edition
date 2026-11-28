@@ -315,7 +315,7 @@ bigger character sheets) as it goes in (a game already running lists it from its
   frame cut down round them: each small pixel the average colour of the big pixels it covers, put back
   to the nearest colour the face itself uses, so it is smooth shading as in Shattered Lands' faces, not
   the big picture's dithering left as speckle ([the faces side by side](docs/ravager-portrait-resample.png)).
-  ![Before and after: Uhubito's talk box and the XP message at the end of the first fight](docs/ravager-small-portraits.png)
+  ![Before and after: Uhubito's talk box and the XP message at the end of the first fight (taken before the empty frame got the emblem, below)](docs/ravager-small-portraits.png)
   With no speaker the frame holds Shattered Lands' stone dark-sun emblem, as there (taken from the
   player's Shattered Lands with its interface; the sequel's grey wash without it), and the shop's
   right-hand panel is laid out as Shattered Lands': the merchant's face at the top, SELL under it, MORE
@@ -395,21 +395,22 @@ greys, which is why [its interface art](#the-mod-in-the-sequel) is matched to th
 ## Not in the sequel yet
 
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
-and the sequel does not yet, each checked against the Loader's code (2026-11-27):
+and the sequel does not yet, each checked against the Loader's code (2026-11-28):
 
 - **[What the party wears](FEATURES.md#what-the-party-wears)**: the party wears its class outfits on the map and in a fight
   (2026-11-27), but not yet its worn gear over them, a second member with the same figure (they share the first's
-  picture). The party column's and the creation screen's small figures wear the outfits too.
+  picture), nor the hair greying with [age](FEATURES.md#ages-and-magical-aging). The party column's and the creation
+  screen's small figures wear the outfits too.
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
 - **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
   shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the
   large ([its creatures](CREATURES.md#wake-of-the-ravager)).
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, and Hasted and Slowed.
 - **The game's people** wearing and wielding their gear as they come on the map.
-- **The Journal tab's open quests**: the sequel's quests show once finished; five show while open (the
-  errands someone asks for: most of the rest are finds and fights no one asks for), and 62 of its
-  scripts' own awards are not in the table yet (the developers' notes on the quests say what is left).
+- **The Journal tab's open quests**: the sequel's 42 quests show once finished; five show while open (the
+  errands someone asks for: most of the rest are finds and fights no one asks for). Of its scripts' other
+  awards, eight are left out because what earns them wasn't established (the rest are small finds, talk
+  checks and the like, each with its reason in `dsloader/ravquests.py`).
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).

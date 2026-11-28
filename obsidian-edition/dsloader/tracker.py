@@ -42,20 +42,10 @@ PRIME_REQUISITES = {**{c: (4,) for c in (1, 2, 3, 4)}, **{c: (4, 5) for c in (5,
 PRIME_BONUS_SCORE, PRIME_BONUS_PERCENT = 16, 10
 ABILITY_NAMES = ("STR", "DEX", "CON", "INT", "WIS", "CHA")
 XP_MOST = 2_000_000_000  # (the game's own cap, in its XP routine 6B817h)
-# Another game's XP cap and a sheet's share of it (Wake of the Ravager's: ravlog.apply_layout); None for
-# Shattered Lands' (game.XP_CAP, game.xp_share)
-CAP: Optional[int] = None
-SHARE: Optional[Callable[[bytes], int]] = None
-
-
-def xp_cap() -> int:
-    """The XP cap in force: Shattered Lands' (game.XP_CAP), or the sequel's (CAP)."""
-    return game.XP_CAP if CAP is None else CAP
-
-
-def xp_share(sheet: bytes) -> int:
-    """A sheet's share of the cap in force: game.xp_share's, or the sequel's (SHARE)."""
-    return game.xp_share(sheet) if SHARE is None else SHARE(sheet)
+# The XP cap in force and a sheet's share of it: Shattered Lands' (game.XP_CAP, game.xp_share), rebound to
+# Wake of the Ravager's while the sequel runs (ravlog.apply_layout, as quests.QUESTS is)
+CAP: int = game.XP_CAP
+SHARE: Callable[[bytes], int] = game.xp_share
 
 
 def prime_bonus(sheet: bytes, gain: int) -> Tuple[int, List[str]]:
@@ -86,7 +76,7 @@ def prime_bonus(sheet: bytes, gain: int) -> Tuple[int, List[str]]:
 
 def cap_why(sheet: bytes) -> str:
     """For the hold line: how a share of the XP cap below the cap came about ("" for all of it)."""
-    share, cap = xp_share(sheet), xp_cap()
+    share, cap = SHARE(sheet), CAP
     if share == cap:
         return ""
     if sheet[game.SHEET_RACE] != game.HUMAN:
@@ -176,7 +166,7 @@ class PartyTracker:
         return out
 
     def hold_at_cap(self, members: List[Optional[Member]]) -> List[str]:
-        """Each party member's XP above its share of the XP cap (xp_share) put back to it, on the
+        """Each party member's XP above its share of the XP cap (SHARE) put back to it, on the
         sheet and in MEMBERS: a line for each, with what wasn't counted. (An award is seen held as
         it lands, before the XP line, which then shows the gain that counted.)"""
         out = []
@@ -184,7 +174,7 @@ class PartyTracker:
             if member is None:
                 continue
             sheet = self.game.sheet(i)
-            share = xp_share(sheet)
+            share = SHARE(sheet)
             if member.xp <= share:
                 continue
             at = aging.sheet_address(self.game, i)
@@ -210,7 +200,7 @@ class PartyTracker:
                 continue
             at = aging.sheet_address(self.game, i)
             xp = struct.unpack("<I", self.game.guest.read(at + game.SHEET_XP, 4))[0]  # (as it is now)
-            most = min(XP_MOST, xp_share(self.game.sheet(i)))
+            most = min(XP_MOST, SHARE(self.game.sheet(i)))
             given = min(xp + bonus, max(xp, most)) - xp
             if not given:
                 notes[i] = f"the {bonus:+d} for {'; '.join(why)} held at the cap"
