@@ -136,6 +136,10 @@ Run these in order, from `playtest/`, at the start of every test and again after
      helper's tail where its header says (+1834 the segment + TAIL_PARAS), its tables as built, and what
      the Loader has written in its buffers (the USE screen's lines, the item names, the labels)
      ([DSCLOG2's segment, tail and install](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclog2s-segment-tail-and-install)).
+     The sequel's DOSBox runs `dos/DSCLOG2.EXE` as it was when DOSBox started: after a rebuild, restart
+     it (`ps -o lstart= -p $(cat $WORK/rav.pid)` against the EXE's time; 2026-11-28 a test ran on the old
+     build). A helper variable's offset for a look in memory: `ravtail.symbols()`, its `image` section, at
+     the INT F5h vector's segment.
    - For a script change, decode the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF
      python3 dec.py SCRIPT LO HI`) and check the change is there before trusting anything seen in
      play. `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command

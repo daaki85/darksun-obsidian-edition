@@ -1456,6 +1456,16 @@ the last three stay as they are. The routine and its clicks are the game's: only
 
 ([In the features page](FEATURES.md#more-saves).)
 
+**In the sequel** (DSCLOG2's MORE SAVES): the same letters in the same two names (DS:2088h, 20B9h), the keys
+alone (its RESOURCE.GFF has no PAGE buttons to copy). Site 238 takes the window routine's way out for a key
+it has no use for (7DABCh): PgUp and PgDn change the letter and run the window's own routines, as DSCLOG
+does (search the folder, draw the ten rows, choose the first row, its name below), then draw the page's
+name and "PGUP PGDN" under EXIT. Site 216 draws them as the window opens (in place of the `add sp,4` after
+the opening routine draws the window: the far call before it is fixed up as the overlay loads). Site 239
+gives each page's GREQ chunks their own numbers (B 200 + the slot, C 300, D 400, QUICK 100), and the load's
+GREQ read (site 84) takes the same base. The map's first pass after a window shuts puts the game's page and
+its first row back, so every window opens on page 1.
+
 How: the save names the game searches the folder for and writes a save to
 (`SAVE??.SAV`, `SAVE%.2d.SAV`) are two strings in its memory; DSCLOG changes
 their fourth letter for the page. The window's event routine leaves keys and

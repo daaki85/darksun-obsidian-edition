@@ -180,13 +180,15 @@ class NamedSavesTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_the_sequels_page(self):
-        """Its saves copied under their names (one page: "Page 1 slot NN"); the quick saves' page left
-        out; Shattered Lands' tests don't take a sequel's save, nor its a Shattered Lands' one."""
-        for name, title in (("SAVE01.SAV", "AFTER AMBUSH"), ("SAVE03.SAV", "AT THE ROOST"), ("SAVQ01.SAV", "Quick")):
+        """Its saves copied under their names (four pages, MORE SAVES: "Page 2 slot NN"); the quick saves'
+        page left out; Shattered Lands' tests don't take a sequel's save, nor its a Shattered Lands' one."""
+        for name, title in (("SAVE01.SAV", "AFTER AMBUSH"), ("SAVE03.SAV", "AT THE ROOST"), ("SAVB02.SAV", "PAGE TWO"),
+                            ("SAVQ01.SAV", "Quick")):
             with open(os.path.join(self.game, name), "wb") as f:
                 f.write(save_file(title, ravager.GAME_SHEET_SIZE if name == "SAVE03.SAV" else ravager.SHEET_SIZE))
         made = namedsaves.sync(self.game, self.named, wotr=True)
-        self.assertEqual(sorted(made), ["Page 1 slot 01 - AFTER AMBUSH.SAV", "Page 1 slot 03 - AT THE ROOST.SAV"])
+        self.assertEqual(sorted(made), ["Page 1 slot 01 - AFTER AMBUSH.SAV", "Page 1 slot 03 - AT THE ROOST.SAV",
+                                       "Page 2 slot 02 - PAGE TWO.SAV"])
         self.assertEqual(namedsaves.sync(self.game, self.named), [])  # (as Shattered Lands': none)
         self.assertIsNone(namedsaves.save_name(save_file("x")))
         self.assertTrue(namedsaves.is_wotr_save(os.path.join(self.game, "SAVE01.SAV")))
@@ -201,13 +203,14 @@ class NamedSavesTests(unittest.TestCase):
         chunks = gff.read_gff(open(os.path.join(self.game, "SAVE04.SAV"), "rb").read())
         self.assertEqual(len(chunks[ravager.SHEETS_CHUNK]), 17 * ravager.SHEET_SIZE)
         self.assertTrue(os.path.exists(os.path.join(self.named, "Replaced - Page 1 slot 04 - THERE.SAV")))
+        self.assertEqual(namedsaves.restore(copy, self.game, 4, 10, self.named, wotr=True), "OLD")  # (page 4: SAVD)
+        self.assertTrue(os.path.exists(os.path.join(self.game, "SAVD10.SAV")))
         with self.assertRaises(ValueError):
-            namedsaves.restore(copy, self.game, 2, 4, self.named, wotr=True)  # (one page)
+            namedsaves.restore(copy, self.game, 5, 4, self.named, wotr=True)  # (four pages)
 
 
-@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
-class HelperTests(unittest.TestCase):
-    """DSCLOG2's QS_KEY, SAVE_TICK and GREQ_LOAD."""
+class HelperRig(unittest.TestCase):
+    """DSCLOG2 in the emulator, the game's DS and routines around it (HelperTests, PageKeyTests)."""
     TSR, GAME_DS, SS = 0x1000, 0x5000, 0x4000
     LOAD = GAME_DS - ravager.DGROUP
 
@@ -284,6 +287,12 @@ class HelperTests(unittest.TestCase):
             self.word(name, value)
         self.go("save_tick")
         self.assertEqual([self.word(n) for n in ("s_ip", "s_cs", "s_fl")], [0x1111, 0x2222, 0x0202])
+
+
+
+@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
+class HelperTests(HelperRig):
+    """DSCLOG2's QS_KEY, SAVE_TICK and GREQ_LOAD."""
 
     def test_header(self):
         """The fields at quicksave's layout (ravlog.QUICK_LAYOUT), past DSCLOG's header and the recent ones."""
@@ -405,6 +414,147 @@ class HelperTests(unittest.TestCase):
             self.assertEqual((mu.reg_read(r.UC_X86_REG_AX), mu.reg_read(r.UC_X86_REG_SP)), (want, 0x7F6), letter)
         self.assertEqual(self.word("greq_loads"), 1)
 
+    def test_greq_by_page(self):
+        """MORE SAVES: each page's saves keep their GREQ chunks apart: GREQ_LOAD (site 84) and GREQ_SAVE (site
+        239, "mov ax,si / inc ax"), the page's base more (PAGE_BASE: B 200, C 300, D 400, QUICK 100)."""
+        mu = self.mu
+        mu.mem_write(0x3000 * 16 + 2, struct.pack("<H", 3))
+        for letter, base in ((b"E", 0), (b"B", 200), (b"C", 300), (b"D", 400), (b"Q", 100), (b"?", 0)):
+            mu.mem_write(self.GAME_DS * 16 + 0x2088, letter)
+            for routine, want in (("greq_load", base + 3), ("greq_save", base + 5)):
+                mu.mem_write(self.SS * 16 + 0x7F0, struct.pack("<HHH", 0xFFF0, self.TSR, 0x2))
+                for name, value in dict(cs=self.TSR, ds=self.GAME_DS, ss=self.SS, esp=0x7F0, es=0x3000, eax=0x9999,
+                                        esi=4, ebx=0x4321).items():
+                    mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+                mu.emu_start(self.TSR * 16 + self.sym[routine], self.TSR * 16 + 0xFFF0, count=1000)
+                self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + n)) for n in ("AX", "BX", "SI", "SP")],
+                                 [want, 0x4321, 4, 0x7F6], (letter, routine))
+
+    def test_pages_back_to_the_first(self):
+        """A page PgDn turned to (B, say): the game's again once the map is the screen, on its first row."""
+        ds = self.GAME_DS * 16
+        lst = (self.LOAD + 0x3C4C) * 16
+        self.mu.mem_write(ds + 0x2088, b"C")
+        self.mu.mem_write(ds + 0x20B9, b"C")
+        self.mu.mem_write(lst, struct.pack("<HH", 6, 3))
+        self.ask(0)
+        self.assertEqual((self.letters_now(), self.word("pages_back"), bytes(self.mu.mem_read(lst, 4))),
+                         (b"EE", 1, bytes(4)))
+
+
+@unittest.skipIf(Uc is None or not shutil.which("nasm"), "needs unicorn and nasm")
+class PageKeyTests(HelperRig):
+    """DSCLOG2's PAGE_KEY (site 238, the window routine's way out for a key it has no use for) and PAGE_OPEN
+    (site 216): the window's own routines (its overlay's, from the way back; the button and window routines,
+    resident) stubbed and their calls kept."""
+    OVL, BACK = 0x6000, 0x1000   # (the way back, the overlay's: 7DABFh)
+    SAVES = 0x7000               # (the saves' records, 7Dh bytes each)
+
+    def setUp(self):
+        super().setUp()
+        mu, sym = self.mu, self.sym
+        self.page_calls = []
+        back = 0x7DABF
+        overlay = {"scan": 0x7D3F2, "row": 0x7E058, "pick": 0x7E0F4}
+        for name, at in overlay.items():
+            self.stub(self.OVL * 16 + self.BACK + at - back, name)
+        self.stub((self.LOAD + 0x2EBE) * 16 + 0x071F, "button")
+        self.stub((self.LOAD + 0x2A8E) * 16 + 0x060D, "window")
+        self.stub((self.LOAD + 0x301B) * 16 + 0x0172, "text")
+        ds = self.GAME_DS * 16
+        mu.mem_write(ds + 0x6278, struct.pack("<HH", 0, self.SAVES))
+        mu.mem_write((self.LOAD + 0x40AF) * 16, struct.pack("<HHB", 0x0004, 0x7E29, 1))  # (the load window)
+        self.saves = {}
+
+    def stub(self, at, name):
+        self.mu.mem_write(at, b"\xcb")  # RETF
+        self.mu.hook_add(UC_HOOK_CODE, lambda uc, *_, n=name: self.page_call(uc, n), begin=at, end=at)
+
+    def page_call(self, uc, name):
+        sp = uc.reg_read(r.UC_X86_REG_SS) * 16 + uc.reg_read(r.UC_X86_REG_SP)
+        args = struct.unpack("<14H", uc.mem_read(sp + 4, 28))
+        if name == "scan":  # (the folder searched: the page's saves put in the records)
+            letter = bytes(uc.mem_read(self.GAME_DS * 16 + 0x2088, 1))
+            for row in range(10):
+                name_at = self.SAVES * 16 + row * 0x7D
+                uc.mem_write(name_at, (b"x" if (letter, row) in self.saves else b"\0"))
+            self.page_calls.append(("scan", letter.decode()))
+        elif name == "button":
+            self.page_calls.append(("button", args[2] - 0x4780, args[4]))
+        elif name == "text":
+            seg, off = args[13], args[12]
+            text = bytes(uc.mem_read(seg * 16 + off, 16)).split(b"\0")[0]
+            self.page_calls.append(("text", text.decode()))
+        else:
+            self.page_calls.append((name,) + ((args[0],) if name in ("row", "pick") else ()))
+        uc.reg_write(r.UC_X86_REG_BX, 0xDEAD)
+        uc.reg_write(r.UC_X86_REG_ES, 0xBEEF)
+
+    def press(self, key, letter=b"E", load=True):
+        mu = self.mu
+        ds = self.GAME_DS * 16
+        mu.mem_write(ds + 0x2088, letter)
+        mu.mem_write((self.LOAD + 0x40AF) * 16 + 4, bytes((1 if load else 0,)))
+        mu.mem_write(self.SS * 16 + 0x700 + 0x12, struct.pack("<H", key))   # (the routine's BP+12h)
+        mu.mem_write(self.SS * 16 + 0x7F0, struct.pack("<HHH", self.BACK, self.OVL, 0x2))
+        for name, value in dict(cs=self.TSR, ds=self.GAME_DS, ss=self.SS, esp=0x7F0, ebp=0x700, eflags=0x2).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        ends = {self.OVL * 16 + self.BACK + 0x7E00F - 0x7DABF: "ignored", self.OVL * 16 + self.BACK + 0x7DBD7 - 0x7DABF: "done"}
+        self.ended = None
+        hooks = [mu.hook_add(UC_HOOK_CODE, lambda uc, *_, e=e: (setattr(self, "ended", e), uc.emu_stop()), begin=at, end=at)
+                 for at, e in ends.items()]
+        mu.emu_start(self.TSR * 16 + self.sym["page_key"], 0, count=200000)
+        for h in hooks:
+            mu.hook_del(h)
+        self.assertEqual((mu.reg_read(r.UC_X86_REG_SP), mu.reg_read(r.UC_X86_REG_BP), mu.reg_read(r.UC_X86_REG_DS)),
+                         (0x7F6, 0x700, self.GAME_DS))
+        return self.ended, bytes(mu.mem_read(ds + 0x2088, 1)).decode()
+
+    def test_other_keys(self):
+        for key in (0x1E61, 0x4800, 0x011B):
+            self.assertEqual(self.press(key), ("ignored", "E"))
+        self.assertEqual(self.page_calls, [])
+
+    def test_pgdn_on_the_save_window(self):
+        """The save window: the next page, its rows drawn again, the first chosen, the label; none past D."""
+        self.assertEqual(self.press(0x5100, load=False), ("done", "B"))
+        self.assertEqual(self.page_calls, [("scan", "B")] + [("row", n) for n in range(10)] + [
+            ("button", 0, 5), ("button", 0, 4), ("pick", 0), ("window",), ("text", "PAGE 2"), ("text", "PGUP PGDN")])
+        self.page_calls.clear()
+        self.assertEqual(self.press(0x5100, b"D", load=False), ("ignored", "D"))  # (no QUICK to save on)
+        self.assertEqual(self.page_calls, [])
+        self.assertEqual(self.press(0x49E0, b"B", load=False)[1], "E")  # (the grey PgUp, as the pad's)
+
+    def test_the_load_window_passes_empty_pages(self):
+        """The load window: PgDn on to the next page with a save (its first chosen), QUICK last; PgUp back."""
+        self.saves = {(b"D", 3), (b"Q", 0)}
+        self.assertEqual(self.press(0x5100), ("done", "D"))
+        self.assertEqual([c for c in self.page_calls if c[0] in ("scan", "pick", "text")],
+                         [("scan", "B"), ("scan", "C"), ("scan", "D"), ("pick", 3), ("text", "PAGE 4"), ("text", "PGUP PGDN")])
+        self.page_calls.clear()
+        self.assertEqual(self.press(0x5100, b"D"), ("done", "Q"))
+        self.assertEqual([c for c in self.page_calls if c[0] == "text"][0], ("text", "QUICK"))
+        self.page_calls.clear()
+        self.assertEqual(self.press(0x5100, b"Q"), ("ignored", "Q"))  # (no page after QUICK)
+        self.saves = set()
+        self.assertEqual(self.press(0x4900, b"D"), ("ignored", "D"))  # (none before with a save: D searched again)
+        self.assertEqual([c[1] for c in self.page_calls if c[0] == "scan"], ["C", "B", "E", "D"])
+
+    def test_page_open(self):
+        """Site 216 in place of "add sp,4" after the window is drawn as it opens: the label, then that add."""
+        mu = self.mu
+        mu.mem_write(self.GAME_DS * 16 + 0x2088, b"Q")
+        mu.mem_write(self.SS * 16 + 0x7EC, struct.pack("<HHHHH", 0x1111, 0x2222, 0x0202, 0xAAAA, 0xBBBB))
+        for name, value in dict(cs=self.TSR, ds=self.GAME_DS, ss=self.SS, esp=0x7EC, ebp=0x700, esi=7).items():
+            mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        end = 0x2222 * 16 + 0x1111
+        mu.mem_write(end, bytes((0xF4,)))
+        mu.emu_start(self.TSR * 16 + self.sym["page_open"], end, count=200000)
+        self.assertEqual([mu.reg_read(getattr(r, "UC_X86_REG_" + n)) for n in ("SP", "BP", "SI", "DS", "CS", "IP")],
+                         [0x7F6, 0x700, 7, self.GAME_DS, 0x2222, 0x1111])
+        self.assertEqual(self.page_calls, [("window",), ("text", "QUICK"), ("text", "PGUP PGDN")])
+        self.assertEqual(self.word("pg_opens"), 1)
+
 
 class PatchTests(unittest.TestCase):
     def test_site(self):
@@ -417,6 +567,13 @@ class PatchTests(unittest.TestCase):
         self.assertIn("inc word [cs:main_ticks]", scroll[:scroll.index("iret")])
         ours = src[src.index("\nour_key:"):]
         self.assertIn("call qs_key", ours[:300])
+
+    def test_page_sites(self):
+        """MORE SAVES' sites in the window's overlay: none on a far call's fixed-up segment."""
+        for name, at, before, site in (("save_page", 0x7DABC, "e95005", 238), ("save_page_open", 0x7D691, "83c404", 216),
+                                       ("greq_save", 0x7D8A1, "8bc640", 239), ("greq_save_2", 0x7D8BA, "8bc640", 239)):
+            p = next(p for p in ravager.PATCHES if p.name == name)
+            self.assertEqual((p.offset, p.original.hex(), p.replacement), (at, before, bytes((0xCD, ravager.VEC_SITE, site))))
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR (the sequel's folder) not given")
     def test_the_games_bytes(self):

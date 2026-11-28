@@ -9,8 +9,8 @@ Before Scar's battle.SAV", whenever the game writes one, one copy for each slot:
 has its copy replaced. A copy can be put back in a slot (to be loaded from the game's list) with
 `restore`.
 
-Wake of the Ravager's saves (`wotr=True`) the same way, into a folder of their own, NAMED_WOTR: its one
-page of ten (SAVE01.SAV to SAVE10.SAV; its quick saves' page, SAVQ, left out as Shattered Lands'), a save
+Wake of the Ravager's saves (`wotr=True`) the same way, into a folder of their own, NAMED_WOTR: its four
+pages of ten (DSCLOG2's PgUp and PgDn; its quick saves' page, SAVQ, left out as Shattered Lands'), a save
 told by its sheet table (SAVE 6: 17 sheets of 42h bytes, or the Loader's 48h, ravager.SHEET_SIZE). A copy
 put back in a slot is made the Loader's 48h sheets first (ravager.resized_chunks), as the Loader makes
 every save of the sequel's folder as it starts the game (ravager.widen_files).
@@ -27,7 +27,7 @@ from .savefile import party_chunks
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMED = os.path.join(HERE, "Named saves")
 NAMED_WOTR = os.path.join(HERE, "Named saves (Wake of the Ravager)")
-WOTR_PAGES = 1  # (the sequel's save window: one page of ten)
+WOTR_PAGES = 4  # (the sequel's save window: four pages of ten, as SL's: DSCLOG2's MORE SAVES)
 PAGES = ("SAVE", "SAVB", "SAVC", "SAVD")  # page 1 (the game's own) to 4 (not the QUICK page, SAVQ)
 SLOTS = 10
 NAME_CHUNK = ("STXT", 1)
@@ -106,7 +106,7 @@ def _same_bytes(copy: str, data: bytes) -> bool:
 def sync(game_dir: str, folder: str = NAMED, wotr: bool = False) -> List[str]:
     """Each of the game's saves copied into FOLDER under its name, where its copy is missing or not
     the same save (even if its timestamp and size match); a slot's copy under another name (the
-    slot saved over) is replaced. The copies made. WOTR: Wake of the Ravager's (one page)."""
+    slot saved over) is replaced. The copies made. WOTR: Wake of the Ravager's."""
     copies = _copies(folder)
     made = []
     for page in range(1, (WOTR_PAGES if wotr else len(PAGES)) + 1):

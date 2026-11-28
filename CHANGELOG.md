@@ -83,6 +83,13 @@ refresh at each page flip (the pointer stalls less as items are moved). In both 
 only over a weapon that shoots ammunition: a thrown chatkcha said "Out of arrows" after every throw. DSCLOG2's
 sites 235-237 (`playtest/logs/2026-11-28-ravager-creation-age.md`).
 
+**New: Wake of the Ravager, more saves** (branch `claude/ravager-save-pages`). The sequel's save and load
+window has Shattered Lands' four pages of ten and, in the load window, the QUICK page: PgDn and PgUp turn the
+page (the load window passes by empty pages and chooses the page's first save), the page's name shows under
+EXIT, and the window opens on page 1. The sequel's RESOURCE.GFF has no PAGE buttons, so the keys alone turn the
+pages. Each page's saves keep their map limits apart, and the named saves copy all four pages. DSCLOG2's sites
+216, 238 and 239 (`playtest/logs/2026-11-28-ravager-save-pages.md`).
+
 Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.

@@ -119,6 +119,10 @@ section image follows=mz vstart=0
 section tail follows=image vstart=0 align=16           ; (the tail's tables, with their values)
 tail_start:
 tail_sig db 'DSCLOG2 TAIL', 0, 0, 0, 0  ; (so that nothing of the Loader's is at the tail's offset 0)
+NAMES_ROOM  equ 160                 ; (ITEM_NAMES: SITE_NAME's)
+NAME_KEPT   equ 16                  ; (each: 15 letters at most and a NUL, as DSCLOG's EXTRA_NAMES)
+item_names times NAMES_ROOM * NAME_KEPT db 0    ; (first in the tail, zeros in the file though a buffer: the
+tail_tables:                        ;   emulator tests' way back, a HLT at CS:FFF0, lands in it, not in a table)
 section tailz follows=tail vfollows=tail align=16     ; (then its buffers, zeros in the file: the same segment)
 tailz_start:
 section install follows=tailz vstart=0 align=16
@@ -2897,8 +2901,6 @@ showing db 0                    ; 1 while SHOW_WINDOW has its window up
 ; are SITE_NAME: name 256 on is ITEM_NAMES' (the Loader's, from the party transfer), an empty name past them.
 NAMES_TABLE equ 0x56F3
 NAMES_GAME  equ 256
-NAMES_ROOM  equ 160
-NAME_KEPT   equ 16                  ; (each: 15 letters at most and a NUL, as DSCLOG's EXTRA_NAMES)
 name_push:
         pop word [cs:np_ip]
         pop word [cs:np_cs]
@@ -2931,9 +2933,6 @@ np_ip   dw 0
 np_cs   dw 0
 np_fl   dw 0
 no_name db 0
-section tailz
-item_names times NAMES_ROOM * NAME_KEPT db 0    ; (the tail's)
-section image
 
 ; RTC_BEGIN, RTC_WAITED: DSCLOG's: a wait for the Loader ends after its BIOS ticks, or, as the BIOS
 ; clock can stand still in fights, once the real-time clock's second has changed twice (1 to 2 s)
@@ -5084,6 +5083,7 @@ site_table:
         dw site_none                        ; 213 (none here: held for other work)
         dw poison_hit                       ; 214 SITE_POISON_HIT (5D20Dh: a weapon hit's "does it cast": a Poisoner's poison)
         dw arrow_plus                       ; 215 SITE_ARROW_PLUS (5D456h: the ammunition's plus kept: a Spellarcher's spell arrows')
+        dw page_open                        ; 216 SITE_PAGE_OPEN (7D691h: the save or load window drawn as it opens: its page's label)
         times 230 - ($ - site_table) / 2 dw site_none
         dw camera_walk                      ; 230 SITE_CAMERA_WALK (200B7h: a fight's figure stepped: the view kept while it is on screen)
         dw party_load                       ; 231 SITE_PARTY_LOAD (70DA6h: a game loaded with the party in one figure: spread out)
@@ -5093,6 +5093,8 @@ site_table:
         dw cr_age_new                       ; 235 SITE_CR_AGE_NEW (6D6AEh: PSP drawn anew on the creation screen)
         dw cr_age_con                       ; 236 SITE_CR_AGE_CON (6B79Ch: PSP drawn after a click on CON)
         dw flip_wait                        ; 237 SITE_FLIP_WAIT (1698Fh: the page flip's wait for the retrace: none with a full screen up)
+        dw page_key                         ; 238 SITE_PAGE_KEY (7DABCh: a key the save and load window has no use for: PgUp, PgDn the pages)
+        dw greq_save                        ; 239 SITE_GREQ_SAVE (7D8A1h, 7D8BAh: a save's GREQ number: its page's own)
         times 240 - ($ - site_table) / 2 dw site_none
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
         dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
@@ -21730,10 +21732,16 @@ save_tick:
         je .req
         cmp word [SCREEN_IS], 1         ; (nor a window up: F9's LOAD window, its own passes of the main
         jne .req                        ;   loop coming here, has the screen word 2)
-        cmp byte [QS_LETTER], QS_PAGE_QUICK
-        jne .req
-        mov al, QS_PAGE_GAME
+        cmp byte [QS_LETTER], QS_PAGE_GAME
+        je .req
+        mov al, QS_PAGE_GAME            ; (QUICK, or a page PgDn turned to: every window opens on the first)
         call qs_page
+        push es
+        mov ax, ds
+        add ax, PG_LIST
+        mov es, ax
+        mov dword [es:0], 0             ; (and on its first row: the one chosen there may be empty here)
+        pop es
         inc word [cs:pages_back]
 .req:   mov ax, [cs:save_req]
         dec ax
@@ -21886,12 +21894,299 @@ greq_write:
 ; in the load's wrapper, the window's first row (ES its data, 2F8h) the GREQ chunk's number is made from
 ; (it, the row and 1): GREQ_PAGE more on the quick saves' page, whose saves GREQ_WRITE numbered so.
 greq_load:
+        push bx
+        call page_base
         mov ax, [es:2]
-        cmp byte [QS_LETTER], 'Q'
-        jne .r
-        add ax, GREQ_PAGE
+        add ax, bx
+        or bx, bx
+        jz .r
         inc word [cs:greq_loads]
-.r:     iret
+.r:     pop bx
+        iret
+
+; ---- MORE SAVES: SL's PROBE_SAVE_PAGE (savepages.py's pages) on the sequel's save and load window ----
+; The window shows ten saves, on five pages, each a letter of the game's two save file names (QS_PAGE):
+; the game's own (SAVE01.SAV to SAVE10.SAV), then SAVB, SAVC and SAVD01.SAV to 10.SAV, and in the load
+; window the quick saves' (SAVQ: QUICK SAVES), in that order. PgDn shows the next page, PgUp the one before
+; (PAGE_KEY); the window's own routines (in its overlay, reached from the site's way back: what they call
+; is resident, so it stays put) search the folder again and draw the rows, the load window chooses the
+; page's first save (passing by pages with none), the row chosen is shown so, and the window is drawn
+; again with the page's name under EXIT (PAGE_LABEL; also as the window opens, PAGE_OPEN). Each page's
+; saves keep their map limits in GREQ chunks of their own (PAGE_BASE: GREQ_SAVE, GREQ_LOAD), as the quick
+; saves' (GREQ_WRITE). The sequel's RESOURCE.GFF has no PAGE buttons to add (no WIND 3009 or EXIT icon of
+; SL's), so the keys alone turn the pages. Every window opens on the game's own page (SAVE_TICK's
+; page-back once the map is the screen again).
+PG_BACK    equ 0x7DABF                  ; (DSUN.EXE: PAGE_KEY's way back, past the INT and site byte at 7DABCh)
+PG_IGNORE  equ 0x7E00F - PG_BACK        ; the routine's end, for a key it has no use for
+PG_DONE    equ 0x7DBD7 - PG_BACK        ; ... after Up or Down: the screen updated, then the end
+PG_SCAN    equ 0x7D3F2 - PG_BACK        ; the overlay's routines: the folder searched (how many),
+PG_ROW     equ 0x7E058 - PG_BACK        ;   a row drawn (its number),
+PG_PICK    equ 0x7E0F4 - PG_BACK        ;   a row shown as chosen, its name below
+PG_KEY     equ 0x12                     ; (the key, at the routine's BP+12h)
+PG_LIST    equ 0x3C4C - QS_DGROUP       ; (less DS) the list's words: +0 the row chosen, +2 the first shown
+PG_WINDOW  equ 0x40AF - QS_DGROUP       ; (less DS) +0 the window (far), +4 1 for the load window
+PG_SAVES   equ 0x6278                   ; DS: the saves (far), 7Dh bytes each, +0 the file's name
+PG_SAVE_SIZE equ 0x7D
+PG_ROW_ID  equ 0x4780                   ; the rows' buttons
+PG_BTN_SEG equ 0x2EBE - QS_DGROUP       ; (resident) a button's state (window, id, state) ...
+PG_BTN_OFF equ 0x071F
+PG_WIN_SEG equ 0x2A8E - QS_DGROUP       ; ... and a window brought to the front and drawn (window)
+PG_WIN_OFF equ 0x060D
+PAGE_COUNT equ 5
+PAGE_QUICK equ 4                        ; (the QUICK page: the load window's only)
+KEY_PGUP   equ 0x4900
+KEY_PGDN   equ 0x5100
+PG_LABEL_X equ 228                      ; (the window's coordinates, its top 32 lines down: under EXIT)
+PG_LABEL_Y equ 64
+page_key:
+        push bp
+        mov bp, sp
+        sti
+        pushad
+        push es
+        mov si, [bp]                    ; (the routine's BP)
+        mov ax, [ss:si + PG_KEY]
+        cmp al, 0xE0
+        jne .keys
+        xor al, al                      ; (the grey keys: as the number pad's)
+.keys:  mov dl, -1
+        cmp ax, KEY_PGUP
+        je .step
+        mov dl, 1
+        cmp ax, KEY_PGDN
+        jne .skip
+.step:  mov [cs:pg_dir], dl
+        mov ax, [bp + 4]                ; (the overlay's routines: from the way back)
+        mov [cs:pg_call + 2], ax
+        mov ax, [bp + 2]
+        mov [cs:pg_ip], ax
+        call page_now
+        mov [cs:pg_was], bl
+.next:  add bl, [cs:pg_dir]
+        cmp bl, PAGE_COUNT
+        jae .none                       ; (no page before the first, or after the last)
+        call pg_es_window
+        cmp bl, PAGE_QUICK
+        jne .page
+        cmp byte [es:4], 0
+        je .none                        ; (QUICK: not for the save window)
+.page:  call pg_page
+        call pg_es_window
+        xor di, di                      ; (the save window: its first row)
+        cmp byte [es:4], 0
+        je .rows
+.first: les bx, [PG_SAVES]              ; (the load window: the page's first save)
+        imul ax, di, PG_SAVE_SIZE
+        add bx, ax
+        cmp byte [es:bx], 0
+        jne .found
+        inc di
+        cmp di, 10
+        jb .first
+        call page_now                   ; (none: the next page that way)
+        jmp .next
+.none:  call page_now
+        cmp bl, [cs:pg_was]
+        je .skip                        ; (where it was: nothing to do)
+        mov bl, [cs:pg_was]             ; (back to the page there was)
+        call pg_page
+        jmp .skip
+.found:
+.rows:  xor cx, cx
+.row:   push cx
+        push cx
+        mov ax, PG_ROW
+        call pg_overlay
+        add sp, 2
+        pop cx
+        inc cx
+        cmp cx, 10
+        jb .row
+        mov ax, ds
+        add ax, PG_LIST
+        mov es, ax
+        push word 5                     ; (the row chosen before: as the others ...)
+        mov ax, [es:0]
+        call pg_button
+        mov ax, ds
+        add ax, PG_LIST
+        mov es, ax
+        mov [es:0], di
+        mov word [es:2], 0
+        push word 4                     ; (... and the one chosen now)
+        mov ax, di
+        call pg_button
+        push di
+        mov ax, PG_PICK
+        call pg_overlay
+        add sp, 2
+        call page_label
+        inc word [cs:page_turns]
+        add word [bp + 2], PG_DONE
+        jmp .out
+.skip:  add word [bp + 2], PG_IGNORE
+.out:   pop es
+        popad
+        pop bp
+        iret
+
+; PAGE_OPEN (site 216, "save_page_open"): "add sp,4" (7D691h, 3 bytes) after the window's opening routine
+; draws it (the far call before it is fixed up as the overlay loads, so no site there): the page's label put in
+; (PAGE_LABEL), then the routine's own "add sp,4" done under the way back. AX to DI, ES kept.
+page_open:
+        inc word [cs:pg_opens]
+        pushad
+        push es
+        call page_label
+        pop es
+        popad
+        pop word [cs:pg_near]           ; (the way back, IP, CS and flags, put 4 bytes higher)
+        pop word [cs:pg_far]
+        pop word [cs:pg_far + 2]
+        add sp, 4
+        push word [cs:pg_far + 2]
+        push word [cs:pg_far]
+        push word [cs:pg_near]
+        iret
+
+; PAGE_NOW: BL the page shown (0 to 4, by the letter in QS_LETTER: PAGE_LETTERS; another as the first).
+page_now:
+        push ax
+        mov al, [QS_LETTER]
+        xor bx, bx
+.find:  cmp al, [cs:page_letters + bx]
+        je .ret
+        inc bx
+        cmp bx, PAGE_COUNT
+        jb .find
+        xor bx, bx
+.ret:   pop ax
+        ret
+
+; PAGE_BASE: BX the page's GREQ chunks' base (its saves' are this and the slot): the game's own 0, QUICK
+; GREQ_PAGE (GREQ_WRITE's), the others 200, 300, 400. DS the game's; keeps the rest.
+page_base:
+        push ax
+        call page_now
+        mov al, [cs:page_bases + bx]
+        mov bl, 100
+        mul bl
+        mov bx, ax
+        pop ax
+        ret
+
+; PG_PAGE: page BL's letter put in the names (QS_PAGE), and the folder searched again (PG_SCAN).
+pg_page:
+        movzx bx, bl
+        mov al, [cs:page_letters + bx]
+        call qs_page
+        push word 10
+        mov ax, PG_SCAN
+        call pg_overlay
+        add sp, 2
+        ret
+
+; PG_OVERLAY: a far call to the window's overlay at AX from PAGE_KEY's way back (PG_CALL's segment set),
+; its arguments pushed; the game's routines keep neither BX nor ES.
+pg_overlay:
+        add ax, [cs:pg_ip]              ; (offsets from the way back)
+        mov [cs:pg_call], ax
+        pop word [cs:pg_near]           ; (the near way back, kept while the far call runs)
+        call far [cs:pg_call]
+        jmp [cs:pg_near]
+
+; PG_BUTTON: row AX's button set to the state pushed (taken off: PG_BTN_SEG's routine, as the game does).
+pg_button:
+        pop word [cs:pg_near2]
+        add ax, PG_ROW_ID
+        movzx edx, ax
+        call pg_es_window
+        pop cx                          ; (the state)
+        push cx
+        push edx
+        push dword [es:0]
+        mov ax, ds
+        add ax, PG_BTN_SEG
+        mov [cs:pg_far + 2], ax
+        mov word [cs:pg_far], PG_BTN_OFF
+        call far [cs:pg_far]
+        add sp, 10
+        jmp [cs:pg_near2]
+
+pg_es_window:                           ; ES the window's words (PG_WINDOW)
+        mov ax, ds
+        add ax, PG_WINDOW
+        mov es, ax
+        ret
+
+; PAGE_LABEL: the page's name ("PAGE 2", "QUICK") and "PGUP PGDN" under EXIT in the window, which is then
+; drawn again (PG_WIN_SEG's routine). DS the game's; changes all but DS and BP.
+page_label:
+        call pg_es_window
+        mov eax, [es:0]
+        or eax, eax
+        jz .ret
+        mov [cs:c_winptr], eax
+        inc word [cs:pg_labels]
+        mov ax, ds
+        add ax, USE_TEXT_SEG
+        mov [cs:c_draw + 2], ax
+        mov word [cs:c_draw], USE_TEXT_OFF
+        call page_now
+        mov al, '1'
+        add al, bl
+        mov [cs:pg_text + 5], al
+        mov si, pg_text
+        cmp bl, PAGE_QUICK
+        jne .win
+        mov si, pg_quick
+.win:   push si
+        call pg_es_window
+        push dword [es:0]
+        mov ax, ds
+        add ax, PG_WIN_SEG
+        mov [cs:pg_far + 2], ax
+        mov word [cs:pg_far], PG_WIN_OFF
+        call far [cs:pg_far]
+        add sp, 4
+        pop si
+.draw:  push word PG_LABEL_Y
+        push word PG_LABEL_X
+        push cs
+        push si
+        call c_draw_line
+        push word PG_LABEL_Y + 9
+        push word PG_LABEL_X
+        push cs
+        push word pg_keys
+        call c_draw_line
+.ret:   ret
+
+page_letters db QS_PAGE_GAME, 'B', 'C', 'D', QS_PAGE_QUICK
+page_bases   db 0, 2, 3, 4, GREQ_PAGE / 100
+pg_text      db 'PAGE 1', 0
+pg_quick     db 'QUICK', 0
+pg_keys      db 'PGUP PGDN', 0
+pg_was       db 0
+pg_dir       db 0
+pg_ip        dw 0
+pg_call      dd 0
+pg_far       dd 0
+pg_near      dw 0
+pg_near2     dw 0
+page_turns   dw 0               ; (pages turned, for a look in play)
+pg_opens     dw 0               ; (windows opened: PAGE_OPEN)
+pg_labels    dw 0               ; (labels drawn: PAGE_LABEL)
+
+; GREQ_SAVE (site 239, "greq_save"): "mov ax,si / inc ax" (7D8A1h, 7D8BAh; 3 bytes) where the SAVE window's
+; wrapper numbers the GREQ chunk it takes out and writes again (the row and 1): the page's base more
+; (PAGE_BASE), so each page keeps its saves' map limits apart. Others kept.
+greq_save:
+        push bx
+        call page_base
+        lea ax, [bx + si + 1]
+        pop bx
+        iret
 
 ; ---- LOOT AND SELL KEYS, M, U and I: DSCLOG's LOOT_KEY, SELL_KEY, MAP_KEY and SHOP_LOOP on the sequel ----
 ; (The Loader's dsloader/loot.py and sell.py do the item moves once the window or the shop is shut, as in
