@@ -44,7 +44,7 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 649,Occupied bed,Cleave’s catalogue pose and his scripted transition to the empty bed checked in DOSBox,649-cleave-sickbed.zip,001:1
 703,"Counters, stalls and attendants",Moved in play beside Fletch to uncover the book. Retain current scale,,032:1 03C:1
-785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
+785,Temple fixture beside the prisoner,All 623 visible pixels match stock in DOSBox at the original floor position,,037:1
 787,Pavis at his writing basin,Occupied and vacated poses checked in DOSBox. Paper and rim keep their floor anchor,scenery-and-miner.zip,037:1
 788,Tantris seated in his throne,Occupied poses retained. The live transition uses 789 for the vacated throne,alternate-pose-continuity.zip,037:1
 789,Empty throne for Tantris,Lowered and aligned in play with 788 on the temple floor. GPL 256 brings it from Limbo,,0FF:1

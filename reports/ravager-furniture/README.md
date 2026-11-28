@@ -156,6 +156,8 @@ In DOSBox, all six lowered braziers stood on the same floor points as their stoc
 
 ![Tantris seated and the vacated throne in stock Ravager, the previous PR and the repaired build](el-temple-throne-transition.png)
 
+The green coils and red center beside the prisoner occupy the same floor space in the original game and the mod. All 623 visible pixels match in the two DOSBox captures. [Prison room beside the Shattered Lands brazier hall](el-temple-prisoner-fixture.png) · [Playtest](../../playtest/logs/2026-11-28-ravager-temple-prison-room.md)
+
 The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. The later Mines 3 playtest identified the separate composite pictures used during destruction.
 
 ## Earlier figure work
@@ -314,7 +316,7 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Four regions now have in-game coverage for every placement currently listed in the furniture inventory: Mines 3 (72), the Yuan-ti tunnels (11), Volcano 1 (48) and Volcano 2 (57). The other 16 regions still have entries requiring room or interaction checks. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Six regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48) and Volcano 2 (57). Fourteen regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -323,7 +325,7 @@ The scan covered all 20 shipped region files. Four regions now have in-game cove
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds, intact storage stacks and four side-facing counters checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
 | 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
-| 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
+| 037 Temple | 62 | 0 | 6 | All nine listed placements checked in DOSBox, including the six braziers, both occupied furnishings and their vacated states, and the coiled fixture beside the prisoner |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
