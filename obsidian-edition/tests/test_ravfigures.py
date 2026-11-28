@@ -173,6 +173,28 @@ class GameFileTests(unittest.TestCase):
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
 
+    def test_mine_worktables_lower_as_complete_surfaces(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        for first, second in ((3766, 3767), (3770, 3771), (3772, 3773), (3774, 3775)):
+            keys = (("BMP ", first), ("BMP ", second))
+            originals = [sequelicons.decode(stock[key]) for key in keys]
+            revised = [sequelicons.decode(package[key]) for key in keys]
+            if first == 3766:  # One continuous front-to-back surface across the native boundary.
+                originals = [originals[0] + originals[1]]
+                revised = [revised[0] + revised[1]]
+            for before, after in zip(originals, revised):
+                self.assertEqual(len(after), len(before), first)
+                self.assertEqual(after[:5], [[None] * len(before[0])] * 5, first)
+                self.assertEqual(after[5:-11], before[:-16], first)
+                self.assertEqual(after[-11:], [before[-1 - n] for n in (15, 14, 12, 11, 9, 8, 6, 5, 3, 2, 0)], first)
+            # A future replacement of either piece must also protect its partner.
+            imported = {keys[0]: stock[keys[0]], keys[1]: package[keys[1]]}
+            expected = imported.copy()
+            ravfigures._lower_mine_worktables(stock, imported)
+            self.assertEqual(imported, expected)
+
     def test_mine_shelf_preserves_all_six_loose_orbs(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
             stock = gff.read_gff(f.read())

@@ -259,6 +259,29 @@ def _lower_orb_shelf(chunk: bytes) -> bytes:
     return sprites.encode_frames([[[None] * 64] * (len(rows) - len(tiers)) + tiers])
 
 
+def _lower_mine_worktables(old: gff.Chunks, new: gff.Chunks) -> None:
+    """Shorten the bases under the laboratory tops. A catalogue redraw owns the entire pair."""
+    from . import sequelicons, sprites
+    for left, right in ((3766, 3767), (3770, 3771), (3772, 3773), (3774, 3775)):
+        keys = (("BMP ", left), ("BMP ", right))
+        if any(k not in old or new.get(k) != old[k] or ("SCMD", k[1]) in new
+               or struct.unpack_from("<H", old[k], 4)[0] != 1 for k in keys):
+            continue
+        if left == 3766:
+            # The rear piece ends one row before the front piece begins in the room.
+            rear, front = (sequelicons.decode(old[k]) for k in keys)
+            if (len(rear), len(front), len(rear[0]), len(front[0])) != (48, 38, 31, 31):
+                continue
+            joined = sprites.encode_frames([rear + front])
+            rows = sequelicons.decode(lowered_furniture(joined, base_rows=16))
+            new[keys[0]] = sprites.encode_frames([rows[:len(rear)]])
+            new[keys[1]] = sprites.encode_frames([rows[len(rear):]])
+        else:
+            # Side-by-side pieces share a floor row. The lowest bottle ends above the base.
+            for key in keys:
+                new[key] = lowered_furniture(old[key], base_rows=16)
+
+
 def _lower_split_bed(old: gff.Chunks, new: gff.Chunks) -> None:
     """Resample the assembled bed, then split it back across the two stock drawing areas."""
     from . import sequelicons, sprites
@@ -305,6 +328,7 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
             raise FigureError(f"{f}: the import took out {gone[:5]}")
         if f == "OBJEX.GFF":
             _lower_split_bed(old, new)
+            _lower_mine_worktables(old, new)
             for number in (*FURNITURE, *BASE_ROWS):
                 key = ("BMP ", number)
                 # A later catalogue replacement owns its art and all its poses.
