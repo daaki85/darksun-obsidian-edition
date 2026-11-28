@@ -1652,7 +1652,9 @@ was out of memory floated above the ground. Past `SC_RUNS` the kept runs now go 
 cast a shadow (128 before: the Tarrasque's widest cast none), and the planar pictures of its biggest
 creatures, the drakes and the Tarrasque, cast one too (`PLANAR FIGURES` in `dsclog2.asm`: such a frame is
 unpacked as the game draws it, its feet found and its runs kept, and the floor pass casts from what was
-kept).
+kept). A creature drawn as two map things casts from both: the Tarrasque's front half (picture 11002)
+is a thing of its own, not a creature, whose map record's +23h names the thing it is part of (the back
+half, the creature); `FIG_ALIVE` asks after that one.
 
 **Pictures out of memory.** The shadow is traced from the figure's picture in the game's picture
 cache, and in a big fight (the arena, ten monsters) the game lets go of most pictures between

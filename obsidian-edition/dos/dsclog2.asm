@@ -19775,15 +19775,24 @@ fig_pass:
 .done:  call vga_restore
 .ret:   ret
 
-; FIG_ALIVE: CF set if thing BX is a living creature (FIGURE SHADOWS, above). DS the game's; keeps all.
+; FIG_ALIVE: CF set if thing BX is a living creature (FIGURE SHADOWS, above), or a part of one: the map
+; thing's word +23h the thing it is part of (FFFFh none; the Tarrasque's front half, thing 252 in its fight,
+; +23h 41 its back half, the creature; +21h on the creature names the part), which casts its own shadow
+; (2026-11-28: the front half cast none, the back half's lay under the body, the beast standing on no
+; shadow). DS the game's; keeps all.
 fig_alive:
         push ax
         push si
         push es
+        imul si, bx, THING_SIZE
+        mov ax, [si + MAP_THINGS + 0x23]
+        cmp ax, MAP_COUNT - 1
+        jbe .whose
+        mov ax, bx
+.whose: imul si, ax, 3
         mov ax, ds
         sub ax, DGROUP - FS_THINGS_SEG
         mov es, ax
-        imul si, bx, 3
         cmp byte [es:si + FS_THINGS], 2
         jne .no
         mov ax, [es:si + FS_THINGS + 1]

@@ -105,7 +105,9 @@ picture and frame a party member is drawn with, the log's probe reads the draw l
 **Planar figures and big ones** (2026-11-28, logs/2026-11-28-ravager-shadows-review.md): the drakes (RESOURCE 11005-11007)
 and the Tarrasque (11001, 11002) are planar pictures (FFh "PLNR"), drawn through the same call as the others (FIG_KEEP
 sees them); DSCLOG2 now unpacks such a frame there to keep its shadow. `ravfig.py`'s "none for want of one" counts
-a planar figure never drawn yet. To see what the Loader adds to a view, switch the header's +1872 (walls) and +1960
+a planar figure never drawn yet. The Tarrasque is two map things: the back half (thing 41, 11001), the creature, and the
+front half with the claws (thing 252, 11002), kind 0 in the things table; a map thing's +21h names its part, +23h the
+thing it is part of (FFFFh none). To see what the Loader adds to a view, switch the header's +1872 (walls) and +1960
 (figures) off and on and press U then Escape (logs/files/2026-11-28-ravager-shadows-onoff.sh).
 
 **Dust, and the figures' shadows in a fight** (2026-11-26, logs/2026-11-26-ravager-dust.md): **Tyr's ground is

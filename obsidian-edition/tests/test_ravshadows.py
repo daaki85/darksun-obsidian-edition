@@ -53,9 +53,10 @@ def frame_of_runs(w, h, runs):
 
 @unittest.skipIf(Uc is None, "unicorn not installed")
 class PassTests(unittest.TestCase):
-    def scene(self, statuses, seen=True, margin=0, picture=None):
+    def scene(self, statuses, seen=True, margin=0, picture=None, parts=None):
         """Things 5, 6, 7 standing in the view (creatures 0, 1, 2 with STATUSES; None: not a creature), each
         an 8 x 16 frame, their feet 20 pixels apart; the floor all colour 40, DARK 40 -> 41."""
+        parts = parts or {}
         s = Scene(ASM)
         s.fill_with = 40
         for p in range(4):
@@ -80,6 +81,7 @@ class PassTests(unittest.TestCase):
             s.mu.mem_write(CREATURES * 16 + n * 0x31 + 0x14, bytes((status or 1,)))
             rec = bytearray(0x25)
             rec[7], rec[8:10], rec[0x10:0x12], rec[0x12] = 4, struct.pack("<H", 15), struct.pack("<H", n), 0
+            rec[0x21:0x25] = struct.pack("<HH", 0xFFFF, parts.get(thing, 0xFFFF))  # (the thing it is part of)
             s.ds(0x67BB + 0x25 * thing, bytes(rec))
             s.mu.mem_write(CACHE + 16 * n, struct.pack("<HIIHHBB", n, len(pic), 0, 0, PICTURE, 2, 0))
         return s
@@ -118,6 +120,16 @@ class PassTests(unittest.TestCase):
         s.call("fig_pass", fs=FAR)
         self.assertTrue(self.dark(plain))
         self.assertEqual(self.dark(s), self.dark(plain))
+
+    def test_a_creatures_part_casts(self):
+        """A thing that is part of a living creature (its map thing's +23h that creature's thing: the Tarrasque's
+        front half, no creature itself) casts its shadow too; part of a dead one, none."""
+        s = self.scene([1, None, 7], parts={6: 5})
+        s.call("fig_pass", fs=FAR)
+        self.assertTrue(any(96 <= x < 150 for x, _ in self.dark(s)))  # (the second's, at 40 + 60 - 4)
+        s = self.scene([7, None, 1], parts={6: 5})
+        s.call("fig_pass", fs=FAR)
+        self.assertFalse(any(x < 150 for x, _ in self.dark(s)))
 
     def test_dying_none(self):
         s = self.scene([4, 8, 1])

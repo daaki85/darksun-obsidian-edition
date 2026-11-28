@@ -46,5 +46,24 @@ against Shattered Lands'. Branch `claude/ravager-shadows-review`, after #293 (th
     frames, none missed. Shattered Lands' `fountain-user`: Pehtucl's and the party's shadows and the dust
     as before.
 
-The unit suite and both games' start-up tests passed. The Tarrasque was not played again (its fight is
-behind the cinematic); its frames are planar and up to 153 wide, both covered by the tests.
+The unit suite and both games' start-up tests passed.
+
+## The Tarrasque, played again
+
+12. `ravload.sh ravager-roost`, `ravjump.py 0x44 33 43`, Reyhan's talk, Down x7, the cinematic, then the camera on
+    the beast (`cam.py 1256 380`, a redraw). Its shadow fell under its own body and its front claws cast none:
+    **the Tarrasque is two map things**, the back half (thing 41, picture 11001) and the front half with the
+    claws (thing 252, picture 11002). Only thing 41 is a creature in the things table; 252 is kind 0, so
+    `FIG_ALIVE` said "not a creature" and nothing of it was kept or cast. A map thing's +21h names its part
+    and **+23h the thing it is part of** (FFFFh none): 41 has +21h = 252, 252 has +23h = 41.
+13. **The fix**: `FIG_ALIVE` follows +23h to the whole and asks after that one (dying, dead or gone cast
+    none, as before). Played again: picture 11002's frame 7 kept (115 wide, 48 runs, the runs nearest the
+    feet), and with the figures' shadows off and on (`onoff.sh`) the claws cast theirs onto the tiles to the
+    lower right (img/2026-11-28-tarrasque-shadow-marked.png, the difference in red). On the Roost's dark
+    tiles a shadow is faint, as everywhere on dark ground.
+14. **Shattered Lands' big figures**: `legcrusher-fountain-user`, the fight with Legcrusher (picture 1781,
+    frames to 70 runs) and two of the party (75 and 76 runs), all past the old 64: with `shadowsw.py` off and
+    on (the camera fixed with `camera.py` and a scroll to redraw) each casts from its feet to the lower right
+    as before (img/2026-11-28-sl-legcrusher-shadows-off-on.png). A faint shadow also shows on the brick wall
+    at the view's foot, from someone beyond it; not looked into.
+
