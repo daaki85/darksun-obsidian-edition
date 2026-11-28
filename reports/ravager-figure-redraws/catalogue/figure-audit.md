@@ -50,7 +50,7 @@ Three full imports passed, starting from the stock archives, the result of the f
 
 - Reopened each archive and compared the effective package contents, including stock fallbacks, in manifest order. **5,249 stored frames** decoded and **11,050 script records** resolved across OBJEX and the eight RESOURCE pictures. Every populated action slot landed inside its script.
 - Checked all 4,479 shipped object definitions. Exactly the 32 registered picture assignments changed. The 1,643 shipped character and item data records remained byte-identical. The dining-room placement chunk and the Tarrasque and drake encounter chunks matched their packages.
-- Compared the first displayed idle in each available cardinal facing with its shipped counterpart, applying its mirror flag and trimming transparent margins. Exact stock matches occurred only on the five explicitly retained pictures, 691, 849, 1736, 2395 and 3238. This checks for an accidental return to an original idle. The visual review of fit, texture and posture still rests on the individual comparisons.
+- Compared the first displayed idle in each available cardinal facing with its shipped counterpart, applying its mirror flag and trimming transparent margins. In the pre-merchant audit, exact stock matches occurred only on the five explicitly retained pictures, 691, 849, 1736, 2395 and 3238. This checks for an accidental return to an original idle. The visual review of fit, texture and posture still rests on the individual comparisons.
 - Checked local catalogue media and package links, repaired three old heading links, decoded 10,089 frames in 622 GIFs and 615 PNGs, and tested all 267 ZIPs for read errors. Historical before-and-after studies are preserved. An entry’s installation source below identifies the effective package when its earlier studies show different artwork.
 
 ## How coverage was checked
@@ -113,7 +113,7 @@ Each row links to its catalogue review. Frame counts are base drawings / combat 
 | [649 Cleave on his sickbed](README.md#649-cleave-on-his-sickbed) | Approved | 1 / 0 / 0 | [649-cleave-sickbed](proposals/649-cleave-sickbed.zip) |
 | [650 small villager, green shirt (halfling-sized)](README.md#650-small-villager-green-shirt-halfling-sized) | Approved | 15 / 14 / 70 | [catalogue-base-figures](approved/catalogue-base-figures.zip) |
 | [651 small villager, red (halfling-sized)](README.md#651-small-villager-red-halfling-sized) | Approved | 15 / 14 / 70 | [catalogue-base-figures](approved/catalogue-base-figures.zip) |
-| [691 Elf male party figure (object 304)](README.md#691-elf-male-party-figure-object-304) | Approved | 14 / 13 / 73 | [691-human-merchants-stock](approved/691-human-merchants-stock.zip) · [player 3961](proposals/3961-obsidian-party-elf.zip) |
+| [691 Human merchants](README.md#691-in-the-original-game--human-merchants) | Approved · player split approved | 14 / 13 / 73 | [691 Human merchants](proposals/691-human-merchants.zip) · [player 3961](proposals/3961-obsidian-party-elf.zip) |
 | [692 Half-giant female party figure (object 309)](README.md#692-half-giant-female-party-figure-object-309) | Approved | 15 / 14 / 70 | [catalogue-base-figures](approved/catalogue-base-figures.zip) |
 | [693 Magma Golem](README.md#693-magma-golem) | Approved | 18 / 6 / 52 | [693-magma-golem](approved/693-magma-golem.zip) |
 | [714 innkeeper, teal (behind a counter, no walking)](README.md#714-innkeeper-teal-behind-a-counter-no-walking) | Approved | 2 / 0 / 3 | [714-human-woman-hair](proposals/714-human-woman-hair.zip) |
