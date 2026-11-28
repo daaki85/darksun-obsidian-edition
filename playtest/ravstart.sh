@@ -30,22 +30,27 @@ ravager.widen_files(sys.argv[1])   # (the roster's and the saves' sheets the cop
 skip = [s for s in os.environ.get('RAV_SKIP', '').split(',') if s]   # (a control run: those fixes left out)
 if skip:
     exe = os.path.join(sys.argv[2], ravager.PATCHED_EXE); data = bytearray(open(exe, 'rb').read())
+    small = {'small_portraits'} & set(skip)   # (the talk portraits at Shattered Lands' size: its patches; the faces in GPLDAT2.GFF, the window and frame in RESOURC2.GFF, kept out of every rewrite below)
+    if small:
+        skip = [s for s in skip if s != 'small_portraits'] + sorted(ravager.ravportraits.PATCH_NAMES)
     for p in ravager.PATCHES:
         if p.name in skip:
             assert data[p.offset:p.offset + len(p.replacement)] == p.replacement, p.name
             data[p.offset:p.offset + len(p.original)] = p.original; skip.remove(p.name)
     gone = [s for s in skip if s in ravager.SCRIPT_FIXES]   # (a script fix: GPLDAT2.GFF without it)
-    if gone:
-        ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone))
+    if gone or small:
+        ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone) | small)
         skip = [s for s in skip if s not in gone]
     # (the mod's item types, its new items, or the new spells' spellbooks: OBJEX2.GFF without them, the
     # spells themselves kept; all the parts asked for in one write, since each write starts from the
     # game's own file: one at a time, the last put back what the others left out, 2026-11-27's audit)
-    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range', 'figures', 'sl_interface')}
+    parts = {p for p in skip if p in ('mod_types', 'new_items', 'new_spells', 'item_shine', 'weights', 'spell_arrows', 'melee_range', 'materials', 'object_types', 'figures', 'sl_interface', 'class_outfits')}
+    if small and not parts:
+        ravager.write_resources(sys.argv[1], os.path.join(sys.argv[2], ravager.RESOURCE_COPY), small, sl)
     if parts:
         ravager.write_objects(sys.argv[1], os.path.join(sys.argv[2], ravager.OBJECTS_COPY), parts, sl)
-        if parts & {'spell_arrows', 'figures', 'sl_interface'}:   # (the arrows' icons and names, the Tarrasque and the drakes, Shattered Lands' interface: RESOURC2.GFF's)
-            ravager.write_resources(sys.argv[1], os.path.join(sys.argv[2], ravager.RESOURCE_COPY), parts & {'spell_arrows', 'figures', 'sl_interface'}, sl)
+        if parts & {'spell_arrows', 'figures', 'sl_interface'} or small:   # (the arrows' icons and names, the Tarrasque and the drakes, Shattered Lands' interface, the portraits: RESOURC2.GFF's)
+            ravager.write_resources(sys.argv[1], os.path.join(sys.argv[2], ravager.RESOURCE_COPY), parts & {'spell_arrows', 'figures', 'sl_interface'} | small, sl)
         if 'figures' in parts:   # (the redrawn figures' dining room: no RGN03A2.GFF, the game's own read)
             ravager.write_regions(sys.argv[1], sys.argv[2], {'figures'})
         skip = [s for s in skip if s not in parts]

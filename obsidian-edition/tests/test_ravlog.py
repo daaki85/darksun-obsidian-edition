@@ -9,7 +9,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import aging, dicelog, game, kits, ravager, ravlog, ravspells  # noqa: E402
+from dsloader import aging, defilerscrolls, dicelog, game, itemwatch, kits, ravager, ravlog, ravspells, tracker  # noqa: E402
 
 
 class FakeGuest:
@@ -370,18 +370,103 @@ class PassTests(unittest.TestCase):
         log._changes = log._answer_use = lambda *a: self.fail("not ported")
         self.assertEqual(log._after_rolls(False, 1.0), ["  Gerakis now 64/165 HP (-12)"])
 
-    def test_the_kills_said(self):
-        """The monsters killed ("Draxan is killed", tracker.PartyTracker's look at the monsters) follow the hit
-        points, for the fight's tally: the sequel's every summary said "0 kills" without them. Its XP lines
-        and the prime requisites' bonus are not run; nothing while a game loads."""
+    def test_the_tracker_said(self):
+        """Shattered Lands' tracker (kills, XP lines, level-ups: tracker.PartyTracker.check) follows the hit
+        points, for the fight's tally (the sequel's every summary said "0 kills" without the kills); nothing
+        while a game loads."""
         log = ravlog.RavDiceLog(FakeGuest())
         log.hp_changes = lambda now: ["  Draxan now 0/70 HP (-3)"]
-        log.tracker = types.SimpleNamespace(_check_monsters=lambda now: ["Draxan is killed"],
-                                            check=lambda now: self.fail("its XP part not ported"))
+        log.tracker = types.SimpleNamespace(check=lambda now: ["Draxan is killed", "XP: Gerakis +120 (for Draxan 120)"])
         log._party_check = lambda now: False
-        self.assertEqual(log._after_rolls(False, 1.0), ["  Draxan now 0/70 HP (-3)", "Draxan is killed"])
+        self.assertEqual(log._after_rolls(False, 1.0), ["  Draxan now 0/70 HP (-3)", "Draxan is killed",
+                                                        "XP: Gerakis +120 (for Draxan 120)"])
         log._party_check = lambda now: True
         self.assertEqual(log._after_rolls(False, 2.0), ["  Draxan now 0/70 HP (-3)"])
+
+    def test_the_tracker_writes_the_xp(self):
+        """While the tracker runs, each party member's sheet XP (+0, a dword) is writable (the read-only view
+        dropped the prime requisites' bonus, and the next look took it back: 2026-11-27's play), and nothing
+        else; read only again after."""
+        ravlog.apply_layout()
+        log = ravlog.RavDiceLog(FakeGuest())
+        ds, sheets = 0x4982, 0x72014
+        struct.pack_into("<HH", log.guest.mem, ds * 16 + game.SHEETS_PTR, sheets & 0xF, sheets >> 4)
+        names = (b"Gerakis", b"", b"Thy'rokh", b"")
+        def creature(i):
+            rec = bytearray(game.CREATURE_SIZE)
+            rec[game.CREATURE_NAME:game.CREATURE_NAME + len(names[i])] = names[i]
+            struct.pack_into("<H", rec, game.CREATURE_SHEET_INDEX, i)
+            return bytes(rec)
+        log.game = types.SimpleNamespace(creature=creature, guest=log.guest, ds=ds)
+        seen = []
+        log.tracker = types.SimpleNamespace(check=lambda now: seen.append(list(log.guest.writable)) or [])
+        log._party_check = lambda now: False
+        before = list(log.guest.writable)
+        self.assertEqual(log._tracker_pass(1.0), [])
+        base = (sheets >> 4) * 16 + (sheets & 0xF)
+        self.assertEqual(seen, [before + [(base + game.SHEET_XP, 4), (base + 2 * game.SHEET_SIZE + game.SHEET_XP, 4)]])
+        self.assertEqual(log.guest.writable, before)
+
+    def test_the_sequels_xp_cap(self):
+        """The tracker holds a sequel member's XP at its share of RAV_XP_CAP (ravager.xp_share), not at
+        Shattered Lands' cap: a fighter's whole 5,625,000, a fighter/thief's half; Shattered Lands' back after."""
+        ravlog.apply_layout()
+        sheet = bytearray(game.SHEET_SIZE)
+        sheet[game.SHEET_RACE], sheet[game.SHEET_CLASSES], sheet[game.SHEET_LEVELS] = 2, 9, 15
+        self.assertEqual(tracker.xp_cap(), ravager.RAV_XP_CAP)
+        self.assertEqual(tracker.xp_share(bytes(sheet)), ravager.RAV_XP_CAP)
+        sheet[game.SHEET_CLASSES + 1], sheet[game.SHEET_LEVELS + 1] = 17, 15
+        self.assertEqual(tracker.xp_share(bytes(sheet)), ravager.RAV_XP_CAP // 2)
+        self.assertEqual(tracker.cap_why(bytes(sheet)), f", {ravager.RAV_XP_CAP:,} shared by 2 classes")
+        ravlog.restore_layout()
+        self.assertEqual((tracker.CAP, tracker.SHARE), (None, None))
+        self.assertEqual(tracker.xp_cap(), game.XP_CAP)
+
+    def test_the_sequels_item_watch(self):
+        """The missing-item report runs in the sequel (PASS's itemwatch step) with the sequel's item types
+        for the ordinary losses: an arrow (6), a scroll (77), a Shillelagh (90) or a Broken Weapon (21) gone is
+        no news there, Shattered Lands' arrow type (62) is; Shattered Lands' sets back after."""
+        self.assertIn("itemwatch", [step.name for step in ravlog.RavDiceLog.PASS])
+        ravlog.apply_layout()
+        try:
+            seen = lambda typ: game.ItemSeen(5, 0, "Thy'rokh", None, "x", typ, bytes(game.ITEM_SIZE), b"")
+            for typ in (6, 7, 9, 14, 77, 78, 47, 87, 90, 95):
+                self.assertTrue(itemwatch.ordinary_loss(seen(typ), b"", False, False), typ)
+            self.assertIsNone(itemwatch.ordinary_loss(seen(62), b"", False, False))
+            self.assertIn(21, itemwatch.BROKEN)
+        finally:
+            ravlog.restore_layout()
+        self.assertIn(62, itemwatch.USED_UP)
+        self.assertEqual(itemwatch.BROKEN, frozenset((93, 107)))
+
+    def test_the_sequels_defiler_scrolls(self):
+        """Defilers' scrolls run in the sequel (PASS's item_watches step) with its names: its defiler objects,
+        a spellbook of its book object teaching the spell (its +2 and power the spell + 1, 3000 a level), its
+        wizard spells of levels 1 to 9 and the new ones; Shattered Lands' back after."""
+        self.assertIn("item_watches", [step.name for step in ravlog.RavDiceLog.PASS])
+        ravlog.apply_layout()
+        try:
+            self.assertEqual(defilerscrolls.DEFILER_OBJECTS, ravlog.RAV_DEFILER_OBJECTS)
+            self.assertTrue({363, 369} <= ravlog.RAV_DEFILER_OBJECTS)  # (the Pyramid's Defilers run as 363)
+            rec = defilerscrolls.scroll(40, 6)
+            self.assertEqual(len(rec), ravager.ITEM_SIZE)
+            self.assertTrue(defilerscrolls.is_ours(rec))
+            self.assertEqual(struct.unpack_from("<hHHHHH", rec, 0), (-31002, 41, game.NO_ITEM, 18000, game.NO_ITEM, 77))
+            self.assertEqual(struct.unpack_from("<H", rec, 0x10)[0], 41)
+            self.assertEqual((rec[0x13], struct.unpack_from("<H", rec, ravager.ITEM_NAME)[0]), (0xFF, 4))
+            levels = lambda spell: 9 if spell == 100 else 6 if spell == 40 else 0 if spell > 0x72 and spell < 320 else 1
+            pool = defilerscrolls.spells(levels, True)
+            self.assertIn(100, pool)
+            self.assertIn(40, pool)
+            self.assertIn(325, pool)
+            self.assertNotIn(0x73, pool)
+            self.assertNotIn(320, defilerscrolls.spells(levels, False))
+        finally:
+            ravlog.restore_layout()
+        self.assertEqual(defilerscrolls.MOST_LEVEL, 5)
+        self.assertIsNone(defilerscrolls.MAKE)
+        self.assertIn(258, defilerscrolls.DEFILER_OBJECTS)
+        self.assertEqual(struct.unpack_from("<h", defilerscrolls.scroll(3, 1), 0)[0], -defilerscrolls.SCROLL_OBJECT)
 
     def test_an_older_header_gets_no_arrows_words(self):
         """SPELL ARROWS' words (+2098 up) are written only to a helper whose HDR_LEN (+30) reaches past them: an

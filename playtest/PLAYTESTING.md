@@ -9,7 +9,7 @@ the container is reclaimed: an earlier version of this guide and its tools were 
 **How to use it.** Read [the startup procedure](#startup-procedure) in full before every in-game
 test and follow it in order. Then read the [recipes](#recipes) for the job in hand, [the
 route](ROUTE.md) (its own page) when the party has to get somewhere, and [the research
-recipes](RESEARCH.md) (memory edits for a test, sounds, the picture store, frame rate, the picture and the music device, the game's
+recipes](RESEARCH.md), split by subject (memory edits for a test, sounds, the picture store, frame rate, the picture and the music device, the game's
 scripts, the recompiled program, Wake of the Ravager) when a test needs memory written or the game
 looked into. **Add to it after every play** ([after a play](#3-after-a-play)). How things were
 found, the incidents behind the rules and the approaches given up are in [HISTORY.md](HISTORY.md),
@@ -89,7 +89,7 @@ tools, but a shell you type in doesn't have it, so type `$PLAYTEST_WORK` there.
     test once attached its dice log to a DOSBox it didn't start (2026-11-24) and wrote its own rules
     into the sequel's helper, voiding that run: check the helper's rules word (header +170) is the one
     your run set before trusting a rule's run ([the sequel's
-    specialization](RESEARCH.md#wake-of-the-ravager)).
+    specialization](RESEARCH-RAVAGER.md#wake-of-the-ravager)).
 
 ## 2. The checklist
 
@@ -136,6 +136,10 @@ Run these in order, from `playtest/`, at the start of every test and again after
      helper's tail where its header says (+1834 the segment + TAIL_PARAS), its tables as built, and what
      the Loader has written in its buffers (the USE screen's lines, the item names, the labels)
      ([DSCLOG2's segment, tail and install](../obsidian-edition/DEVELOPMENT-INTERNALS.md#dsclog2s-segment-tail-and-install)).
+     The sequel's DOSBox runs `dos/DSCLOG2.EXE` as it was when DOSBox started: after a rebuild, restart
+     it (`ps -o lstart= -p $(cat $WORK/rav.pid)` against the EXE's time; 2026-11-28 a test ran on the old
+     build). A helper variable's offset for a look in memory: `ravtail.symbols()`, its `image` section, at
+     the INT F5h vector's segment.
    - For a script change, decode the built copy (`GPLDATA=../obsidian-edition/dos/GPLDATA.GFF
      python3 dec.py SCRIPT LO HI`) and check the change is there before trusting anything seen in
      play. `dec.py` stops with "unknown term" when LO falls inside a command: start it at a command
@@ -214,7 +218,7 @@ game's data: it is one player's account.
 Wake of the Ravager's walkthrough (the user's copy, already text) comes the same way, from the
 private repository's `guide/wake-of-the-ravager-walkthrough.txt` to `$WORK/guide/ravager.txt`. The
 sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private repository, or put at
-`$WORK/dl/rav.exe`), into `$WORK/rav`; it plays in DOSBox by [its recipe](RESEARCH.md#wake-of-the-ravager).
+`$WORK/dl/rav.exe`), into `$WORK/rav`; it plays in DOSBox by [its recipe](RESEARCH-RAVAGER.md#wake-of-the-ravager).
 
 ## Loading and saving
 
@@ -309,7 +313,7 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   (`start.sh`'s too): delete it before a test that counts its entries. `follow.py 29` from
   `pens-after-arena` makes Kurzak's two speeches at his stop, two entries.
 - A save made in DOSBox loads on the recompiled program and the other way round ([the recompiled
-  program](RESEARCH.md#the-recompiled-program-as-the-target)).
+  program](RESEARCH-CODE.md#the-recompiled-program-as-the-target)).
 
 - **The stock game** (no Loader, no dice log: OpenDS's darkfix betas, or the original's behaviour):
   `darkfix_apply.py inst/GPLDATA.GFF darkfix-inst/GPLDATA.GFF FIXES` into a copy of `inst` in the work
@@ -440,10 +444,16 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   Reconnect path says "process N has ended"); either way no party table error. **`start.sh` starts no Xvfb when any Xvfb is running** (`pgrep -x Xvfb`): with
   `:77` up, start `:55` by hand first. Look at the Characters tab once: an error there shows as
   a line in the dice log's pane ("Loader error in the party table") and only with a game attached.
+- **The Loader's own start of Wake of the Ravager with GOG's DOSBox** (`play --ravager`, `launch --ravager`
+  with the GOG engine): it runs the sequel folder's `DOSBOX/DOSBox.exe`, a Windows program. On a **copy** of
+  `$WORK/rav`, replace it with a bash shim that drops `-noconsole` and execs `/usr/bin/dosbox "$@"`, and copy
+  `__support/save/*` into the folder first (as `ravstart.sh` does; without them the game stops at once with
+  `DARKSAVE.GFF to DARKRUN.GFF failed`). `play.log` in `obsidian-edition/` says when the dice log
+  attaches ([the run](logs/2026-11-27-ravager-ingame-rolls.md)).
 - **The Loader window's Help**: in this container `gio` takes the URL and finds no browser, so
   nothing opens; the status line names the guide either way.
 - The kit drives the recompiled program as well (`PT_TARGET=recomp`, `start_recomp.sh`): [the
-  recompiled program](RESEARCH.md#the-recompiled-program-as-the-target).
+  recompiled program](RESEARCH-CODE.md#the-recompiled-program-as-the-target).
 
 ## A game in DOSBox-X
 
@@ -574,6 +584,9 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   pointer was [leaves the box up](HISTORY.md#message-boxes-and-yesno-questions). `dismiss.sh`
   does this for several. **Once a fight is on, boxclick.sh clicks the map**: on a member's turn its
   clicks at 160,20 walk it.
+  **In Wake of the Ravager** the grey box waits the options' message time, and a click anywhere or a
+  key closes it at once and is used up by it (2026-11-27, [the sequel's scenes, pointer and message
+  box](RESEARCH-RAVAGER.md)); its films and narrated opening show the arrow and skip on a click.
 - **YES/NO questions** ("Yell something back at the Announcer? (Answer Yes or No)") look like a
   message box, but a click doesn't answer them: press **N** (or Y). One is waiting only while the
   dice log's last line is `    2. No` (answered, `    > No` follows): a check for "2. No" in the
@@ -759,7 +772,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   and the most, going round past either (with the as-rolled rule a round trip upward is cut to
   what's spare). `leasts.sh` reads each score's least (`creationscores.py`). EXIT (278,160) leaves
   without keeping the character. The screen's memory (its sheet, the least and most, the stand-in
-  sheet): [the creation screen in memory](RESEARCH.md#creation-and-levels).
+  sheet): [the creation screen in memory](RESEARCH-MEMORY.md#creation-and-levels).
 - **AGE and the dice log** (logs/2026-11-19-older-loader-bugs.md): the screen's AGE (155,97 rolls
   the die, AGE under THAC0: crop a shot at `80x10+150+176` and scale it 300% to read it) is the age
   the character keeps (DSCLOG's roll, put in its sheet at DONE). The dice log gives no age while the
@@ -773,10 +786,15 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   sex: read the sheet's +18h after each click (two clicks a race: 1 human, 2 dwarf, 3 elf, 4
   half-elf ... 7 mul). The race text and the small figure at the top don't change it (the figure
   rolls a new character).
+- **The full-length picture** (top left) is the inventory's painting for the classes picked
+  (logs/2026-11-27-creation-inventory-pictures.md): DSCLOG's CREATION_PORTRAIT gives the game the
+  inventory's key when it draws it (a race or portrait click, the screen opening), and FIG_DRAWS draws it
+  again after a class click; with no class picked it is the game's own. The sequel's the same (DSCLOG2's
+  CR_FIGURE, CR_DRAW from KP_CLASS and CR_HP). Crop a shot at `110x120+0+0`.
 - **The figure at the top** wears the class's outfit (logs/2026-11-27-creation-figure-outfits.md):
   crop a shot at `60x45+130+12` and scale it 400% to see it; it changes at each class, race or
   portrait click. Read the game's blob of the screen's figures with `creationfigure.Figures(gd)`
-  ([RESEARCH.md](RESEARCH.md#creation-and-levels)).
+  ([RESEARCH-MEMORY.md](RESEARCH-MEMORY.md#creation-and-levels)).
 - **The classes**: click a name (x 250; cleric 13, druid 21, fighter 29, gladiator 37, preserver
   45, psionicist 53, ranger 61, thief 69); a human's class must be clicked off before another is
   chosen.
@@ -816,6 +834,38 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   classes are at x 181-200 from y 105 (preserver 105, thief 132 ...), and a human's kit menu then
   comes up (its first row 145,104). The Effects button is (121,171) in View Character, (242,185) on
   the inventory bar. Escape on Effects goes all the way back to the main menu.
+- **A kit's THAC0 in Wake of the Ravager** (logs/2026-11-27-ravager-scholar.md): the sequel writes a
+  member's THAC0 (+16h of its creature) only when the character is made and at a level up, never on
+  equip, so a THAC0 change is seen by making a new member or by levelling one in a fight (set it one XP
+  short with `ravlevel.py set`, then the fight route with Computer Control). `ravkits.py show` lists
+  DSCLOG2's counters (`scholar_thac0s` among them). A kit's extra spell window counts when it closes, not
+  while it is up. The creation screen's THAC0 line is drawn again at a roll (the die, 145,92) and at a
+  click at (40,162), the second without the game working the THAC0 out again
+  (logs/2026-11-27-ravager-dam-lines.md). **A kit or rule test in the sequel needs the dice log running**
+  (`ravdice.py`): `ravload.sh` alone leaves DSCLOG2's rules words 0 (`ravkits.py count`'s first line).
+  **The sequel's dice log writes only where a feature names the bytes** (`guest.writable`, `_writable`):
+  a write anywhere else is dropped without a word, so a ported feature that writes memory (the tracker's
+  XP bonus: logs/2026-11-27-ravager-xp-lines.md) must name its ranges. An XP edit by hand counts as an
+  award (and gets the bonus): make it before the dice log attaches.
+  **To see the sequel's item report**, free a party item's record with a test edit (its +0 word 0:
+  logs/files/2026-11-27-ravager-item-watch-edit.py): two seconds on the dice log names the report in
+  `obsidian-edition/crash-logs/` (git ignores it); an item of an ordinary type (an arrow, 6) freed says nothing.
+  **The sequel's inventory and shop by clicks** (logs/2026-11-27-ravager-item-watch.md): its window is
+  640x480, so a game y is the window's / 2.4 (not / 2): Ar'Anda's left hand 173,90, missile 65,50, right
+  hand 65,91, portraits 30,21 / 30,71, backpack 196,27 / 45 / 63 / 81, DROP 206,135. In Notaku's shop SELL is
+  292,164 (an item on the pointer first), TAKE IT 145,92, the list's first place 253,88, MORE 255,164; the
+  list is drawn one change behind, so read `ravshop.py shop` before buying. A one-use scroll's spell icon
+  out of a fight gives a casting pointer that found no valid target; a right-click ends it.
+  **A defiler for a test** (logs/2026-11-27-ravager-defiler-scrolls.md): `ravjump.py 0x34 45 32` (the Pyramid,
+  RGN034, among its five Defilers, creatures 15, 17, 21, 22 and 23, object 363 in the running game) with
+  `RAV_DEFILER_CHANCE=100`. `ravjump.py`'s REGION is the region file's hex number: 0x22 (34 decimal) asks for
+  RGN022.GFF, which the game hasn't, and it quits to DOS printing the name (DOSBox closes; stock does the same).
+  For a defiler in a smaller fight, give one of Tyr's ambush's Draxans (creatures 25, 26, 29, 31 in the fight; 5,
+  7, 8 are the street's, not in it) the Defiler's object (logs/files/...-defiler-crobj.py `25 369`) and start the
+  dice log again (a running log keeps its answer for the fight). The pointer's mode (DS:1440h: 1 walk, 4, 2 the
+  eye; 0 while a container is open, DS:05D6h its thing) tells which a right-click gave.
+  The USE screen opens from the top-left icon (22,17); there the inventory is (75,171), View Character
+  (170,188), the portraits (30,23 / 30,71 / 30,121 / 30,167) on the inventory screen.
 - **DONE for a new fighter** (logs/2026-11-23-memory-pass-6.md): PICK A WEAPON SPECIALTY comes up
   over the screen (four rows of six icons, the Ravager kinds among them); a click on an icon (the
   gythka at 210,66) takes it ("SPECIALIZE IN GYTHKA" below, the dice log's gear lines), then PICK
@@ -886,7 +936,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   (CANCEL in DUAL's place when it isn't offered; the menu opens at different heights: shoot it
   first, DUAL at 90,145 or 90,97); the classes greyed or white (zoom a shot: `convert -crop
   120x110+150+30 -scale 300%`); EXIT 213,145. Its scores, a kit's menu and the rule switched off in
-  memory: [DUAL in memory](RESEARCH.md#creation-and-levels).
+  memory: [DUAL in memory](RESEARCH-MEMORY.md#creation-and-levels).
 - **The DUAL sphere menu** (logs/2026-11-15-kit-rebalance-checks.md part 9): after CLERIC, DRUID or
   RANGER on the DUAL window, a menu whose title row is "SPHERE: AIR" (no click there), EARTH
   (140,92), FIRE (140,104), WATER (140,116), and a close button (210,116). **The game makes the
@@ -900,6 +950,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   instead (logs/2026-11-16-spellarcher-fine-bow.md).
 
 ## Inventory, looting, selling and shops
+
+- **The sequel's class outfits** (logs/2026-11-27-ravager-class-outfits.md): `ravdress` dresses only with the dice log attached (`ravdice.py`; its `dress` pass), the copy's pictures plain until then. Only the leader is drawn outside a fight: keys 1-4 make each member the leader, to see each outfit. Thy'rokh (the thri-kreen) has none. `RAV_SKIP=class_outfits` is the control. The inventory's party column and the creation screen's small figure (DSCLOG2's SMALL_FIG) need no dice log: their pictures are keyed by figure and classes, made at the copy. On the creation screen it follows every class, race and portrait click; with no class it is the stock figure (a class-less key quit the game with "Math Err").
+- **The party column's small figures** (logs/2026-11-27-small-party-figures.md): each is frame 0 of the member's walking picture in the Loader's SEGOBJEX (DSCLOG's `SMALL_FIGURE`; the member's picture in the header's `SMALL_PICS`, +1893), so with the Loader attached it is their map figure, outfit and gear; with it detached (0 there) the game's stock figure from start-up. To see a class change, close the inventory and open it again (Escape, I) after the Loader's pass (about 2 s).
+- **Class portraits.** From the PENS save, press I and select each party face. Cermak wears his active Preserver outfit. Compare Gerakis, K’ratchek and Cilla with their retail half-giant, thri-kreen and elf inventory pictures. The DOS helper reads the portrait from the prepared RESOURCE.GFF, so this check also works with the host dice log detached. To compare human fittings, capture the central parchment after each party selection and again after returning to the first member. In a 320 × 240 DOSBox window, horizontal pixels are native and the 200 game rows stretch to 240. Use that vertical scale when aligning a capture with the Loader’s decoded picture.
 
 - **An item's box on the inventory screen**: a right-click on the item opens it (lower for a lower
   backpack cell), a left-click on the box closes it. Escape closes the whole inventory, and
@@ -959,7 +1013,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   (logs/2026-11-18-spell-arrows-info.md).
 - **Items changed in memory** (an item turned into another, a held item rewritten, an item's icon,
   a figure's glow and outfit): `itemedit.py`, `setitem.py`, `sprites.worn` and the item records'
-  fields, in [items in memory](RESEARCH.md#items-in-memory).
+  fields, in [items in memory](RESEARCH-MEMORY.md#items-in-memory).
 - **Looting a body** (the user): the **look pointer** on the body's picture; the plain eye (not the
   red one) shows when it is over it. A body's map position isn't where its picture is drawn when
   others lie on it: move the pointer over the picture, beside the party (a body far off opened
@@ -1044,7 +1098,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
 5. **Movement**: a member with no Move left can't reach anyone; a click then opens its END menu or
    does nothing ("Move : 0"). **Move running out doesn't pass the turn**: the walk stops and END
    <NAME>'S MOVE opens and waits. For a test that needs reach, raise its Move in memory first ([the
-   turn's movement word](RESEARCH.md#fights-and-foes-in-memory)), and restore it after; never save
+   turn's movement word](RESEARCH-MEMORY.md#fights-and-foes-in-memory)), and restore it after; never save
    the game while it's raised. The END menu shows what is left ("Move : 12").
    **Walking a member square by square** (logs/2026-11-18-squares-in-reach.md): `movestate.py`
    prints whose turn it is, its square, points and flags and the walk map round it with the
@@ -1239,10 +1293,10 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   before the member's next turn (standing where it was), and its next round is from behind.
 - **Hidden members** (logs/2026-11-05-fight-test.md): Cilla, thief level raised to 12 in memory,
   hides at 95. Hidden, Tab + Return walks the thief up and backstabs; it is drawn solid from the
-  blow on. The see-through drawing: [see-through figures](RESEARCH.md#see-through-figures).
+  blow on. The see-through drawing: [see-through figures](RESEARCH-PICTURES.md#see-through-figures).
 - Foes and effects written in memory (`foeset.py`, `addeffect.py`, `effects.py`, `kinds.py`, a
   foe's saves, level and class, Psionic Blast without a blaster, held targets on any roll):
-  [fights and foes in memory](RESEARCH.md#fights-and-foes-in-memory).
+  [fights and foes in memory](RESEARCH-MEMORY.md#fights-and-foes-in-memory).
 
 ### An archer's shots
 
@@ -1257,7 +1311,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   unless it kills its target**: against one still standing the turn passes after the shots
   whatever is left; a kill with attacks left keeps it (walk, ready, strike again). For a kill on
   demand, `foeset.py C hp=1`. **Arrows set in memory must be set before the fight starts**
-  ([arrows in memory](RESEARCH.md#items-in-memory)). With no arrows at all, a click on a far foe
+  ([arrows in memory](RESEARCH-MEMORY.md#items-in-memory)). With no arrows at all, a click on a far foe
   walks the member up and strikes with its melee weapon instead of shooting.
 - **Readying arrows in a fight** (logs/2026-11-14-quiver-turn.md): on the member's turn, I, then
   the quiver (66,26) and a backpack cell (195,26) by clicks; another member's arrows: its portrait
@@ -1280,8 +1334,8 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   "+3 Dag's Dagger" the same; measured in the game's font, `art.GameArt(GAME).font`).
 - A weapon or a rule tried in a fight by a memory edit (a weapon put on a member, a named weapon, a
   shot with a weapon put in memory with `setitem.py`, melee reach, grand mastery, a rule by size):
-  [items in memory](RESEARCH.md#items-in-memory) and [fights and foes in
-  memory](RESEARCH.md#fights-and-foes-in-memory).
+  [items in memory](RESEARCH-MEMORY.md#items-in-memory) and [fights and foes in
+  memory](RESEARCH-MEMORY.md#fights-and-foes-in-memory).
 
 ### The chance to hit against the swing
 
@@ -1375,7 +1429,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   slots), the kind button (CLERIC/MAGE) at 150,171: Lex at preserver 10 with only 3rd-level spells
   known went 1 to 3; at preserver 4 it stayed on 1 (no 3rd-level spells at that level: the least for
   Flame Arrow is 5). spellsetup.py prints the pages and warns when a human's second class counts 0
-  ([the game's rule for the pages](RESEARCH.md#spells-and-powers-in-memory)). A stuck button means
+  ([the game's rule for the pages](RESEARCH-MEMORY.md#spells-and-powers-in-memory)). A stuck button means
   a caster level of 0 or 1: check what else was written to the sheet ([the one time it
   stuck](HISTORY.md#the-level-button-that-stuck)). **The first click after U opens the screen was
   lost twice**: shoot the page after each LEVEL click.
@@ -1408,7 +1462,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   levels move with the sky: K'ratchek counts as a Wasteland Seer). Out of a fight, U then Cilla
   (108,108), the CLERIC/MAGE button (150,171) switches the spell kind; an aimed summon there did
   nothing (red no-sign). In a fight a summon keeps no effect timer (effects.py shows none) and no
-  "lasts" line. The detail: [spells and powers in memory](RESEARCH.md#spells-and-powers-in-memory).
+  "lasts" line. The detail: [spells and powers in memory](RESEARCH-MEMORY.md#spells-and-powers-in-memory).
 - **Range**: Cloudkill at about 230 map units said "too far away"; at 80 it cast. Rainbow Pattern
   and Cloudkill are areas that stay: Rainbow Pattern (2d3 rounds) made Lex, Jenna and Seneca save
   each turn and paralysed some, so aim them away from the party; Cloudkill near the party: raise
@@ -1449,7 +1503,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
 - **Spells rolling to hit** (logs/2026-11-08-spell-to-hit.md): each missile
   or hostile touch spell has a line `X's SPELL at Y: [touch ]attack d20 = ...` after its damage
   roll; each of Magical Stone's three throws rolls. Hits on demand and a weapon's spell on a hit:
-  [spells and powers in memory](RESEARCH.md#spells-and-powers-in-memory).
+  [spells and powers in memory](RESEARCH-MEMORY.md#spells-and-powers-in-memory).
 - **Turn Undead** (logs/2026-11-08-turn-undead.md): U (in a fight it opens the USE screen for the
   one whose turn it is; the click at 24,17 opened the inventory), the TURN UNDEAD button at
   (158,146) with a slow press (out of a fight the thief's purse is beside it, at 176), then the
@@ -1460,7 +1514,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   off and doesn't attack. Kalzith's pen (`route.py 1592 584`, then `route.py 1560 880`) puts the
   party beside him for a turning, and the aiming box reaches him there (the guards west of
   Kurzak's stop are behind a wall: "no line of sight"). A cleric and undead made in memory
-  (`turnsetup.py`): [Turn Undead in memory](RESEARCH.md#spells-and-powers-in-memory).
+  (`turnsetup.py`): [Turn Undead in memory](RESEARCH-MEMORY.md#spells-and-powers-in-memory).
 - **A power out of a fight** (logs/2026-11-15-kit-rebalance-checks.md): U, the user's portrait,
   the kind button (150,171) CLERIC/MAGE -> PSIONIC (the P-METAB powers then: Animal Affinity 176,59,
   Energy Containment 194, Life Draining 212, Cell Adjustment 230), the icon, the target's portrait.
@@ -1472,8 +1526,8 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   Burning Hands button); a slow press makes one arrow ("makes one of the shocking arrows in the
   pack (1 of 24 now)") and **closes the screen** (an Escape after it opens EXIT: SAVE GAME?). With
   wooden arrows in the quiver the new stack goes to the pack: swap them in the inventory (quiver
-  66,26, a backpack cell). **In the sequel** the same buttons and places (RESEARCH.md's spell arrows made in
-  the sequel: the party to ADD again at every start, the way out to a fight, the quiver).
+  66,26, a backpack cell). **In the sequel** the same buttons and places ([spell arrows made in
+  the sequel](RESEARCH-RAVAGER-RECORDS.md): the party to ADD again at every start, the way out to a fight, the quiver).
 - **A spell's description box**: U, a member's portrait (Cermak 66,108), then right-click a spell's
   icon (from 177,59, about 14 apart); in a fight the same on the USE screen (Fire Shield's and Cat's
   Grace's, logs/img/2026-11-09-group-3-*.png); a known bit or `spellsetup.py 0=10 44` first. Seven
@@ -1492,7 +1546,7 @@ teaches outside the caster's spheres it names ("cast at level 0"). Then:
   regeneration's +12 for the 8 hours then follows as an HP line. Where the ring is and how the call
   comes: [resting in the pens](ROUTE.md#resting-and-kurzaks-call). An effect given in memory before
   a rest (`addeffect.py`, `restfixmem.py`): [fights and foes in
-  memory](RESEARCH.md#fights-and-foes-in-memory).
+  memory](RESEARCH-MEMORY.md#fights-and-foes-in-memory).
 
 **A power aimed at a party member, in Wake of the Ravager** (logs/2026-11-25-ravager-blast-log.md):
 the game refuses a member as a power's target; make the target's side byte (creature +15h) 7, a
@@ -1515,23 +1569,43 @@ from the edited ones and can come out negative. Raise them after a level-up, not
 
 ## Memory edits for a test
 
-The game's records and how to write them for a test are in [RESEARCH.md's memory
-edits](RESEARCH.md#memory-edits-for-a-test), by subject. Never save after any of them (rule 8). The
+The game's records and how to write them for a test are in [the research recipes' memory
+edits](RESEARCH-MEMORY.md#memory-edits-for-a-test), by subject. Never save after any of them (rule 8). The
 tools, and where each is described:
 
 | Subject | Tools |
 |---|---|
-| [The party and the map's people](RESEARCH.md#the-party-and-the-maps-people) | `itemlists.py`, `party.py`, `sheetedit.py`, `thief.py`, `award.py`, `kitset.py`, `scrolltest.py`, `npcgear.py`, `thingsfree.py`, `arenatrip.sh` |
-| [Items](RESEARCH.md#items-in-memory) | `itemedit.py`, `setitem.py`, `specset.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
-| [Fights and foes](RESEARCH.md#fights-and-foes-in-memory) | `foeset.py`, `addeffect.py`, `effects.py`, `kinds.py`, `restfixmem.py`, `setmem.py`, `turnwatch.py` |
-| [Spells and powers](RESEARCH.md#spells-and-powers-in-memory) | `spellsetup.py`, `turnsetup.py`, `powers.py`, `setmem.py power=` |
-| [Creation and levels](RESEARCH.md#creation-and-levels) | `creationscores.py`, `sheetscore.py`, `sheetinfo.py`, `gearpoll.py`, `foeset.py C int=` |
+| [The party and the map's people](RESEARCH-MEMORY.md#the-party-and-the-maps-people) | `itemlists.py`, `party.py`, `sheetedit.py`, `thief.py`, `award.py`, `kitset.py`, `scrolltest.py`, `npcgear.py`, `thingsfree.py`, `arenatrip.sh` |
+| [Items](RESEARCH-MEMORY.md#items-in-memory) | `itemedit.py`, `setitem.py`, `specset.py`, `setarrows.py`, `ammodump.py`, `sprites.worn`, `ring.unlink` |
+| [Fights and foes](RESEARCH-MEMORY.md#fights-and-foes-in-memory) | `foeset.py`, `addeffect.py`, `effects.py`, `kinds.py`, `restfixmem.py`, `setmem.py`, `turnwatch.py` |
+| [Spells and powers](RESEARCH-MEMORY.md#spells-and-powers-in-memory) | `spellsetup.py`, `turnsetup.py`, `powers.py`, `setmem.py power=` |
+| [Creation and levels](RESEARCH-MEMORY.md#creation-and-levels) | `creationscores.py`, `sheetscore.py`, `sheetinfo.py`, `gearpoll.py`, `foeset.py C int=` |
 
 ## Pictures for the docs
 
 For an outfit review with the loader detached, stage the walking and fighting chunks in the disposable pictures file before DOSBox starts. Record the object, figure, class combination, and worn items for each party member. A fixed-state capture can verify how the sprite and its palette cycle look in the map view. Exercise inventory changes separately with the loader attached. [Dwarf and human play log](logs/2026-11-23-dwarf-human-outfits.md)
 
-- **A magic item for a look at its box**: [items in memory](RESEARCH.md#items-in-memory).
+- **Which pictures the class outfits change** (logs/2026-11-27-docs-pictures-retake.md): the map
+  figures and the creation screen's figure only. The inventory, Effects and USE screens' portraits are
+  the game's own whatever the outfit, so a picture of those screens never needs a retake for outfits;
+  check a map picture's figures are the party (the Trustee, Dinos, Scar's gladiators are the game's).
+- **Kalzith's shop and body** (`docs/kalzith.png`, `kalzith-body.png`): `openshop.sh` from
+  `selling-junk-user` for the talk (that save's shop has the party's sold junk in it, so keep an
+  older shop half). The body: from `pens-after-scar` by [ROUTE.md's Kalzith](ROUTE.md#kalzith) to
+  `route.py 1560 880`, then `pointer.py attack 120 185` and a click on him at (262,126) from beside
+  him (from (1496,840) the click says NO PATH FROM HERE); then `walkto.py 1544 856`, `pointer.py look
+  120 185` and a slow press at (262,129) opens the body (a scroll, the Quarterstaff, the Cloak, the
+  Ashen Robe); `shot.sh`, 200%. In `selling-junk-user` the attack pointer finds no Kalzith to hit.
+- **Wake of the Ravager's screen in its own pixels and colours** (logs/2026-11-28-outfits-vs-stock.md):
+  `shot.sh` is Shattered Lands' capture only. The sequel's grab (`ravload.sh`'s `$WORK/rav-loaded.png`, or
+  `import -window`) is 640x480, each game pixel twice across and 2.4 times down, in ImageMagick's own palette: take
+  every second column and row `int((y+0.5)*2.4)` for the 320x200 picture, and the region palette
+  (`ravitems.region_palettes`, each 6-bit value as `v*4+v//16`) for the game's colours (region 1 is Tyr's).
+- **Outfits beside the stock people on a real floor**: cut a clean floor patch from a `shot.sh` capture (its
+  palette is the game's), tile it, and paint the built pictures (`sprites.Pictures.build`) and the stock ones
+  (SEGOBJEX `BMP` frames 0 front, 1 back, 2 side) on it, feet on one line: the scripts are in project files
+  `class-figures/stock-comparison/tools/`.
+- **A magic item for a look at its box**: [items in memory](RESEARCH-MEMORY.md#items-in-memory).
 - **An icon's shimmer** (logs/2026-11-18-item-glows.md): the game cycles four runs of the palette
   in the inventory too (1-5 green, 6-10 violet, 11-15 the water's, 240-248 fire). Move the pointer
   off (`click.py 280 190 none`), take four `shot.sh` captures 0.4 s apart, crop the cell
@@ -1554,7 +1628,7 @@ For an outfit review with the loader detached, stage the walking and fighting ch
   +184+18, the boots' 112x66 at +173+95, each 200%, side by side, a black row under (410x133).
 - **The inventory panel's picture**: I opens the inventory; the panel is `shot.sh`'s x 230-319, y
   0-199, scaled 2x (`convert -crop 90x200+230+0 +repage -scale 200%`). A class can be tried in
-  memory ([a class in memory](RESEARCH.md#the-party-and-the-maps-people)); never save after.
+  memory ([a class in memory](RESEARCH-MEMORY.md#the-party-and-the-maps-people)); never save after.
 - **The Loader's own window for a screenshot** (`docs/dicelog.png`): the container's Python has no
   tkinter; `apt-get install -y python3-tk` gives it to `/usr/bin/python3.12`, which runs
   `python3.12 -m dsloader view` from `obsidian-edition/`. Stop start.sh's text dice log first (by

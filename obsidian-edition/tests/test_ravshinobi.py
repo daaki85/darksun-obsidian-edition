@@ -46,7 +46,7 @@ class ShinobiTests(unittest.TestCase):
         from test_dsclog_drawing import build
         exe, cls.sym = build(ASM)
         cls.image = exe[struct.unpack_from("<H", exe, 8)[0] * 16:]
-        assert cls.sym["tail_mid"] <= HLT  # (the HLT past the segment and the tail's tables: test_dsclog2_room)
+        assert not cls.sym["tail_tables"] <= HLT < cls.sym["tail_mid"]  # (the HLT in none of the tail's tables: test_dsclog2_room)
 
     def setUp(self):
         mu = self.mu = Uc(UC_ARCH_X86, UC_MODE_16)
@@ -239,6 +239,40 @@ class ShinobiTests(unittest.TestCase):
                     with self.subTest(n=n, rules=rules_hi, cls=cls):
                         self.assertEqual(bool(flags & 0x40), want)
 
+    def test_scholar_pick(self):
+        """SHINOBI_LEVEL_UP's way in (SCHOLAR_LEVEL_UP): a party member's new preserver level ([BP+8] 0Bh,
+        [BP-6] not 0) with the Scholar kit awake (kits.SCHOLAR, the rule on) calls CHOOSE A SPELL (688h:66h
+        through its stub, here a RETF) once more, SCHOLAR_PICKS counted, every register kept; ZF as the
+        compare's for all (the game's own pick next); nobody else's calls it."""
+        from dsloader import kitpages
+        stub = (GDS + self.sym.get("CR_STUB", -0x30)) * 16 + 0x66
+        self.mu.mem_write(stub, bytes((0xCB,)))  # (CHOOSE A SPELL: back at once)
+        picks = TSR * 16 + self.sym["scholar_picks"]
+        seen = 0
+        sheets = [(wotr_sheet((PRESERVER,), (9,), 1, byte), byte) for byte in (0, 1, 2, 3)]
+        sheets += [(wotr_sheet((9, PRESERVER), (5, 5), 3, byte), byte) for byte in (0, 1)]
+        for sheet, byte in sheets:
+            for rules_hi in (RULE_HI_KITS, 0):
+                self.rules(0, rules_hi)
+                for member in (0, 3, 5):
+                    if member < 4:
+                        self.member(member, sheet)
+                    for cls, new in ((PRESERVER, 1), (PRESERVER, 0), (THIEF, 1), (9, 1)):
+                        self.mu.mem_write(SS * 16 + 0x900 + 8, struct.pack("<H", cls))
+                        self.mu.mem_write(SS * 16 + 0x900 - 6, bytes((new,)))
+                        before = struct.unpack("<H", self.mu.mem_read(picks, 2))[0]
+                        flags = self.site(210, esi=member, ebx=0x1234, edi=0x5678, eax=0x9ABC)
+                        after = struct.unpack("<H", self.mu.mem_read(picks, 2))[0]
+                        want = bool(rules_hi) and member < 4 and cls == PRESERVER and new \
+                            and kits.SCHOLAR in kitpages.kit_ids(sheet)
+                        with self.subTest(byte=byte, rules=rules_hi, member=member, cls=cls, new=new):
+                            self.assertEqual(after - before, int(want))
+                            self.assertEqual(bool(flags & 0x40), cls == PRESERVER)
+                            for reg, value in (("EBX", 0x1234), ("EDI", 0x5678), ("EAX", 0x9ABC), ("ESI", member)):
+                                self.assertEqual(self.mu.reg_read(getattr(r, "UC_X86_REG_" + reg)) & 0xFFFF, value)
+                        seen += want
+        self.assertTrue(seen)
+
     def known_sets(self, level: int):
         mine = [s for s, _ in kits.RAV_SHINOBI_SPELLS]
         return [(), tuple(mine[:5]), tuple(mine[:9]), tuple(mine[:14]), tuple(mine[:18]), tuple(mine), (3, 8, 20)]
@@ -374,7 +408,7 @@ class ShinobiTests(unittest.TestCase):
             self.assertEqual(p.replacement[:3], bytes((0xCD, 0xF5, number)))
             self.assertEqual(len(p.replacement), len(p.original))
             self.assertEqual(struct.unpack_from("<H", self.image, self.sym["site_table"] + 2 * number)[0],
-                             self.sym[{209: "sh_cast_level", 210: "sh_level_up"}[number]])
+                             self.sym[{209: "sh_cast_level", 210: "scholar_level_up"}[number]])
         for number, label in ((90, "sh_sphere_di"), (91, "sh_sphere_bp"), (92, "sh_sphere_bp")):
             self.assertEqual(struct.unpack_from("<H", self.image, self.sym["site_table"] + 2 * number)[0], self.sym[label])
 

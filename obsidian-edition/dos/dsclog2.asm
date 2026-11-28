@@ -119,6 +119,10 @@ section image follows=mz vstart=0
 section tail follows=image vstart=0 align=16           ; (the tail's tables, with their values)
 tail_start:
 tail_sig db 'DSCLOG2 TAIL', 0, 0, 0, 0  ; (so that nothing of the Loader's is at the tail's offset 0)
+NAMES_ROOM  equ 160                 ; (ITEM_NAMES: SITE_NAME's)
+NAME_KEPT   equ 16                  ; (each: 15 letters at most and a NUL, as DSCLOG's EXTRA_NAMES)
+item_names times NAMES_ROOM * NAME_KEPT db 0    ; (first in the tail, zeros in the file though a buffer: the
+tail_tables:                        ;   emulator tests' way back, a HLT at CS:FFF0, lands in it, not in a table)
 section tailz follows=tail vfollows=tail align=16     ; (then its buffers, zeros in the file: the same segment)
 tailz_start:
 section install follows=tailz vstart=0 align=16
@@ -167,7 +171,7 @@ tbuf_seg  dw 0                  ; +138 the text buffer's segment: the far block'
 panel_off dw FAR_PANEL          ; +140 the panel's picture's offset in the far block (PANEL_BLIT)
 far_seg   dw 0                  ; +142 the far block's segment (FAR_INIT): its buffers from FAR_RING on
 vec_table dw all_vectors        ; +144 where ALL_VECTORS is in the install (its segment: the EXE header's CS)
-copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF, 4 its OBJEX.GFF, 8 its RGN03A.GFF
+copied    dw 0                  ; +146 bits: 1 the Loader's RESOURCE.GFF copy opened, 2 its GPLDATA.GFF, 4 its OBJEX.GFF, 8 its RGN03A.GFF, 16 its RGN001.GFF, 32 its RGN033.GFF
 slots_off dw slots_text         ; +148 offset of SLOTS_TEXT in the tail (+1834's): 4 x SLOTS_SIZE bytes, one a party member,
                                 ;      written by the Loader (DSCLOG's: dicelog.DiceLog._write_slots)
 look_seq   dw 0                 ; +150 monsters looked at in a fight (PROBE_LOOK counts them)
@@ -192,7 +196,9 @@ names_count dw NAMES_ROOM       ; +198   game's 256 (as DSCLOG's EXTRA_NAMES), N
 stealth    dw 0                 ; +204 the Loader sets bit N when party member N is hidden and unheard
                                 ;      (RULE_STEALTH, stealth.py): their next attack is from behind
 stealth_used dw 0               ; +206 counted up each time one is (the bit cleared: MISSILE_REAR)
-        times 230 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +229: none of them here yet, zero)
+        times 228 - ($ - hdr) db 0  ; (DSCLOG's fields +208 to +227: none of them here yet, zero)
+scroll_on  dw SCROLL_MIDDLE     ; +228 as DSCLOG's: SCROLL_MIDDLE has a drag with the wheel pressed scroll
+                                ;      the map (SCROLLING; on from the start: the Loader writes nothing)
 pan_x      dw 0                 ; +230 the Loader adds to these (wrapping) to scroll the view by as many
 pan_y      dw 0                 ; +232   pixels, as DSCLOG's (to the enemy chosen with Tab: PAN_TICK)
         times 238 - ($ - hdr) db 0  ; (DSCLOG's fields +234 to +237: none of them here yet, zero)
@@ -1386,6 +1392,7 @@ pf_failed  dw 0                         ; reused slots let go after a failed rea
 ; Loader's copy instead (with the same mode) and sets its bit in COPIED: RESOURCE.GFF is D:\RESOURC2.GFF
 ; (bit 1), GPLDATA.GFF D:\GPLDAT2.GFF (bit 2), OBJEX.GFF D:\OBJEX2.GFF (bit 4: the mod's item types),
 ; RGN03A.GFF D:\RGN03A2.GFF (bit 8: the Mines3 dining room for its redrawn figures, ravfigures.REGIONS).
+; RGN001 and RGN033 use their copies for the Forest dining sets and Alliance crate.
 ; With no copy there, the game's own. Everything else goes on to DOS.
 probe_dos_open:
         cmp ah, 3Dh
@@ -1495,11 +1502,17 @@ copies  db 12, 'RESOURCE.GFF'
         dw obj_copy, 4
         db 10, 'RGN03A.GFF'
         dw rgn_copy, 8
+        db 10, 'RGN001.GFF'
+        dw forest_copy, 16
+        db 10, 'RGN033.GFF'
+        dw alliance_copy, 32
         db 0
 res_copy db 'D:\RESOURC2.GFF', 0
 gpl_copy db 'D:\GPLDAT2.GFF', 0
 obj_copy db 'D:\OBJEX2.GFF', 0
 rgn_copy db 'D:\RGN03A2.GFF', 0
+forest_copy db 'D:\RGN0012.GFF', 0
+alliance_copy db 'D:\RGN0332.GFF', 0
 
 ; ---- SPELL SLOTS ON USE: DSCLOG's PROBE_USE, PROBE_WIN and USE_DRAW ----
 ; The same routines as Shattered Lands' (the USE screen's code is SL's, at other addresses): PROBE_USE
@@ -2641,7 +2654,9 @@ sold_kept  dw 0                 ; (magical items kept by a merchant, for a look 
 ;   (counted).
 ; - MSG_SHOWN (site 58, "message_shown"): "mov ax,[26B7h]" (59B62h; 3 bytes), the wait about to start: a
 ;   new picture shown first, as the routine's own call before the text does (0B0h:2A81h with 1: drawing
-;   allowed, the picture marked new, 3328h:0B4Ch), so the box is on screen while the game waits.
+;   allowed, the picture marked new, 3328h:0B4Ch), so the box is on screen while the game waits. A left
+;   or right click (MOUSE_EVENT) or a key (INT16) ends the wait at once and goes no further, as Shattered
+;   Lands' box (its event loop, 4D0h:2Ah) takes the click or key that closes it.
 MSG_TIME     equ 0x26B7
 MSG_DRAW_SEG equ 0x18C9 - 0x47E0   ; (selector 0B0h's segment, the root's, less DS's)
 MSG_DRAW_OFF equ 0x2A81
@@ -2670,15 +2685,22 @@ msg_shown:
         xor ax, ax
         mov es, ax
         mov bx, [es:0x46C]
+        mov byte [cs:msg_ended], 0
+        mov byte [cs:msg_waiting], 1
         sti
-.wait:  mov ax, [es:0x46C]
+.wait:  cmp byte [cs:msg_ended], 0      ; (a click or a key: the box closed, as Shattered Lands' does)
+        jne .ended
+        mov ax, [es:0x46C]
         sub ax, bx
         cmp ax, cx
         jb .wait
+.ended: mov byte [cs:msg_waiting], 0
         pop es
         popa
         xor ax, ax                      ; (the game's own wait: none left)
         iret
+msg_waiting db 0                ; (1 while MSG_SHOWN waits: a press or a key ends it, MSG_ENDED, and
+msg_ended   db 0                ;   isn't the game's: MOUSE_EVENT, INT16)
 msg_windows dw 0                ; (message windows opened, for a look in play)
 msg_waits   dw 0                ; (waits shown)
 
@@ -2879,8 +2901,6 @@ showing db 0                    ; 1 while SHOW_WINDOW has its window up
 ; are SITE_NAME: name 256 on is ITEM_NAMES' (the Loader's, from the party transfer), an empty name past them.
 NAMES_TABLE equ 0x56F3
 NAMES_GAME  equ 256
-NAMES_ROOM  equ 160
-NAME_KEPT   equ 16                  ; (each: 15 letters at most and a NUL, as DSCLOG's EXTRA_NAMES)
 name_push:
         pop word [cs:np_ip]
         pop word [cs:np_cs]
@@ -2913,9 +2933,6 @@ np_ip   dw 0
 np_cs   dw 0
 np_fl   dw 0
 no_name db 0
-section tailz
-item_names times NAMES_ROOM * NAME_KEPT db 0    ; (the tail's)
-section image
 
 ; RTC_BEGIN, RTC_WAITED: DSCLOG's: a wait for the Loader ends after its BIOS ticks, or, as the BIOS
 ; clock can stand still in fights, once the real-time clock's second has changed twice (1 to 2 s)
@@ -3054,7 +3071,7 @@ v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 .bw      db 'BW  00 ', 0
 .sp      db 'SP  00 ', 0
 
-; ---- THE CREATION SCREEN'S THAC0: DSCLOG's CR_HP and CR_THAC0_DRAW, no kits ----
+; ---- THE CREATION SCREEN'S THAC0: DSCLOG's CR_HP and CR_THAC0_DRAW ----
 ; INT VEC_CR_HP replaces "add sp,10h" (3 bytes: INT + NOP) after the creation screen draws its hit
 ; points again (6B84Ch, a click on them; 6BC62h; SL's 63AC3h, 63EDAh) and after it draws PSP, which
 ; follows the hit points (6D6AEh at the die, a choice and the screen opening; 6B79Ch at a click on
@@ -3064,7 +3081,7 @@ v_saves  dw .ppd, 0x3A, .rsw, 0x3A, .pp, 0x41, .bw, 0x41, .sp, 0x48
 ; inventory's THAC0 with no weapon. The hit points' box (the 7th, DS:1224h) widened to x 243 (DONE's
 ; left 244: ravager.py's "cr_thac0_box"), so its saved background clears it. What differs from
 ; DSCLOG's: the sequel's records (the creature being made at DS:142Dh, 31h bytes: THAC0 +16h, STR
-; +19h, DEX +1Ah; the STR to-hit table at DS:0832h, SL's 7C2h) and no kits (the THAC0 is the game's).
+; +19h, DEX +1Ah; the STR to-hit table at DS:0832h, SL's 7C2h); a new character's kit by KIT_MADE (CR_KIT_THAC0).
 CR_CREATURE equ 0x142D          ; DS: far pointer to the creature being made (SL's 11A0h)
 CR_HP_BOX   equ 0x1224          ; DS: the hit points' box: x1, y1, x2, y2 (SL's F92h)
 CR_THAC0_X  equ 146             ; (RECALL's left edge, as DSCLOG's CR_AGE_X)
@@ -3078,8 +3095,20 @@ probe_cr_hp:
         sti
         pushad
         push es
+        call cr_changed         ; (a new character's class only now shown: its picture, CR_DRAW)
+        jz .drawn
+        push word [cs:t_cs]     ; (the way back, as a far call's, with BP)
+        push word [cs:t_ip]
+        push bp
+        mov bp, sp
+        call cr_draw
+        pop bp
+        pop word [cs:t_ip]      ; (as the overlay manager has left it)
+        pop word [cs:t_cs]
+.drawn:
         les bx, [CR_CREATURE]
         mov cl, [es:bx + CREATURE_THAC0]
+        call cr_kit_thac0
         mov di, cr_thac0_text + 8       ; (after "THAC0: M")
         mov si, STR_HIT
         mov dl, [es:bx + CREATURE_STR]
@@ -3103,7 +3132,11 @@ probe_cr_hp:
         push cs
         push word cr_thac0_text
         call c_draw_line
-        pop es
+        cmp byte [cs:cr_age_mode], 0
+        je .aged
+        call cr_age_show                ; (PSP drawn: the age beside it, CR_AGE)
+        mov byte [cs:cr_age_mode], 0
+.aged:  pop es
         popad
         push word [cs:t_fl]
         push word [cs:t_cs]
@@ -3122,6 +3155,144 @@ cr_less:                        ; at CS:DI, CL less DS:SI's entry for score DL (
 .put:   jmp c_itoa
 cr_thac0_text db 'THAC0: M', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 cr_count dw 0                   ; THAC0s drawn (for a look in play)
+;
+; THE CREATION SCREEN'S AGE: DSCLOG's CR_AGE (RULE_HI_AGING). CR_AGE_NEW (site 235, "cr_thac0_psp": PSP drawn
+; at the die, a choice and the screen opening, 6D6AEh) and CR_AGE_CON (site 236, "cr_thac0_con": a click on
+; CON, 6B79Ch) replace those two INTs of PROBE_CR_HP, which they go on to, and which then draws "AGE: 23"
+; on PSP's line at CR_THAC0_X (the PSP box's saved background widened to x 200: ravager.py's "cr_age_box").
+; The age is the one the character will have, kept in the sheet being made at SHEET_AGE (+41h, the last
+; byte of the game's 42h sheet, which DONE copies with the rest; the creature follows at +42h, so the roll
+; has no room there: the Loader's aging.give_ages works it out from the age). A new roll of Table 7's dice
+; (AGE_DICE) at the die, a choice and the screen's opening; a click on CON, a RECALL (CR_AGE_HOLD, with the
+; byte among STORE's fields) and EDIT's member keep the age the sheet has. Others kept.
+CR_PSP_BOX  equ 0x122C          ; DS: the PSP box: x1, y1, x2, y2 (SL's F9Ah)
+cr_age_new:
+        mov byte [cs:cr_age_mode], 1
+        jmp probe_cr_hp
+cr_age_con:
+        mov byte [cs:cr_age_mode], 2
+        jmp probe_cr_hp
+; CR_AGE_SHOW: the age put in the sheet being made (rolled, or kept) and drawn (DS the game's, C_DRAW and
+; C_WINPTR set). Changes all but DS.
+cr_age_show:
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .ret
+        les bx, [WP_CREATION]
+        movzx si, byte [es:bx + SHEET_RACE]
+        dec si
+        cmp si, AGE_RACES
+        jae .ret                        ; (no race yet)
+        mov al, [es:bx + SHEET_AGE]
+        or al, al
+        jz .roll                        ; (none yet: one rolled)
+        cmp word [CR_EDITING], -1
+        jne .show                       ; (EDIT: the member's own)
+        cmp byte [cs:cr_age_mode], 2
+        je .show                        ; (CON: the roll kept)
+        cmp byte [cs:cr_age_hold], 0
+        jne .show                       ; (RECALL: the stored one)
+.roll:  shl si, 1
+        movzx cx, byte [cs:si + age_dice]
+        mov dl, cl
+        inc dl                          ; (the byte: the dice's count + their roll less it + 1)
+        jcxz .put
+.die:   call age_rand
+        shr ax, 8
+        push dx
+        xor dx, dx
+        movzx di, byte [cs:si + age_dice + 1]
+        div di
+        mov al, dl
+        pop dx
+        add dl, al
+        loop .die
+.put:   mov [es:bx + SHEET_AGE], dl
+        shr si, 1
+        mov al, dl
+.show:  movzx ax, al
+        movzx dx, byte [cs:age_bases + si]
+        add ax, dx
+        dec ax                          ; (the race's base, + the byte - 1)
+        mov di, c_age_n
+        call c_wtoa
+        mov ax, [CR_PSP_BOX + 2]
+        sub ax, 2
+        push ax
+        push word CR_THAC0_X
+        push cs
+        push word c_age
+        call c_draw_line
+        inc word [cs:cr_ages]
+.ret:   ret
+; AGE_RAND: AX a random word (DSCLOG's: AGE_SEED, h * 25173 + 13849, mixed with the BIOS's tick count).
+        SHARED_age_rand
+age_dice db 1, 8,  4, 6,  3, 4,  2, 4,  5, 4,  3, 6,  1, 6,  0, 1  ; Table 7's dice by race (aging.RACES)
+age_seed dw 0x5A17
+cr_age_mode db 0                ; (1: PSP drawn anew, 2: CON clicked; 0: no age to draw)
+cr_age_hold db 0                ; (1: a RECALL's redraw: the stored age kept)
+cr_ages  dw 0                   ; ages drawn (for a look in play)
+;
+; FLIP_WAIT (site 237, "flip_wait"): DSCLOG's PROBE_FLIP. "push cs / call 3BA4h" (1698Fh; 4 bytes: the INT,
+; the site's number, a NOP) in the game's page flip (the CRT controller's start address set to the other
+; page, then a wait for the next vertical retrace, 13BA4h, as SL's 11674h). With a full screen up
+; (SCREEN_IS 2: the inventory, View Character, USE, a talk) no wait: the game redraws its screen after each
+; item picked up or put down, flipping as it goes, and the pointer stands still meanwhile. Elsewhere the
+; wait as the game's (the map's pace may hang on it), with interrupts on if the game had them on. All kept.
+flip_wait:
+        inc word [cs:flip_waits]
+        push bp
+        mov bp, sp
+        test byte [bp + 7], 2           ; (the caller's flags' IF)
+        jz .quiet
+        sti
+.quiet: push ax
+        push dx
+        push es
+        mov ax, [cs:pointer_ds]
+        or ax, ax
+        jz .wait                        ; (not known yet)
+        mov es, ax
+        cmp word [es:SCREEN_IS], 2
+        jne .wait
+        inc word [cs:flip_quick]
+        jmp .out
+.wait:  mov ax, 0x40                    ; as the game's 13BA4h: out of any retrace, then into the next
+        mov es, ax
+        mov dx, [es:0x63]               ; (the CRT controller's port: 3D4h, its status 3DAh)
+        add dl, 6
+.in:    in al, dx
+        test al, 8
+        jnz .in
+.next:  in al, dx
+        test al, 8
+        jz .next
+.out:   pop es
+        pop dx
+        pop ax
+        pop bp
+        iret
+flip_waits dw 0                 ; page flips (for a look in play)
+flip_quick dw 0                 ; ... of them with no wait
+; CR_KIT_THAC0: CL (the creature's THAC0) with the kit chosen for a new character (KIT_MADE): a Scholar's 1
+; worse (kits.thac0, DSCLOG's CR_THAC0_BASE; a warrior THAC0 kit's is the chosen weapon's alone, WAR_HIT, so
+; not here). The game works the creature's THAC0 out again at a roll, through SCHOLAR_THAC0, which notes
+; whether the kit is in it (CR_THAC0_SCHOLAR, none when the screen opens: KP_OPEN): the line has the kit
+; chosen now, put in or taken out. An EDIT's creature has its kit in its own THAC0. Others kept.
+cr_kit_thac0:
+        cmp word [CR_EDITING], -1
+        jne .ret
+        push ax
+        call kit_made
+        cmp al, KIT_SCHOLAR
+        sete al
+        sub al, [cs:cr_thac0_scholar]
+        jz .out
+        add cl, al
+        inc word [cs:cr_kits]
+.out:   pop ax
+.ret:   ret
+cr_kits dw 0                    ; (THAC0s a kit changed, for a look in play)
+cr_thac0_scholar db 0           ; (1: the creature's THAC0 has a Scholar's in it)
 
 ; ---- THE RULES ----
 ; The rule changes, as DSCLOG's bits in its header's RULES (+170) and RULES_HI (+270); the Loader
@@ -4358,6 +4529,318 @@ fshield_save:
         inc word [cs:manual_saves]
 .out:   iret
 manual_saves dw 0                           ; (Blur's and Fire Shield's, counted for a look in play)
+; ---- THE INVENTORY'S FULL-LENGTH PICTURE: DSCLOG's inventory_figure and inventory_load ----
+; Its key in the Loader's RESOURC2.GFF matches inventoryart.py: 6000h + figure * 256 + one bit per class
+; group (inventoryart.rav_chunks: Shattered Lands' dressed figures in the sequel's steady colours). What
+; differs from DSCLOG's: the sequel's creature has the figure at +10h and its pictures are preloaded from
+; 15h (SL's +18h, 12h), its sheets are 48h bytes at DS:19C5h (race +12h, classes +1Bh), and the loader of a
+; preloaded picture is 7B827h (SL's 73034h), its way back with the picture at 7B89Eh (SL's 730ABh).
+INV_ART_BASE equ 0x6000
+INV_ART_FIGURES equ 14
+INV_PRELOAD equ 0x15
+INV_LOAD_DONE equ 0x7B89E - (0x7B831 + 3)
+; INV_FIGURE (site 251, "inventory_figure"): "mov ax,[es:bx+10h] / add ax,15h" (75DD0h, SL's 6D5A3h): the
+; picture of the selected creature ES:BX, its classes' key (a human's active class alone), or its figure's
+; preloaded one for a figure past the 14.
+inv_figure:
+        mov ax, [es:bx + 0x10]
+        cmp ax, INV_ART_FIGURES
+        jae .stock
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push es
+        mov dx, ax
+        shl dx, 8
+        add dx, INV_ART_BASE
+        mov ax, [es:bx + 4]
+        call kit_sheet_ax               ; (ES:BX its sheet)
+        mov cx, 3
+        cmp byte [es:bx + SHEET_RACE], 1
+        jne .slots
+        mov cx, 1                       ; (a human dual class: the active class)
+.slots: xor si, si
+.next:  movzx di, byte [es:bx + si + SHEET_CLASSES]
+        dec di
+        cmp di, 16
+        ja .skip
+        movzx di, byte [cs:di + kit_class_of]
+        dec di
+        bts dx, di
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop es
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        iret
+.stock: add ax, INV_PRELOAD
+        iret
+
+; CR_FIGURE (site 253, "creation_portrait"): "mov ax,[es:bx+10h] / add ax,15h" (6B04Fh, a race or portrait
+; clicked; 6DBC4h, the screen opening; SL's 632BFh, 65F9Ch): the creation screen's full-length picture of
+; the creature being made (ES:BX) made the inventory's for the classes of the sheet being made (CR_KEY).
+cr_figure:
+        call cr_key
+        pushad
+        push es
+        call cr_look
+        mov [cs:cr_seen], eax           ; (what is drawn: CR_REDRAW draws it again when it changes)
+        pop es
+        popad
+        iret
+
+; CR_LOOK: EAX the classes of the sheet being made, the figure in its top byte. BX, EDX, ES changed.
+cr_look:
+        les bx, [WP_CREATION]
+        call sheet_classes_cr
+        les bx, [CR_CREATURE]
+        movzx edx, byte [es:bx + 0x10]
+        shl edx, 24
+        or eax, edx
+        ret
+
+; CR_KEY: AX the picture for the creation screen's figure (ES:BX its creature): INV_FIGURE's key for the
+; classes of the sheet being made (WP_CREATION: numbered 1-8, the class groups; a human's one class), else
+; INV_PRELOAD + the figure. All other registers kept.
+cr_key:
+        mov ax, [es:bx + 0x10]
+        cmp ax, INV_ART_FIGURES
+        jae .stock
+        push bx
+        push cx
+        push dx
+        push si
+        push es
+        mov dx, ax
+        mov cx, 3
+        cmp ax, 2
+        jae .key
+        mov cx, 1                       ; (a human: its one class)
+.key:   shl dx, 8
+        add dx, INV_ART_BASE
+        les bx, [WP_CREATION]
+        xor si, si
+.next:  movzx ax, byte [es:bx + si + SH_CLASSES]
+        dec ax
+        cmp ax, 7
+        ja .skip
+        bts dx, ax
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop es
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
+.stock: add ax, INV_PRELOAD
+        ret
+
+; CR_CHANGED: (KP_CLASS, after every click on the creation screen; CR_HP, as a new character's class is
+; first shown) ZF clear if the classes or the figure being made have changed since the full-length picture
+; was drawn (CR_FIGURE; the game draws it after a race's or a portrait's click, not after a class's), and
+; then taken as drawn. EAX, BX, EDX, ES changed.
+cr_changed:
+        call cr_look
+        cmp eax, [cs:cr_seen]
+        je .ret
+        mov [cs:cr_seen], eax
+.ret:   ret
+
+; CR_DRAW: the full-length picture drawn again, as after a race's click: its box's backdrop put back (the
+; root's 0C8h:3B30h, with the words at 1120h) and the picture drawn (the overlay's 5F0h:98h, CR_KEY's).
+; Called in a frame the overlay manager can fix up (BP pushed last, the far way back below it): the draw
+; may load its overlay over the creation screen's. DS the game's; AX, BX, ES changed.
+CR_BACK_SEG  equ 0x1D40 - 0x47E0        ; (0C8h's segment less DS's: 3B30h the backdrop put back)
+CR_BACK_PUT  equ 0x3B30
+CR_BACK      equ 0x1120                 ; (DS: the picture's box's saved backdrop, two words)
+CR_DRAW_SEG  equ 0x471F - 0x47E0        ; (5F0h's stub segment less DS's: 98h a preloaded picture drawn)
+CR_DRAW      equ 0x98
+cr_draw:
+        push word [CR_BACK]
+        push word [CR_BACK + 2]
+        mov ax, ds
+        add ax, CR_BACK_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_BACK_PUT
+        call far [cs:cr_call]
+        add sp, 4
+        push dword 0x3C
+        push word 0x32                  ; (its place, as the game pushes it)
+        les bx, [CR_CREATURE]
+        call cr_key
+        push ax
+        mov ax, ds
+        add ax, CR_DRAW_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_DRAW
+        call far [cs:cr_call]
+        add sp, 8
+        ret
+; CR_SMALL_DRAW: the small figure drawn again, as after a race's click (6B05Fh-6B07Fh): its box's backdrop put
+; back (the words at 111Ch) and the figure drawn (the overlay's 5D0h:2Ah, SMALL_FIG's outfit). Called as CR_DRAW.
+CR_SMALL_BACK equ 0x111C                ; (DS: the small figure's box's saved backdrop, two words)
+CR_SMALL_SEG equ 0x488B - 0x4982        ; (5D0h's stub segment less DS's, read in a run: 2Ah the small figure drawn)
+CR_SMALL     equ 0x2A
+cr_small_draw:
+        push word [CR_SMALL_BACK]
+        push word [CR_SMALL_BACK + 2]
+        mov ax, ds
+        add ax, CR_BACK_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_BACK_PUT
+        call far [cs:cr_call]
+        add sp, 4
+        push dword 0x160091             ; (its place: x 91h, y 16h)
+        push dword [CR_CREATURE]
+        mov ax, ds
+        add ax, CR_SMALL_SEG
+        mov [cs:cr_call + 2], ax
+        mov word [cs:cr_call], CR_SMALL
+        call far [cs:cr_call]
+        add sp, 8
+        ret
+small_seen dw 0xFFFF                    ; (the creation screen's small figure as KP_CLASS last drew it)
+cr_seen dd 0xFFFFFFFF
+cr_call dd 0
+
+; SMALL_FIG (site 254, "small_figure"): "mov ax,[es:bx+10h] / add ax,23h" (6F7EAh, SL's 6797Ah: DSCLOG's
+; SMALL_FIGURE), the small figure of the creature ES:BX (the inventory's party column, the creation screen's):
+; the Loader's frame 0 of the figure's walking picture in the outfit of its classes, BMP SMALL_BASE + INV_FIGURE's
+; key (the figure * 256 + a bit per class group: ravdress.small_chunks, in OBJEX2.GFF), which INV_LOAD reads,
+; the preloaded picture where there is none; the creature being made has the creation sheet's classes (CR_KEY's), drawn again
+; after a class's click by KP_CLASS (CR_SMALL_DRAW). With no class (a class clicked off), the preloaded picture: a
+; class-less key, absent from the GFF, quit the game with "Math Err" (2026-11-27).
+SMALL_BASE equ 0x7000
+SMALL_PRELOAD equ 0x23
+small_fig:
+        call small_key
+        iret
+
+; SMALL_KEY: AX SMALL_FIG's picture for the creature ES:BX. All other registers kept.
+small_key:
+        mov ax, [es:bx + 0x10]
+        cmp ax, INV_ART_FIGURES
+        jae .stock
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        push es
+        mov dx, ax
+        shl dx, 8
+        add dx, SMALL_BASE
+        mov di, es
+        cmp di, [CR_CREATURE + 2]       ; (DS the game's: the creature being made?)
+        jne .party
+        cmp bx, [CR_CREATURE]
+        jne .party
+        mov cx, 3
+        cmp ax, 2
+        jae .cr
+        mov cx, 1                       ; (a human: its one class)
+.cr:    les bx, [WP_CREATION]
+        xor si, si
+.crnx:  movzx di, byte [es:bx + si + SH_CLASSES]
+        dec di
+        cmp di, 7                       ; (numbered 1-8, the class groups, on the creation sheet)
+        ja .crsk
+        bts dx, di
+.crsk:  inc si
+        loop .crnx
+        jmp .done
+.party: mov ax, [es:bx + 4]
+        call kit_sheet_ax               ; (ES:BX its sheet)
+        mov cx, 3
+        cmp byte [es:bx + SHEET_RACE], 1
+        jne .slots
+        mov cx, 1                       ; (a human dual class: the active class)
+.slots: xor si, si
+.next:  movzx di, byte [es:bx + si + SHEET_CLASSES]
+        dec di
+        cmp di, 16
+        ja .skip
+        movzx di, byte [cs:di + kit_class_of]
+        dec di
+        bts dx, di
+.skip:  inc si
+        loop .next
+.done:  mov ax, dx
+        test al, al
+        jnz .key
+        sub ax, SMALL_BASE              ; (no class, as between a class's click off and another's on:
+        shr ax, 8                       ;   the preloaded picture, there being no outfit to read)
+        add ax, SMALL_PRELOAD
+.key:   pop es
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        ret
+.stock: add ax, SMALL_PRELOAD
+        ret
+
+; INV_LOAD (site 252, "inventory_load"): "mov dword [bp-4],0" (7B831h, SL's 7303Eh), the preloaded
+; picture SI's loader starting: an INV_FIGURE or SMALL_FIG key is read from the GFF as the game reads a
+; chunk, and given back by the loader's own way out; with none (a figure or class without one), the
+; figure's own preloaded picture.
+inv_load:
+        mov dword [bp - 4], 0
+        cmp si, SMALL_BASE
+        jb .art
+        cmp si, SMALL_BASE + INV_ART_FIGURES * 256
+        jb .read
+.art:   cmp si, INV_ART_BASE
+        jb .out
+        cmp si, INV_ART_BASE + INV_ART_FIGURES * 256
+        jae .out
+.read:  call kp_if_frame                ; (it calls the game: interrupts as the caller had them)
+        pusha
+        push es
+        push ss
+        lea ax, [bp - 4]
+        push ax
+        movzx eax, si
+        push eax
+        push dword 'BMP '
+        mov ax, LOAD_SEG
+        mov dx, LOAD_OFF
+        call pp_aim
+        call far [cs:pp_call]
+        add sp, 12
+        pop es
+        test ax, ax
+        jnz .none
+        cmp dword [bp - 4], 0
+        je .none
+        popa
+        push bx
+        mov bx, sp
+        add word [ss:bx + 2], INV_LOAD_DONE
+        pop bx
+        iret
+.none:  popa
+        mov dword [bp - 4], 0
+        cmp si, SMALL_BASE
+        jb .big
+        sub si, SMALL_BASE
+        shr si, 8
+        add si, SMALL_PRELOAD
+        jmp .out
+.big:   sub si, INV_ART_BASE
+        shr si, 8
+        add si, INV_PRELOAD
+.out:   iret
+
 ; SITE: INT VEC_SITE followed by a byte, the site's number in SITE_TABLE (gamepatch's _site, as
 ; DSCLOG's): its routine is run as if INT had called it (the way back past the byte; registers and the
 ; game's BP as they were). Saves the vectors (one for many sites).
@@ -4554,11 +5037,11 @@ site_table:
         dw site_none                        ; 167 (none here)
         dw site_none                        ; 168 (none here)
         dw site_none                        ; 169 (none here)
-        dw site_none                        ; 170 (none here)
-        dw site_none                        ; 171 (none here)
-        dw site_none                        ; 172 (none here)
-        dw site_none                        ; 173 (none here)
-        dw site_none                        ; 174 (none here)
+        dw mouse_init                       ; 170 SITE_MOUSE_INIT (39F0Bh: the mouse driver reset at the start: as fast up and down as across)
+        dw mouse_set                        ; 171 SITE_MOUSE_SET (2F110h: the mouse given its ranges: the pointer where it was)
+        dw speech_wait                      ; 172 SITE_SPEECH_WAIT (69BE2h: the wait while a narration plays: the pointer, a click ends it)
+        dw fli_key                          ; 173 SITE_FLI_KEY (8335Ch: a FLI's frame shown, Shift tested: the pointer, a click as Shift)
+        dw fli_end                          ; 174 SITE_FLI_END (8324Dh: the FLI played or ended: the pointer wiped)
         dw site_none                        ; 175 (none here)
         dw site_none                        ; 176 (none here)
         dw site_none                        ; 177 (none here)
@@ -4594,12 +5077,24 @@ site_table:
         dw avenger_area                     ; 207 SITE_AVENGER_AREA (7E7A6h: a spell's damage rolled: a Wilderness Avenger's Cause Wounds)
         dw avenger_one                      ; 208 SITE_AVENGER_ONE (7F727h: ... a one-creature spell's)
         dw sh_cast_level                    ; 209 SITE_SHINOBI_CAST_LEVEL (97DF1h: the caster level's class level: a Shinobi's thief level less 5)
-        dw sh_level_up                      ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Shinobi's at its thief level up)
+        dw scholar_level_up                 ; 210 SITE_SHINOBI_LEVEL_UP (957ABh: a level up's preserver's spell pick: a Scholar's one more, a Shinobi's at its thief level up)
         dw site_none                        ; 211 (none here: held for other work)
         dw site_none                        ; 212 (none here: held for other work)
         dw site_none                        ; 213 (none here: held for other work)
         dw poison_hit                       ; 214 SITE_POISON_HIT (5D20Dh: a weapon hit's "does it cast": a Poisoner's poison)
         dw arrow_plus                       ; 215 SITE_ARROW_PLUS (5D456h: the ammunition's plus kept: a Spellarcher's spell arrows')
+        dw page_open                        ; 216 SITE_PAGE_OPEN (7D691h: the save or load window drawn as it opens: its page's label)
+        times 230 - ($ - site_table) / 2 dw site_none
+        dw camera_walk                      ; 230 SITE_CAMERA_WALK (200B7h: a fight's figure stepped: the view kept while it is on screen)
+        dw party_load                       ; 231 SITE_PARTY_LOAD (70DA6h: a game loaded with the party in one figure: spread out)
+        dw party_gather                     ; 232 SITE_PARTY_GATHER (6A823h: the party put in one figure: after a fight, spread out again)
+        dw pace_pass                        ; 233 SITE_PACE_PASS (21AB6h: the map's step for everything: STEADY PACE's count)
+        dw pace_draw                        ; 234 SITE_PACE_DRAW (21AFAh: the drawing of what moved and the flip: STEADY PACE)
+        dw cr_age_new                       ; 235 SITE_CR_AGE_NEW (6D6AEh: PSP drawn anew on the creation screen)
+        dw cr_age_con                       ; 236 SITE_CR_AGE_CON (6B79Ch: PSP drawn after a click on CON)
+        dw flip_wait                        ; 237 SITE_FLIP_WAIT (1698Fh: the page flip's wait for the retrace: none with a full screen up)
+        dw page_key                         ; 238 SITE_PAGE_KEY (7DABCh: a key the save and load window has no use for: PgUp, PgDn the pages)
+        dw greq_save                        ; 239 SITE_GREQ_SAVE (7D8A1h, 7D8BAh: a save's GREQ number: its page's own)
         times 240 - ($ - site_table) / 2 dw site_none
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
         dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
@@ -4609,6 +5104,13 @@ site_table:
         dw berserk_add                      ; 245 SITE_BERSERK_ADD (822A1h: an effect's add, no case of its own: Berserk keeps the side it had)
         dw berserk_end                      ; 246 SITE_BERSERK_END (827D6h: an effect's end, no case of its own: Berserk gives the side back)
         dw ef_charges                       ; 247 SITE_EF_CHARGES (8ABBDh: the Effects screen's line under the pointer: an effect's charges)
+        dw scholar_thac0                    ; 248 SITE_SCHOLAR_THAC0 (953A1h: the THAC0 routine's end: a Scholar's 1 worse)
+        dw size_line                        ; 249 SITE_SIZE_LINE (7B1CFh: a weapon's damage line drawn: an item box's large dice)
+        dw size_pre                         ; 250 SITE_SIZE_PRE (7B1B2h: ... about to be drawn: Shillelagh's 1D6+1)
+        dw inv_figure                       ; 251 SITE_INV_FIGURE (75DD0h: the inventory's full-length picture: the class's)
+        dw inv_load                         ; 252 SITE_INV_LOAD (7B831h: a preloaded picture's loader: the class's from the GFF)
+        dw cr_figure                        ; 253 SITE_CR_FIGURE (6B04Fh, 6DBC4h: the creation screen's full-length picture: the class's)
+        dw small_fig                        ; 254 SITE_SMALL_FIG (6F7EAh: the party column's small figure: the outfit's)
 ; NEW SPELLS (the sequel; dsloader/ravspells.py, RULE_NEW_SPELLS): the mod's six new wizard spells, numbered
 ; past the sequel's 320 records (NS_FIRST: 320-325, Cat's Grace, Erdlu Claw, Fogbolt, Reflected Image, Spook,
 ; Friends; their records, icons and descriptions in the Loader's RESOURC2.GFF), known by the sheet's bits as
@@ -5641,6 +6143,54 @@ sh_place_level:
 ; LV_SHINOBI: the compare's flags, but ZF set for a Shinobi's thief class (SH_MEMBER) at thief level SH_FIRST
 ; or more, so that it learns one of its own (PICK_ANY's, PICK_PAGE's, PICK_LIST's and PICK_TOP's Shinobi
 ; parts). Counted (SH_UPS).
+; SCHOLAR_LEVEL_UP (site 210's entry): a party member SI gone up a new level ([BP-6] not 0) as a preserver
+; ([BP+8] 0Bh) with the Scholar kit awake picks one more spell, on the game's CHOOSE A SPELL (688h:66h, CR_ONE's
+; way: the way back in a frame the overlay manager can fix up, as CR_PICKS'), before the game's own (SL's
+; LV_SCHOLAR, kits: a Scholar learns one more spell at each preserver level). Counted (SCHOLAR_PICKS). Then
+; SH_LEVEL_UP, as for anyone.
+scholar_level_up:
+        cmp word [ss:bp + 8], 0x0B
+        jne sh_level_up
+        cmp byte [ss:bp - 6], 0
+        je sh_level_up
+        cmp si, 4
+        jae sh_level_up
+        push bx
+        push es
+        push ax
+        mov ax, si
+        call kit_sheet_ax
+        pop ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        pop es
+        pop bx
+        jne sh_level_up
+        call kp_if_frame        ; (interrupts as the caller had them)
+        pushad
+        push es
+        mov bx, sp              ; the interrupt frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        mov ax, ds
+        add ax, CR_STUB
+        mov [cs:cr_far + 2], ax
+        mov word [cs:cr_far], CR_SPELL_ENTRY
+        push si
+        call far [cs:cr_far]
+        add sp, 2
+        inc word [cs:scholar_picks]
+        pop bp
+        pop ax                  ; the way back, as the overlay manager has left it
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+        pop es
+        popad
+        ; (on to SH_LEVEL_UP: the compare's flags, and the game's own pick)
 sh_level_up:
         push bp
         mov bp, sp              ; ([BP+2] the INT's IP, CS, FLAGS; [BP] the game's BP)
@@ -6641,7 +7191,10 @@ tu_site:
         mov dx, TU_END
         call tu_bit
         jz .cell
-        test [cs:tu_failed + si], al
+        push fs
+        call tail_fs
+        test [fs:tu_failed + si], al
+        pop fs
         jnz .done
 .cell:  mov al, [cs:tu_hd]
         mov cl, [cs:tu_level]
@@ -6666,7 +7219,10 @@ tu_site:
         mov dx, TU_FAIL
         call tu_bit
         jz .done
-        or [cs:tu_failed + si], al
+        push fs
+        call tail_fs
+        or [fs:tu_failed + si], al
+        pop fs
         jmp .done
 .dstar: mov word [cs:tu_outcome], TU_DSTARRED
         mov ax, [bp - 4]
@@ -6746,8 +7302,9 @@ tu_clear:                       ; (no failed turnings). All kept.
         push cx
         push di
         push es
-        push cs
-        pop es
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov es, ax                      ; (TU_FAILED: the tail's)
         mov di, tu_failed
         mov cx, TU_MOST
         xor al, al
@@ -6794,7 +7351,9 @@ tu_more   dw 0                  ;   +14h D*: how many more of its kind this cast
 tu_caster_c dw 0                ;   +16h the priest's creature (FFFFh: not a creature)
 tu_target_c dw 0                ;   +18h the undead's
 tu_frame_end:
+section tailz
 tu_failed times TU_MOST db 0 ; (a byte a target: the priests, 0-7, who failed against it this fight)
+section image
 ; TH_SITE (site 16, "spell_hit"): spells that roll to hit, SL's SPELL_HIT (th_hit). The sequel has no
 ; always-hit stub and no table of the missile spells (SL's 7A1A7h): its routine of what spell SI does
 ; to target DI (8451Ah, SL's 7A085h; [BP-4] 1 for the computer's look ahead, 5F2D2h's, not a cast)
@@ -7944,7 +8503,7 @@ RP_CURES_END equ $
 ; THIEF_HEAVY; game.RULE_RESTRICT, always on in SL; dsloader/restrict.py). The sequel's records: an item
 ; type's flags +0 (4 a shield, 2 missile, 10h thrown), material +4 (its low nibble; 40h with 0 none),
 ; armour +0Bh 80h, the classes that may use it +0Ch; a sheet's class bits +10h, race +12h (1 human),
-; classes +1Bh, levels +1Eh. The mod's bracers, robes and Cloak of Protection (its types 102-134 in
+; classes +1Bh, levels +1Eh. The mod's bracers, robes and Cloak of Protection (its types 102-145 in
 ; OBJEX2.GFF, with the party transfer) aren't armour (ARMOUR_TYPE). Not in the sequel, so not here:
 ; the Spellarcher's arrows. The kits' gear limits and own gear: KITS' GEAR, below.
 ; - CU_SITE (site 19) replaces "mov [bp-1],al" (775FDh) at the end of the sequel's "may this character
@@ -7990,7 +8549,7 @@ SPHERE_WATER equ 0x03           ; wood, bone
 CU_BOW_KIND equ 14              ; (KIND_OF_TYPE's bow)
 CU_FIGHTER  equ 9
 CU_GLADIATOR equ 10
-KIND_TYPES  equ 135             ; (KIND_OF_TYPE's types: the sequel's 102 and the mod's 33)
+KIND_TYPES  equ 147             ; (KIND_OF_TYPE's types: the sequel's 102, the mod's 44, SL's 1: ravager.SL_EXTRA_TYPES)
 ARM_SLOT    equ 0               ; (an item's +13h while worn: arms, legs, head, chest)
 LEG_SLOT    equ 6
 HEAD_SLOT   equ 7
@@ -8585,7 +9144,7 @@ warrior_al:
 .no:    clc
         ret
 ; ARMOUR_TYPE: carry set if the item type at ES:BX is armour (restrict.is_armour): +0Bh 80h, and not a
-; shield (+0 4), nor of these the mod's types bring (OBJEX2.GFF's 102-134): bracers of defense (worn on
+; shield (+0 4), nor of these the mod's types bring (OBJEX2.GFF's 102-145): bracers of defense (worn on
 ; the arms, +5 3, of no material: +4 40h), a robe (on the chest, +5 1, +4 40h, for preservers,
 ; psionicists and druids alone: +0Ch 190h) or a cloak of protection (+5 8, as a cloak). All kept.
 CU_WORN     equ 0x05
@@ -9792,6 +10351,42 @@ priest_thac0:
         iret
 thac0_most db 12, 19, 6, 9              ; (20 less the group's best THAC0: priest 8, warrior 1, wizard 14, rogue 11)
 thac0_cuts dw 0                         ; (THAC0 held at a group's best, for a look in play)
+;
+; SCHOLAR_THAC0 (site 248, "scholar_thac0"): "mov ax,14h / sub ax,si" (953A1h; 5 bytes, SL's 876BBh:
+; DSCLOG's PROBE_THAC0) at the end of the THAC0 routine (SI the most any of the character's class groups
+; takes off 20, PRIEST_THAC0's above; [BP+6] its sheet's number), which every write of a creature's
+; THAC0 (+1Fh) uses: AX 20 less SI, and the kit's (kits.thac0): a Scholar's 1 worse, its kit awake.
+scholar_thac0:
+        mov ax, 20
+        sub ax, si
+        push bx
+        push es
+        push ax
+        mov ax, [bp + 6]
+        call kit_sheet_ax
+        pop ax
+        push dx
+        xor dl, dl
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .who
+        inc ax
+        inc word [cs:scholar_thac0s]
+        inc dl
+.who:   mov bx, ds              ; (the member on show, USE_WHO: on the creation screen the one being made,
+        add bx, USE_WHO_SEG     ;  its creature's THAC0 now with the kit or not, for CR_KIT_THAC0)
+        mov es, bx
+        mov bx, [bp + 6]
+        cmp bx, [es:USE_WHO_OFF]
+        jne .out
+        mov [cs:cr_thac0_scholar], dl
+.out:   pop dx
+        pop es
+        pop bx
+        iret
+scholar_thac0s dw 0                     ; (Scholars' THAC0s made worse, for a look in play)
+scholar_picks dw 0                      ; (Scholars' spells more at a level up: SCHOLAR_LEVEL_UP)
+scholar_made dw 0                       ; (... and a new Scholar's: CR_SCHOLAR)
 ;
 ; ADND_SLOTS (site 34, "adnd_slots"): "nop / push cs / call 2A10h" (62893h; 5 bytes, SL's 5E240h),
 ; where the slot routine (62A10h) is asked one class's slots at a spell level: the arguments pushed
@@ -11130,21 +11725,28 @@ die_sizes_end:
 ; line routine (7AF9Eh, SL's 7286Ah; its item DI, the type SI, the creature far at [BP-6], 0 for none)
 ; pushes the damage bonus, the dice's sides and their count, then the attacks a round (halves) it reads
 ; for the line's routine (7B1D9h): those three are under the site's return frame (+6 count, +8 sides, +0Ah
-; bonus from SP at entry). What SL's add and these don't: the kits' (KITS has them in the attack, not on the lines yet), a
-; thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
+; bonus from SP at entry). The kits' as the attack has them: KIT_MELEE's damage and a kit's expertise
+; (DAM_KIT_MELEE, DAM_EXPERT). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
 ; own, 628h:5Ch, not SL's effects), a weak material's damage on View Character (VIEW_MATERIAL).
 ; DAM_LINE (site 70 at 7B19Eh, "mov al,es:[bx+24h]", SL's 72A77h): the melee branch, ES:BX the sheet; AL
 ; the attacks a round (the game's "mov ah,0" follows).
 dam_line:
         mov al, [es:bx + 0x24]
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .hand
         push bp
         mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
         push dx
+        push ax
+        call dam_kit_melee      ; (a Ravager's, a Brute's, a Ghetto Fighter's)
+        add [bp + 0x0C], ax
+        pop ax
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .plain
         call spec_of_sheet
         cmp al, 2
-        jbe .bonus              ; (not a warrior: the game's)
+        ja .warrior
+        call dam_expert         ; (not a warrior: a kit's expertise)
+        jmp .bonus
+.warrior:
         cmp dl, SPEC_PLAIN
         jne .grand
         dec al
@@ -11154,9 +11756,9 @@ dam_line:
         add al, 2
 .bonus: lea bp, [bp + 0x0A]
         call dam_spec_bonus
-        pop dx
+.plain: pop dx
         pop bp
-.hand:  push ax
+        push ax
         movzx ax, al
         call dam_hand
         mov [cs:dam_halves], al
@@ -11212,6 +11814,32 @@ dam_hand:
         ret
 dam_halves db 0
 dam_count  dw 0                 ; (the DAM lines made so, for a look in play)
+; DAM_KIT_MELEE: AX what the kits of sheet ES:BX add to damage with item type SI on a DAM line, as the
+; attack has it (KIT_DAMAGE's KIT_MELEE: SL's PROBE_DAM_LINE and PROBE_VIEW_DAM), with the kits' rule; else 0.
+; Others kept.
+dam_kit_melee:
+        xor ax, ax
+        test word [cs:rules_hi], RULE_HI_KITS
+        jz .ret
+        call kit_melee
+        add [cs:dam_kits], ax
+.ret:   ret
+; DAM_EXPERT: AL the attacks a round (halves) of one who isn't a warrior, DL its skill, ES:BX its sheet: a
+; kit's expertise (EXPERT_HALVES, as SPEC_ATTACKS' EXPERT_OF), the attack's own count of it kept. AH 0;
+; others kept.
+dam_expert:
+        movzx ax, al
+        push word [cs:kit_rates]
+        push ax
+        call expert_halves
+        pop word [cs:dam_expert_was]
+        cmp ax, [cs:dam_expert_was]
+        je .same
+        inc word [cs:dam_kits]
+.same:  pop word [cs:kit_rates]
+        ret
+dam_expert_was dw 0
+dam_kits   dw 0                 ; (the DAM lines a kit changed, for a look in play)
 ; MISSILE_LINE (site 71 at 7B124h, "mov al,es:[bx+7]", SL's 729FFh): the missile branch (and with no
 ; creature, an item box's, a melee weapon's too), ES:BX the type's record; AL the type's attacks a round.
 ; With a creature: a specialist's rate of fire (MISSILE_RATE) and the skill's damage, as SPEC_DAMAGE. With
@@ -11271,8 +11899,6 @@ view_dam:
         mov si, [es:bx + ITEM_TYPE]
         mov di, [bp - 0x0A]
         mov dl, SPEC_NONE
-        test word [cs:rules], RULE_SPECIALIZE
-        jz .kind
         mov ax, ds
         add ax, USE_WHO_SEG
         mov es, ax
@@ -11282,6 +11908,12 @@ view_dam:
         imul ax, ax, SHEET_SIZE
         les bx, [SHEETS_PTR]
         add bx, ax
+        mov [cs:view_sheet], bx
+        mov [cs:view_sheet + 2], es
+        call dam_kit_melee      ; (a Ravager's, a Brute's, a Ghetto Fighter's)
+        add [bp - 0x0E], ax
+        test word [cs:rules], RULE_SPECIALIZE
+        jz .kind
         call spec_of_sheet
 .kind:  imul bx, si, TYPE_SIZE
         les ax, [ITEM_TYPES_PTR]
@@ -11290,7 +11922,11 @@ view_dam:
         ja .bonus               ; (a missile weapon: its rate kept)
         mov ax, [bp - 6]
         cmp ax, 2
-        jbe .hand               ; (not a warrior: the game's)
+        ja .warrior
+        les bx, [cs:view_sheet]
+        call dam_expert         ; (not a warrior: a kit's expertise)
+        jmp .hand
+.warrior:
         cmp dl, SPEC_PLAIN
         jne .grand
         dec ax
@@ -11315,6 +11951,7 @@ view_dam:
 .out:   pop es
         popa
         iret
+view_sheet dd 0
 
 ; ---- The Effects screen's lines: DSCLOG's PROBE_EF_ROWS and PROBE_EF_CLICK ----
 ; EF_ROWS (site 73 at 8AFA9h, "pop di / pop si / leave", SL's 7F13Eh): the end of the Effects screen's
@@ -11765,6 +12402,7 @@ KIT_RAVAGER  equ 15
 KIT_CHAMPION equ 17
 KIT_TWIN_BLADE equ 18
 KIT_BRUTE    equ 19
+KIT_SCHOLAR  equ 21
 KIT_BATTLE_MAGE equ 22
 KIT_MIND_WARRIOR equ 26
 KIT_STALKER  equ 29
@@ -15100,6 +15738,259 @@ size_spared:                        ; (PROBE_SAVE's) a save's total 101 for Hold
         mov byte [bp - 2], 101
         inc word [cs:spared_count]
 .ret:   ret
+; SIZE_LINE (site 249 at 7B1CFh, "inc word [bp-2]", 3 bytes; DSCLOG's SIZE_LINE, SL's 72AA7h) in the
+; routine writing a weapon's lines (7AF9Eh: an item box's, [BP-6] its creature 0; the inventory screen's and
+; the Look box's, its creature's), its damage line just drawn from SS:[BP-2Eh] ("1D8+4"; SI the item type):
+; an item box's line drawn again with the dice against a large target after it ("1D8+4/1D12+4", as
+; Shattered Lands' box), when they differ (SZ_CHANGE: RAV_LARGE, then LARGE_DICE by KIND_OF_TYPE, as
+; SIZE_DICE's; Shillelagh's 2D4, its line 1D6+1 by SIZE_PRE). Always, as SL's (the rule's on in both). The
+; text routine's far address is the game's call's, before the site; the line's x, y and colours the
+; call's ([BP+0Ch], [BP+10h], [BP+12h], [BP+14h]: the sequel's arguments 2 bytes on from SL's).
+SZ_DRAW  equ 0x7B1C8 - 0x7B1D2      ; (the text routine's far address in that call, less the way back)
+SZ_TEXT  equ 0x2E                   ; ([BP-2Eh]: the line)
+size_line:
+        inc word [bp - 2]
+        cmp dword [bp - 6], 0
+        jne .ret                    ; (an item box's only)
+        sti                         ; (interrupts on while the game's text routine draws: the INT
+        pushad                      ;   turned them off; IRET puts the caller's back)
+        push es
+        mov ax, 0x0402              ; (Shillelagh: 2D4, its line 1D6+1)
+        mov dl, -1
+        cmp si, SHILLELAGH_TYPE
+        je .parse
+        call sz_change
+        jc .out
+.parse: call sz_parse
+        jc .out
+        mov si, sp
+        les bx, [ss:si + 34]        ; the way back (after ES and the PUSHAD)
+        mov ecx, [es:bx + SZ_DRAW]
+        mov [cs:sz_draw], ecx
+        push ss                     ; "/1D12+4" after the line
+        pop es
+        lea di, [bp - SZ_TEXT]
+.end:   cmp byte [es:di], 0
+        je .slash
+        inc di
+        jmp .end
+.slash: mov byte [es:di], '/'
+        inc di
+        call sz_write
+        push word [bp + 0x14]
+        push word [bp + 0x12]
+        push word [bp + 0x10]
+        push word [bp + 0x0C]
+        push ss
+        lea cx, [bp - SZ_TEXT]
+        push cx
+        push dword [bp + 6]         ; the window
+        call far [cs:sz_draw]
+        add sp, 16
+        inc word [cs:sz_count]
+.out:   pop es
+        popad
+.ret:   iret
+
+; SZ_CHANGE: for item type SI, AL the count and AH the sides of its dice against a large target (0: its
+; own) and DL its bonus's change (signed); CF if they are its own. As SIZE_DICE: the Spiritual Hammer 1 off
+; its bonus; the sequel's own weapons by RAV_LARGE first (a count 0 there: the same on any size), else by
+; kind (KIND_OF_TYPE, LARGE_DICE); not Shillelagh: its callers'. Others kept.
+sz_change:
+        push bx
+        push cx
+        xor ax, ax
+        mov dl, -1
+        cmp si, HAMMER_TYPE
+        je .ok
+        mov bx, rav_large
+        mov cx, si
+        or ch, ch
+        jnz .table
+.own:   cmp byte [cs:bx], 0
+        je .table
+        cmp cl, [cs:bx]
+        je .found
+        add bx, 4
+        jmp .own
+.found: mov al, [cs:bx + 1]
+        or al, al
+        jz .none                    ; (its dice the same on any size)
+        mov ah, [cs:bx + 2]
+        mov dl, [cs:bx + 3]
+        jmp .ok
+.table: cmp si, KIND_TYPES
+        jae .none
+        movzx bx, byte [cs:si + kind_of_type]
+        or bx, bx
+        jz .none
+        dec bx
+        imul bx, bx, 3
+        push fs
+        call tail_fs                ; (LARGE_DICE: the tail's)
+        mov ax, [fs:bx + large_dice]
+        mov dl, [fs:bx + large_dice + 2]
+        pop fs
+        or al, al
+        jz .none
+.ok:    pop cx
+        pop bx
+        clc
+        ret
+.none:  pop cx
+        pop bx
+        stc
+        ret
+
+; SZ_PARSE: SZ_DICE and SZ_BONUS from the line at SS:[BP-2Eh] ("1.5x1D8+7"): AL the count and AH the
+; sides for its (0: the line's), its bonus DL (signed) more; DI the count's first digit. CF if the line
+; has no D. BX, CX, DX lost. (DSCLOG's SL_PARSE.)
+sz_parse:
+        lea bx, [bp - SZ_TEXT]
+        mov di, bx
+.d:     mov cl, [ss:di]             ; the D
+        or cl, cl
+        jz .none
+        cmp cl, 'D'
+        je .back
+        inc di
+        jmp .d
+.none:  stc
+        ret
+.back:  cmp di, bx                  ; the count's digits before it
+        je .count
+        mov cl, [ss:di - 1]
+        sub cl, '0'
+        cmp cl, 9
+        ja .count
+        dec di
+        jmp .back
+.count: mov bx, di
+        push ax
+        call sz_number
+        pop ax
+        or al, al
+        jnz .c
+        mov al, cl
+.c:     inc bx                      ; (past the D)
+        push ax
+        call sz_number
+        pop ax
+        or ah, ah
+        jnz .s
+        mov ah, cl
+.s:     movsx dx, dl
+        mov cl, [ss:bx]
+        inc bx
+        cmp cl, '+'
+        je .plus
+        cmp cl, '-'
+        jne .sum
+        call sz_number
+        sub dx, cx
+        jmp .sum
+.plus:  call sz_number
+        add dx, cx
+.sum:   mov [cs:sz_dice], ax
+        mov [cs:sz_bonus], dx
+        clc
+        ret
+
+; SIZE_PRE (site 250 at 7B1B2h, "push word [bp+14h]", 3 bytes; DSCLOG's SIZE_PRE, SL's 72A8Ah) in the same
+; routine, its damage line made at SS:[BP-2Eh] and about to be drawn (SI the item type): Shillelagh's (the
+; game's 2D4, AD&D's against a large target) made 1D6+1, AD&D's against a smaller one (SIZE_DICE's), the
+; rate kept, in the item box, the inventory and the Look box; the box's then gets its "/2D4" (SIZE_LINE).
+; Then the push, the interrupt's frame moved down a word for it.
+size_pre:
+        pushad
+        push es
+        cmp si, SHILLELAGH_TYPE
+        jne .push
+        mov ax, 0x0601              ; 1D6, its bonus 1 more
+        mov dl, 1
+        call sz_parse
+        jc .push
+        push ss
+        pop es
+        call sz_write               ; (over the count on: "1.5x1D6+1")
+.push:  pop es
+        popad
+        sub sp, 2
+        push bp
+        push ax
+        mov bp, sp
+        mov ax, [bp + 6]
+        mov [bp + 4], ax            ; IP
+        mov ax, [bp + 8]
+        mov [bp + 6], ax            ; CS
+        mov ax, [bp + 10]
+        mov [bp + 8], ax            ; flags
+        mov bp, [bp + 2]            ; (the game's BP)
+        mov ax, [bp + 0x14]
+        mov bp, sp
+        mov [bp + 10], ax           ; the word pushed
+        pop ax
+        pop bp
+        iret
+
+; SZ_NUMBER: CX the number at SS:BX (its digits; 0 if none), BX past them. Others kept.
+sz_number:
+        push ax
+        xor cx, cx
+.next:  mov al, [ss:bx]
+        sub al, '0'
+        cmp al, 9
+        ja .out
+        imul cx, cx, 10
+        movzx ax, al
+        add cx, ax
+        inc bx
+        jmp .next
+.out:   pop ax
+        ret
+
+; SZ_WRITE: SZ_DICE and SZ_BONUS ("1D12+7"; no bonus at 0) at ES:DI, a NUL after. Others kept.
+sz_write:
+        pusha
+        movzx ax, byte [cs:sz_dice]
+        call sz_digits
+        mov byte [es:di], 'D'
+        inc di
+        movzx ax, byte [cs:sz_dice + 1]
+        call sz_digits
+        mov ax, [cs:sz_bonus]
+        or ax, ax
+        jz .end
+        mov byte [es:di], '+'
+        jg .sign
+        mov byte [es:di], '-'
+        neg ax
+.sign:  inc di
+        call sz_digits
+.end:   mov byte [es:di], 0
+        popa
+        ret
+
+; SZ_DIGITS: AX (0-999) in decimal at ES:DI, DI past it. AX, BX, CX, DX lost.
+sz_digits:
+        mov bx, 10
+        xor cx, cx
+.div:   xor dx, dx
+        div bx
+        push dx
+        inc cx
+        or ax, ax
+        jnz .div
+.put:   pop dx
+        add dl, '0'
+        mov [es:di], dl
+        inc di
+        loop .put
+        ret
+sz_draw   dd 0
+sz_dice   dw 0                      ; (the large dice: the count, then the sides)
+sz_bonus  dw 0
+sz_count  dw 0                      ; (the box lines drawn again, for a look in play)
 ; KIND_OF_TYPE: the sequel's item types' weapon kinds, as specialize.KINDS + 1 (0 none): long sword 1,
 ; club 2, dagger 3, short sword 4, mace 5, axe 6, great axe 7, pick 8, quarterstaff 9, polearm 10, gythka
 ; 11, cahulaks 12, chatkcha 13, bow 14, sling 15, staff sling 16, two-handed sword 17, lotulis 18, double
@@ -15134,10 +16025,17 @@ kind_of_type:
         db 7, 11, 0, 0, 0, 0, 0, 0, 21, 0, 18, 0, 0, 0, 0, 0, 5   ; types 51-67
         db 0, 1, 0, 0, 3, 1, 5, 0, 0, 0, 0, 8, 10, 0, 0, 0, 0   ; types 68-84
         db 9, 0, 0, 0, 2, 0, 0, 0, 15, 0, 0, 0, 1, 16, 3, 20, 17   ; types 85-101
-        ; the mod's types (OBJEX2.GFF's 102-134, SL's 115-147: ravager.mod_type), SL's kinds
+        ; the mod's types (OBJEX2.GFF's 102-145, SL's 115-158: ravager.mod_type), SL's kinds
         ; (specialize.KIND_OF_TYPE): its short swords, axes, great axes, picks, polearms, cahulaks
         db 4, 0, 0, 4, 6, 4, 6, 4, 0, 3, 5, 7, 8, 10, 0, 0, 0   ; types 102-118
         db 0, 0, 0, 0, 3, 7, 7, 3, 0, 0, 0, 0, 0, 0, 12, 12      ; types 119-134
+        ; the Ravager weapons backported: five plain ones' places (SL's 148-152, which go back as the
+        ; sequel's own: ravager.sequel_weapon_type), SL's wooden darts (153), then the metal great sword, lotulis and javelin, the
+        ; obsidian lotulis and the bone great sword (SL's 154-158), their material kept
+        db 17, 18, 19, 20, 21, 22, 17, 18, 21, 18, 17            ; types 135-145
+        ; Shattered Lands' own weapon types the sequel has none of its kind and material (ravager.SL_EXTRA_TYPES):
+        ; its bone long sword
+        db 1                                                     ; type 146
 LARGE_MOST    equ 520
 section tail                        ; (LARGE_DICE and LARGE_BITS: the tail's)
 large_dice   db 1, 12, 0            ; long sword: 1d12 (DSCLOG's LARGE_DICE, sizes.LARGE_DICE)
@@ -15268,6 +16166,7 @@ kp_open:
         mov byte [cs:kp_first], 1
         mov byte [cs:kit_keep], 0
         mov dword [cs:wp_classes_seen], 0xFFFFFFFF
+        mov byte [cs:cr_thac0_scholar], 0
         call psi_snap           ; (an EDIT's powers, for PSI_KEEP)
         iret
 
@@ -15440,6 +16339,42 @@ kp_shown:
 ; class's own opened for another, or back to the disciplines for one with no kits. Then the two
 ; instructions.
 kp_class:
+        sti
+        pushad
+        push es
+        call cr_changed
+        jz .drawn
+        mov bx, sp              ; the frame at BX+34: IP, CS, flags
+        push word [ss:bx + 36]  ; the way back, pushed as a far call's, with BP
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call cr_draw            ; (another class: its picture, CR_DRAW)
+        pop bp
+        pop ax                  ; (the way back, as the overlay manager has left it)
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.drawn: les bx, [CR_CREATURE]   ; (and the small figure, its outfit's: CR_SMALL_DRAW)
+        call small_key
+        cmp ax, [cs:small_seen]
+        je .small
+        mov [cs:small_seen], ax
+        mov bx, sp
+        push word [ss:bx + 36]
+        push word [ss:bx + 34]
+        push bp
+        mov bp, sp
+        call cr_small_draw
+        pop bp
+        pop ax
+        pop dx
+        mov bx, sp
+        mov [ss:bx + 34], ax
+        mov [ss:bx + 36], dx
+.small: pop es
+        popad
         push eax
         push es
         push bx
@@ -16222,6 +17157,284 @@ s_cs      dw 0
 s_fl      dw 0
 s_far     dw 0, 0
 
+; ---- THE VIEW IN FIGHTS, THE WHOLE PARTY IN VIEW, STEADY PACE (DSCLOG's CAMERA, SPREAD, STEADY PACE) ----
+; Ported from DSCLOG (gamepatch's camera_still, party_spread and party_gather, pace_pass and pace_draw),
+; first written for the sequel on Codex's branch codex/ravager-map-controls (2026-11-26).
+FS_SEG_GAP   equ DGROUP - 0x3C10        ; (DS less the fight state's segment: its +19h, a fight on)
+SPREAD_STUB  equ DGROUP - 0x46BD        ; (DS less the overlay stubs' segment of the 5 and 6 keys)
+GATHER_CODE  equ DGROUP - 0x18C9        ; (DS less the segment of the routine stepping a fight's figure)
+
+; CAMERA_WALK (site 230): "mov bx,[426Dh]" (200B7h; 4 bytes: the INT, the site's number and a NOP) in the
+; routine stepping a fight's figure (1FD6Bh, SL's 0AC0:C7B3), SI and DI the figure's feet on the map,
+; just before the view's own moves after it: its "would the view centred on it pass the map's edge"
+; (1C5F:01B2), the view centred at once when the figure is outside the middle of the screen (64 to 256
+; across, 64 to 136 down), else stepped toward it (262C:0D80). In a fight (the fight state's +19h) with
+; the feet on the screen the view stays: on to the routine's end (2019Bh), past both. Off the screen,
+; or out of a fight, as the game has it. The displaced read done; others kept.
+camera_walk:
+        push bp
+        mov bp, sp
+        push ax
+        push es
+        mov ax, ds
+        sub ax, FS_SEG_GAP
+        mov es, ax
+        cmp word [es:0x19], 0
+        je .game                        ; (out of a fight: the game's)
+        mov ax, si
+        sub ax, [CAM_X]
+        dec ax
+        cmp ax, 319
+        jae .game                       ; (off the screen across)
+        mov ax, di
+        sub ax, [CAM_Y]
+        dec ax
+        cmp ax, 199
+        jae .game                       ; (off it up or down)
+        add word [bp + 2], 0x2019B - 0x200BA  ; (the INT's way back, 200BAh: to the routine's end)
+.game:  pop es
+        pop ax
+        pop bp
+        mov bx, [WHOSE_TURN]            ; (the displaced read)
+        iret
+
+; PARTY_LOAD (site 231): "mov byte [13FAh],0" (70DA6h; 5 bytes) where loading a game finds the party in
+; the leader's figure (SL's SPREAD_LOAD); PARTY_GATHER (site 232): the same store (6A823h) in the routine
+; putting the party in one figure (46BD:0025's), the game's 6 key's and a fight's end's (SL's
+; SPREAD_GATHER). Each does the store; a load, and a gather whose caller (the routine's own way back,
+; [BP+2], [BP+4]) is one of the two at a fight's end (18C9:21C6h after 20051h, 18C9:31A9h after 21034h),
+; set SPREAD_DUE; the 6 key's (18C9:0ED6h) clears it, so the party stays in one figure until the next
+; fight or load. SPREAD_TICK does the spreading. All registers kept.
+party_load:
+        mov byte [IN_COMBAT], 0         ; (the displaced store)
+        mov byte [cs:spread_due], 1
+        iret
+
+party_gather:
+        mov byte [IN_COMBAT], 0         ; (the displaced store)
+        push ax
+        mov ax, ds
+        sub ax, GATHER_CODE
+        cmp ax, [bp + 4]
+        pop ax
+        jne .out                        ; (another caller: a script's)
+        cmp word [bp + 2], 0x21C6       ; (a fight's end)
+        je party_load
+        cmp word [bp + 2], 0x31A9       ; (... the other)
+        je party_load
+        cmp word [bp + 2], 0x0ED6       ; (the 6 key)
+        jne .out
+        mov byte [cs:spread_due], 0
+.out:   iret
+
+; SPREAD_TICK: (PROBE_SCROLL's, DS the game's) with SPREAD_DUE set, on the map, out of a fight, and
+; the party still in one figure (IN_COMBAT 0): the game's 5 key's routine (46BD:002A, 6A6D1h, its
+; argument 1: the view drawn again) called, which spreads the members round the leader. All kept.
+spread_tick:
+        cmp byte [cs:spread_due], 0
+        je .ret
+        call on_map
+        jne .ret
+        pushad
+        push ds
+        push es
+        mov ax, ds
+        sub ax, FS_SEG_GAP
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .out                        ; (a fight: after it)
+        mov byte [cs:spread_due], 0
+        cmp byte [IN_COMBAT], 0
+        jne .out                        ; (spread already)
+        mov ax, ds
+        sub ax, SPREAD_STUB
+        mov [cs:spread_call + 2], ax
+        push word 1
+        call far [cs:spread_call]
+        add sp, 2
+.out:   pop es
+        pop ds
+        popad
+.ret:   ret
+spread_due  db 0
+spread_call dw 0x2A, 0
+
+; STEADY PACE (SL's PROBE_PACE_PASS, PROBE_PACE_DRAW; DEVELOPMENT-SCREENS.md's Game speed). The map's
+; frame (21A61h, SL's 1E8E4h) calls the step for everything (21E0:2BB9, which builds the list of what
+; moved at 42A2h:0028h, 10 bytes each, and sets the frame's byte [BP-1], "something moved") and then
+; the drawing of that list with the flip (21E0:1478). The step runs only when the timer (2A1AAh) has set
+; DS:265Ah, at each tick of the game's clock (DS:145Eh, 96 a second): a tick passed while drawing is a
+; step lost. PACE_PASS counts the steps run; PACE_DRAW, at each frame, adds the steps lost since the last
+; to a debt in quarter ticks less PACE_ALLOW, and while the debt is above 0, out of a fight, leaves the
+; drawing out and keeps the list (PACE_SAVED, PACE_KEPT entries); the next frame drawn gets it added
+; after its own. Each site replaces the far call's offset (its INT and number: 3 bytes), the call's
+; segment, as DOS relocated it, left in place and read from there.
+PACE_LIST  equ 0x28                     ; the game's list of what moved (at 42A2h:0) ...
+PACE_LSEG  equ DGROUP - 0x42A2          ; (... DS less its segment)
+PACE_LMAX  equ 320                      ; ... and the most it holds
+PACE_CLOCK equ 0x145E                   ; the game's clock: 96 ticks a second
+PACE_STEP  equ 0x265A                   ; set by the game's timer each tick: the step is due
+PACE_ALLOW equ 6                        ; steps a frame may lose, in quarter ticks (1.5 ticks)
+PACE_AHEAD equ 4 * 4 * 4                ; (the most owed: 4 frames of 4 ticks, then as the game)
+PACE_GAP   equ 24                       ; ticks since the last frame: a pause (a load, a talk), afresh
+PACE_HOLD  equ 2                        ; ticks what moved is kept before a frame is drawn for it alone
+PACE_KEPT  equ 64                       ; entries kept at most (more: the frame is drawn)
+
+pace_far:                               ; (both sites': the way back and the game's routine's segment)
+        pop word [cs:pace_ret]          ; (PACE_PASS's or PACE_DRAW's own way back)
+        pop word [cs:pace_back]
+        pop word [cs:pace_back + 2]
+        popf                            ; (the caller's flags: interrupts as they were)
+        push es
+        push bx
+        les bx, [cs:pace_back]
+        mov bx, [es:bx]                 ; (the call's segment, as relocated)
+        mov [cs:pace_call + 2], bx
+        pop bx
+        pop es
+        add word [cs:pace_back], 2      ; (past it)
+        jmp [cs:pace_ret]
+
+pace_pass:
+        call pace_far
+        mov word [cs:pace_call], 0x2BB9
+        cmp byte [PACE_STEP], 0
+        je .call
+        inc word [cs:pace_steps]        ; (a step due: it runs)
+        inc word [cs:pace_ran]
+.call:  call far [cs:pace_call]
+        cmp word [cs:pace_kept], 0
+        je .back
+        push eax
+        mov eax, [PACE_CLOCK]
+        sub eax, [cs:pace_kept_at]
+        cmp eax, PACE_HOLD
+        pop eax
+        jb .back                        ; (kept a moment: the next step draws it too)
+        push bx
+        mov bx, sp
+        mov bx, [ss:bx + 2 + 6]         ; (the frame's "something moved", a byte: the call's 4th argument)
+        mov byte [bx], 1
+        pop bx
+.back:  jmp far [cs:pace_back]
+
+pace_draw:
+        call pace_far
+        mov word [cs:pace_call], 0x1478
+        pusha
+        push es
+        mov bp, sp                      ; ([BP+24]: how many moved; PUSHA, ES, then x, y, 1)
+        mov eax, [PACE_CLOCK]           ; the schedule
+        mov edx, eax
+        sub eax, [cs:pace_clock]
+        mov [cs:pace_clock], edx
+        xor dx, dx
+        xchg dx, [cs:pace_steps]        ; (the steps run since the last frame)
+        cmp eax, PACE_GAP
+        jb .owed
+        mov word [cs:pace_kept], 0      ; (a pause: what was kept is from before it)
+        mov word [cs:pace_debt], 0
+        jmp short .judge
+.owed:  sub ax, dx                      ; the steps lost
+        jge .lost
+        xor ax, ax
+.lost:  add [cs:pace_lost], ax
+        shl ax, 2
+        sub ax, PACE_ALLOW
+        add ax, [cs:pace_debt]
+        cmp ax, -PACE_ALLOW
+        jge .low
+        mov ax, -PACE_ALLOW             ; (a frame's allowance in hand at most)
+.low:   cmp ax, PACE_AHEAD
+        jle .high
+        mov ax, PACE_AHEAD
+.high:  mov [cs:pace_debt], ax
+.judge: mov cx, [bp + 24]
+        jcxz .draw                      ; (nothing new: drawn for what was kept)
+        mov ax, ds
+        sub ax, FS_SEG_GAP
+        mov es, ax
+        cmp word [es:0x19], 0
+        jne .draw                       ; (a fight draws every frame)
+        cmp word [cs:pace_debt], 0
+        jle .draw
+        mov ax, [cs:pace_kept]
+        add ax, cx
+        cmp ax, PACE_KEPT
+        ja .draw
+        mov di, [cs:pace_kept]          ; left undrawn: the list kept
+        or di, di
+        jnz .more
+        mov edx, [PACE_CLOCK]
+        mov [cs:pace_kept_at], edx
+.more:  mov [cs:pace_kept], ax
+        imul di, di, 10
+        add di, pace_saved
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov es, ax                      ; (PACE_SAVED: the tail's)
+        push ds
+        mov ax, ds
+        sub ax, PACE_LSEG
+        mov ds, ax
+        mov si, PACE_LIST
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+        inc word [cs:pace_skipped]
+        pop es
+        popa
+        mov ax, 1                       ; (as drawn)
+        jmp far [cs:pace_back]
+.draw:  mov cx, [cs:pace_kept]          ; the list kept, after this frame's own
+        jcxz .go
+        mov word [cs:pace_kept], 0
+        mov bx, [bp + 24]
+        mov ax, bx
+        add ax, cx
+        cmp ax, PACE_LMAX
+        ja .go                          ; (no room: it is dropped)
+        mov [bp + 24], ax
+        imul di, bx, 10
+        add di, PACE_LIST
+        mov ax, ds
+        sub ax, PACE_LSEG
+        mov es, ax
+        push ds
+        mov ax, cs
+        add ax, TAIL_PARAS
+        mov ds, ax                      ; (PACE_SAVED: the tail's)
+        mov si, pace_saved
+        imul cx, cx, 5
+        cld
+        rep movsw
+        pop ds
+.go:    cmp word [bp + 24], 0
+        pop es
+        popa
+        je .none                        ; (nothing to draw at all)
+        call far [cs:pace_call]
+        jmp far [cs:pace_back]
+.none:  mov ax, 1
+        jmp far [cs:pace_back]
+
+pace_ret     dw 0                       ; (PACE_FAR's own way back)
+pace_back    dd 0                       ; (where the INT returns, past the call's segment)
+pace_call    dd 0                       ; (the game's routine, its segment as relocated)
+pace_clock   dd 0                       ; (the clock at the last frame)
+pace_kept_at dd 0                       ; (the clock when the list was first kept)
+pace_debt    dw 0                       ; steps lost past the allowance, in quarter ticks (signed)
+pace_steps   dw 0                       ; steps run since the last frame
+pace_ran     dw 0                       ; steps run (counted, for measuring)
+pace_lost    dw 0                       ; steps lost (counted, for measuring)
+pace_kept    dw 0                       ; entries kept (PACE_SAVED)
+pace_skipped dw 0                       ; frames left undrawn (counted)
+section tailz                           ; (PACE_SAVED: the tail's buffer)
+pace_saved times PACE_KEPT * 10 db 0  ; (what moved in the frames left undrawn, 10 bytes each)
+section image
+
+
 ; PROBE_SCROLL: INT VEC_SCROLL replaces the start of "call far 35B9:0034" (20230h: 9Ah 34h 00h, then
 ; the segment: A9h makes it a harmless "test ax,<segment>" the loader may relocate), the map's main
 ; loop asking where the pointer is (far pointers to x and y on the stack). The labels' pass done with
@@ -16252,6 +17465,7 @@ probe_scroll:
         call label_tick
         call ring_tick
         call redraw_tick                ; (the view again for the Loader's squares and rings)
+        call spread_tick                ; (the whole party in view: SPREAD_TICK)
         pushf
         cli                             ; (drawing: DUST_NUDGE)
         call dust_tick                  ; (the walkers' dust: DUST)
@@ -16264,12 +17478,522 @@ probe_scroll:
         jz .call
         sti
 .call:  call far [cs:s_far]
+        call drag_mouse                 ; (a drag with the wheel pressed: the view moved, the pointer off the edges)
         call panel_mouse                ; (AX the buttons: a press on the panel kept from the game)
         call target_mouse               ; (... Enter's click on the chosen enemy: TARGETING)
         push word [cs:s_fl]
         push word [cs:s_cs]
         push word [cs:s_ip]
         iret
+
+; SCROLLING (SCROLL_ON), DSCLOG's: pressing the mouse wheel and moving scrolls the map with the pointer,
+; as if dragging it (the game has no use for that button). The game is told of the mouse's buttons by the
+; driver calling its handler (INT 33h, 0Ch; the sequel's 35B9:00C0 sets it): INT33 puts MOUSE_EVENT in its
+; place, which keeps the middle button from the game and starts and ends the drag, and forgets the game's
+; handler when the game takes it away (0Ch with CX 0) or resets the driver (00h, 21h). The main loop's call
+; for the pointer (PROBE_SCROLL, 20230h) is then followed by DRAG_MOUSE: while dragging, the view is
+; centred where the drag puts it through the game's own routine (VIEW_AGAIN's CENTRE, as PAN_TICK), and the
+; pointer the loop is told of is kept off the screen's edges (no scrolling of the game's own meanwhile).
+; MOUSE_EVENT also keeps where the pointer was last seen (MP_X, MP_Y: MOUSE_SET), and takes a click that
+; ends a message box's wait (MSG_SHOWN) from the game.
+MIDDLE          equ 4           ; the middle button (pressing the wheel), in the buttons held
+EVENT_MID_PRESS equ 0x20        ; the driver's events: it pressed, released
+EVENT_MID_LEAVE equ 0x40
+EVENT_PRESSES   equ 0x0A        ; (the left and right buttons pressed)
+SCROLL_MIDDLE   equ 1           ; SCROLL_ON's bit: dragging with the wheel pressed
+old33        dd 0
+game_handler dd 0
+game_mask    dw 0
+drag         db 0               ; (2 while the wheel is held: dragging)
+drag_new     db 0               ; (1: the drag's start not yet taken by DRAG_MOUSE)
+drag_x       dw 0               ; (where the drag started, and the view then)
+drag_y       dw 0
+cam0_x       dw 0
+cam0_y       dw 0
+drag_moves   dw 0               ; (the view moved by a drag, counted: for a look in play)
+int33:
+        cmp ax, 0x0C
+        jne .reset
+        or cx, cx
+        jz .gone                        ; (taking the handler away)
+        mov [cs:game_handler], dx
+        mov [cs:game_handler + 2], es
+        mov [cs:game_mask], cx
+        push es
+        push dx
+        push cx
+        or cx, 0x7F                     ; (moves, and all three buttons)
+        push cs
+        pop es
+        mov dx, mouse_event
+        pushf
+        call far [cs:old33]
+        pop cx
+        pop dx
+        pop es
+        iret
+.reset: or ax, ax                       ; (the driver reset, or its software reset: no handler
+        jz .gone                        ;   now, as the driver has it)
+        cmp ax, 0x21
+        jne .chain
+.gone:  mov dword [cs:game_handler], 0
+        mov word [cs:game_mask], 0
+        mov byte [cs:drag], 0
+.chain: jmp far [cs:old33]
+
+mouse_event:                            ; AX = events, BX = buttons held, CX, DX = where
+        mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
+        cmp byte [cs:msg_waiting], 0    ; (a press ending a message box's wait: not the game's)
+        je .drag
+        test al, EVENT_PRESSES
+        jz .drag
+        mov byte [cs:msg_ended], 1
+        and al, ~EVENT_PRESSES
+.drag:  call panel_event               ; (a left press on the combat log's panel: not the game's)
+        call page_mouse                 ; (... on PGUP or PGDN in the save or load window: the key)
+        test byte [cs:scroll_on], SCROLL_MIDDLE
+        jz .pass
+        test al, EVENT_MID_PRESS        ; the wheel pressed: a drag at once
+        jz .mheld
+        cmp byte [cs:drag], 0
+        jne .mheld
+        mov byte [cs:drag], 2
+        mov byte [cs:drag_new], 1
+        mov [cs:drag_x], cx
+        mov [cs:drag_y], dx
+.mheld: test al, EVENT_MID_LEAVE
+        jz .mdone
+        mov byte [cs:drag], 0
+.mdone: and bx, ~MIDDLE
+        and al, ~(EVENT_MID_PRESS | EVENT_MID_LEAVE)
+.pass:  and ax, [cs:game_mask]          ; the events the game asked for, to its handler
+        jz .none
+        cmp word [cs:game_handler + 2], 0
+        je .none
+        pusha
+        push ds
+        push es
+        call far [cs:game_handler]
+        pop es
+        pop ds
+        popa
+.none:  retf
+
+; DRAG_MOUSE: after the main loop's call for the pointer (AX the buttons; the far pointers to x and y at
+; [SP+2], [SP+6] past this call's return; DS the game's): while dragging, on the map, the view centred
+; where the drag puts it (the map moves with the pointer; while a label or the ring is drawn it waits a
+; pass), and the pointer told the loop kept off the edges and the middle button left out. Keeps all but AX.
+drag_mouse:
+        cmp byte [cs:drag], 2
+        jne .ret
+        push bp
+        mov bp, sp
+        pusha
+        push es
+        les bx, [bp + 4]
+        mov cx, [es:bx]
+        les bx, [bp + 8]
+        mov dx, [es:bx]
+        call on_map
+        jne .edges
+        cmp byte [cs:drag_new], 0
+        je .follow
+        mov byte [cs:drag_new], 0
+        mov ax, [CAM_X]
+        mov [cs:cam0_x], ax
+        mov ax, [CAM_Y]
+        mov [cs:cam0_y], ax
+.follow:
+        cmp byte [cs:lbl_busy], 0
+        jne .edges
+        cmp byte [cs:vga_busy], 0
+        jne .edges
+        mov ax, [cs:cam0_x]             ; where the drag puts the view
+        sub ax, cx
+        add ax, [cs:drag_x]
+        mov si, [cs:cam0_y]
+        sub si, dx
+        add si, [cs:drag_y]
+        jns .yok
+        xor si, si
+.yok:   or ax, ax
+        jns .xok
+        xor ax, ax
+.xok:   and ax, 0xFFF8                  ; (as the game keeps it)
+        and si, 0xFFF8
+        cmp ax, [CAM_X]
+        jne .go
+        cmp si, [CAM_Y]
+        je .edges
+.go:    push cx
+        push dx
+        mov bx, ds
+        sub bx, DGROUP - CENTRE_SEG
+        mov [cs:centre + 2], bx
+        pushf
+        cli                             ; (drawing)
+        push word 1
+        add si, 100
+        push si
+        add ax, 160
+        push ax
+        call far [cs:centre]
+        add sp, 6
+        popf
+        pop dx
+        pop cx
+        inc word [cs:drag_moves]
+.edges: cmp cx, 1                       ; (off the edges: no scrolling of the game's own)
+        jge .x1
+        mov cx, 1
+.x1:    cmp cx, 0x13D
+        jle .y0
+        mov cx, 0x13D
+.y0:    cmp dx, 1
+        jge .y1
+        mov dx, 1
+.y1:    cmp dx, 0xC6
+        jle .put
+        mov dx, 0xC6
+.put:   les bx, [bp + 4]
+        mov [es:bx], cx
+        les bx, [bp + 8]
+        mov [es:bx], dx
+        pop es
+        popa
+        pop bp
+        and ax, ~MIDDLE
+.ret:   ret
+
+; MOUSE_INIT (site 170): "or ax,ax / jnz" (39F0Bh; 4 bytes, SL's 356F5h) as the game starts, just after it
+; resets the mouse driver (AX 0: none): the pointer made to move as far up and down as across
+; (MOUSE_RATIO), and the "jnz" made. DSCLOG's.
+MI_SKIP      equ 0x39F1A - (0x39F0B + 3)
+        SHARED_mouse_init
+
+; MOUSE_SET (site 171): "mov word [0A103h],0" (2F110h; 6 bytes, SL's "mov word [0A12Dh],0" at 2A912h)
+; just after the game gives the mouse its ranges (the screen's 320 by 200), as its screens start. A video
+; mode set leaves the driver's pointer in the middle of its 640 across, which these ranges put at the right
+; edge (318, 100): there it's put back where it was last seen (MP_X, MP_Y, the middle at first). The
+; pointer moves as far up and down as across (MOUSE_RATIO). DSCLOG's.
+mp_x       dw 160               ; (where the pointer was last seen, in the game's 320 by 200)
+mp_y       dw 100
+mouse_set:
+        mov word [0xA103], 0
+        call cine_hide
+        pushad
+        mov ax, 3
+        int 0x33
+        cmp cx, 318
+        jb .ratio
+        cmp dx, 100
+        jne .ratio
+        call mouse_mid
+.ratio: call mouse_ratio
+        popad
+        iret
+mouse_mid:
+        mov ax, 4
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+        cmp cx, 319                     ; (one seen on a wider screen: the middle)
+        jbe .put
+        mov cx, 160
+        mov dx, 100
+.put:   int 0x33
+        SHARED_mouse_ratio
+
+; THE POINTER IN SCENES: DSCLOG's (SL's SCENE_POINTER, CINE_STEP and CINE_END), for the sequel's two kinds
+; of scene. The game shows no pointer in them, and a click does nothing:
+; - its FLI films (the logos and the intro before the title, 1.FLI and 2.FLI; the story's films from the
+;   CD's CINE folder), played frame by frame by 831D4h in mode 13h (chained), where after each frame the
+;   Shift keys' state (1E8h:11h, the BIOS's shift flags) ends the film (at once with [631Bh] set, else
+;   after its 240th frame);
+; - a narration over a picture (the opening's, after START GAME, and a map trigger's speech): the game
+;   waits while the speech plays (69BDDh, 37B3h:51h's "still playing"), with no key or click to end it.
+; Here the arrow is drawn where the driver has the pointer at each frame or pass of the wait (CINE_CHECK),
+; and a button pressed since the last ends the film as Shift does (FLI_KEY)
+; or the narration (SPEECH_WAIT: the speech stopped, 37B3h:3A5h, as the talk's own click stops it,
+; 8850Ah). The arrow is SL's (POINTER.BIN: the game's own, from Shattered Lands' files, which the Loader
+; writes; else a plain one), drawn in chained or planar (mode X) VGA memory, whichever the scene uses.
+CP_MAX_ROWS  equ 16             ; (the room for the arrow: dsloader/scenepointer.py's)
+CP_COLS      equ 11
+CP_SHAPE_BYTES equ 88
+CP_PIXELS    equ 76
+SW_BACK      equ 0x69BE5 - 0x69BDD  ; (SPEECH_WAIT's "jnz" back to the test)
+SPEECH_SEG   equ 0x3611         ; (37B3h at a load segment of 1A2h: the speech's routines' segment)
+SPEECH_STOP  equ 0x03A5
+cine_shown db 0                 ; (1 while a scene plays: the driver's ranges the screen's)
+cp_drawn   db 0                 ; (1: the arrow on the screen, at CP_X, CP_Y, CP_PAGE in A000h,
+cp_x       dw 0                 ;   in CP_MAP's colours, CP_UNDER what was under it)
+cp_y       dw 0
+cp_page    dw 0
+cp_now     dw 0
+cp_op      db 0
+cp_chain   db 0                 ; (the sequencer's chain-4 bit: mode 13h's memory, not mode X's)
+cp_last    dw 0                 ; (the BIOS tick at the last drawing)
+cp_seq_i   db 0
+cp_mask    db 0
+cp_gc_i    db 0
+cp_gc_ix   db 1, 3, 4, 5, 8     ; (the graphics controller's registers kept: set/reset enable,
+cp_gc      times 5 db 0         ;   rotate, read plane, mode, bit mask)
+cp_map     times CP_COLS db 0   ; (each colour's nearest in the palette, and how near)
+cp_best    times CP_COLS db 0
+cp_under   times CP_PIXELS db 0
+cine_stop  dw SPEECH_STOP, 0
+cine_skips dw 0                 ; (scenes ended by a click, counted: for a look in play)
+; CP_DATA: the arrow, as POINTER.BIN has it (read over this as the helper loads): its rows, its colours,
+; their red, green and blue (6 bits), then each row's pixels from its left (a colour's number from 1, or
+; FFh for none), each row ending with 0. Without the file, a plain arrow of the helper's own.
+cp_data:
+cp_rows    db 11
+cp_ncols   db 2
+cp_rgb     db 0, 0, 0, 63, 63, 63
+           times (CP_COLS - 2) * 3 db 0
+        SHARED_cp_shape
+CP_DATA_BYTES equ $ - cp_data
+POINTER_FILE db "D:\POINTER.BIN", 0 ; (CP_DATA's file, read as the helper loads)
+
+; SPEECH_WAIT (site 172): "or al,al / jnz 69BDDh" (69BE2h; 4 bytes) in the wait while a narration plays
+; (AL 1: still playing): the arrow drawn, and a click stops the speech and ends the wait; else the "jnz".
+speech_wait:
+        sti
+        or al, al
+        jz .done
+        mov byte [cs:cp_always], 0
+        call cine_check
+        jc .skip
+        push bp
+        mov bp, sp
+        sub word [bp + 2], SW_BACK
+        pop bp
+        iret
+.skip:  pusha
+        push es
+        inc word [cs:cine_skips]
+        mov bx, ds
+        sub bx, DGROUP - SPEECH_SEG
+        mov [cs:cine_stop + 2], bx
+        call far [cs:cine_stop]
+        pop es
+        popa
+.done:  call cine_hide
+        iret
+
+; FLI_KEY (site 173): "test ax,3" (8335Ch; 3 bytes) after a FLI's frame, AX the shift flags (bits 0 and 1
+; the Shift keys: the "jnz" after it ends the film): the arrow drawn, and a click since the last frame
+; counts as Shift; the flags as the "test" leaves them.
+fli_key:
+        mov byte [cs:cp_always], 1
+        call cine_check
+        jnc .test
+        or ax, 3
+        inc word [cs:cine_skips]
+.test:  push bp
+        mov bp, sp
+        test ax, 3
+        jz .z
+        and word [bp + 6], ~0x40        ; (ZF clear)
+        pop bp
+        iret
+.z:     or word [bp + 6], 0x40
+        pop bp
+        iret
+
+; FLI_END (site 174): "mov [bp-2],ax" (8324Dh; 3 bytes) as the FLI's frames are over, played or ended:
+; the arrow wiped, then that.
+fli_end:
+        call cine_hide
+        mov [bp - 2], ax
+        iret
+
+; CINE_CHECK: CF set if a button was pressed since the last check (a scene's first check takes the
+; driver's ranges as the screen's and forgets the presses before it); else the arrow drawn again where
+; the pointer is: with CP_ALWAYS (a film's frame, drawn over it) each time, else (a narration's wait,
+; which asks a few hundred times a second) only when the pointer has moved or every CP_AGAIN BIOS ticks
+; (a picture fading in), so the arrow is on the screen nearly all the time. Registers kept.
+CP_AGAIN     equ 4
+cp_always  db 0
+cine_check:
+        pusha
+        cmp byte [cs:cine_shown], 0
+        jne .ask
+        mov byte [cs:cine_shown], 1
+        call cine_mouse
+        call cine_presses               ; (the presses before the scene let go)
+        jmp .now
+.ask:   call cine_presses               ; (ZF: none)
+        jz .draw
+        popa
+        stc
+        ret
+.draw:  cmp byte [cs:cp_always], 0
+        jne .now
+        cmp byte [cs:cp_drawn], 0
+        je .now
+        mov ax, 3
+        int 0x33
+        cmp cx, [cs:cp_x]
+        jne .now
+        cmp dx, [cs:cp_y]
+        jne .now
+        push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        sub ax, [cs:cp_last]
+        cmp ax, CP_AGAIN
+        jb .kept
+.now:   push es
+        xor ax, ax
+        mov es, ax
+        mov ax, [es:0x46C]
+        pop es
+        mov [cs:cp_last], ax
+        call cp_draw
+.kept:  popa
+        clc
+        ret
+        SHARED_cine_presses
+cine_mouse:                             ; the driver's ranges the screen's, the pointer where last seen
+        pusha
+        mov ax, 7
+        xor cx, cx
+        mov dx, 319
+        int 0x33
+        mov ax, 8
+        xor cx, cx
+        mov dx, 199
+        int 0x33
+        mov ax, 4
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+        int 0x33
+        popa
+        ret
+cine_where:                             ; CX, DX: the pointer (a video mode set puts the driver
+        mov ax, 3                       ;   back to 640 across, in its middle: CINE_MOUSE again)
+        int 0x33
+        cmp cx, 319
+        jbe .ok
+        call cine_mouse
+        mov cx, [cs:mp_x]
+        mov dx, [cs:mp_y]
+.ok:    cmp dx, 199
+        jbe .in
+        mov dx, 199
+.in:    mov [cs:mp_x], cx
+        mov [cs:mp_y], dx
+        ret
+cine_hide:                              ; the arrow wiped, the scene over
+        mov byte [cs:cine_shown], 0
+        jmp cp_erase
+
+; CP_DRAW: the arrow wiped (CP_ERASE) and drawn again where the driver has the pointer, each colour as
+; the palette's nearest, what it covers kept. CP_ERASE puts that back only where the arrow still is (a
+; frame drawn over it since is left as it is).
+cp_draw:
+        pusha
+        call cp_colours                 ; (the palette read first: the arrow off the screen only
+        call cp_erase                   ;   while it moves)
+        call cp_put
+        popa
+        ret
+        SHARED_cp_put
+        SHARED_cp_erase
+        SHARED_cp_colours
+cp_vga:                                 ; the VGA's registers the drawing changes kept and set;
+        mov dx, 0x3C4                   ;   CP_NOW the page shown, CP_CHAIN the memory's kind
+        in al, dx
+        mov [cs:cp_seq_i], al
+        mov al, 2
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_mask], al
+        mov al, 0x0F
+        out dx, al
+        dec dx
+        mov al, 4
+        out dx, al
+        inc dx
+        in al, dx
+        and al, 8
+        mov [cs:cp_chain], al
+        mov dx, 0x3CE
+        in al, dx
+        mov [cs:cp_gc_i], al
+        xor bx, bx
+.keep:  mov al, [cs:cp_gc_ix + bx]
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_gc + bx], al
+        dec dx
+        inc bx
+        cmp bx, 5
+        jb .keep
+        mov ax, 0x0001
+        out dx, ax
+        mov ax, 0x0003
+        out dx, ax
+        mov ah, [cs:cp_gc + 3]
+        and ah, 0x40
+        mov al, 5
+        out dx, ax
+        mov ax, 0xFF08
+        out dx, ax
+        mov dx, 0x3D4
+        in al, dx
+        mov cl, al
+        mov al, 0x0C
+        out dx, al
+        inc dx
+        in al, dx
+        mov ah, al
+        dec dx
+        mov al, 0x0D
+        out dx, al
+        inc dx
+        in al, dx
+        mov [cs:cp_now], ax
+        dec dx
+        mov al, cl
+        out dx, al
+        ret
+        SHARED_cp_vga_back
+        SHARED_cp_pass
+cp_addr:                                ; DI: pixel CX, DX's (in mode X its plane read and written)
+        push ax
+        push cx
+        push dx
+        cmp byte [cs:cp_chain], 0
+        je .planes
+        imul di, dx, 320                ; (chained: a byte a pixel, from the page's start)
+        add di, cx
+        jmp .out
+.planes:
+        imul di, dx, 80
+        mov ax, cx
+        shr ax, 2
+        add di, ax
+        add di, [cs:cp_page]
+        and cl, 3
+        mov ah, 1
+        shl ah, cl
+        mov al, 2
+        mov dx, 0x3C4
+        out dx, ax
+        mov ah, cl
+        mov al, 4
+        mov dx, 0x3CE
+        out dx, ax
+.out:   pop dx
+        pop cx
+        pop ax
+        ret
 
 ; PROBE_TICK: INT VEC_TICK replaces "inc word cs:[0004h]" (5 bytes: INT + 3 NOPs; 3DA2Ch, SL's
 ; 3925Ch), the first instruction of the game's timer handler. Does that, and every other strike puts
@@ -16963,7 +18687,7 @@ redraw_rect:
         ret
 
 ; PANEL_LIVE: ZF set if the panel is on screen: shown, the page on show the one it was last drawn
-; into, and the game on the map
+; into, and the game on the map (for the pointer drawn over it)
         SHARED_panel_live
 
 ; PANEL_MOUSE: after the main loop's call for the pointer (AX the buttons; the far pointers to x and y
@@ -16975,42 +18699,62 @@ panel_mouse:
         mov bp, sp
         push es
         push bx
-        push cx
-        push dx
         les bx, [bp + 4]
         mov cx, [es:bx]
         les bx, [bp + 8]
         mov dx, [es:bx]
         mov [cs:panel_mx], cx
         mov [cs:panel_my], dx
-        test al, 1
-        jz .up
+        cmp word [cs:panel_held], 0     ; (a press on the panel, PANEL_EVENT's: not the game's)
+        je .out
+        and al, ~1
+.out:   pop bx
+        pop es
+        pop bp
+        ret
+
+; PANEL_EVENT: in MOUSE_EVENT (CX, DX where, AL the events, BX the buttons held), SL's PANEL_MOUSE: a left
+; press on the panel while it is on the map (PANEL_HERE) counted with where it was (PANEL_HITS, PANEL_HX,
+; PANEL_HY) and held (PANEL_HELD) till its release, both kept from the game. The main loop's call for the
+; pointer (PANEL_MOUSE, above) saw a press only if the button was still down as it ran: a quick click
+; was missed there and went to the game's own handler (the party walked to where the panel is).
+panel_event:
         cmp word [cs:panel_held], 0
-        jne .keep
-        call panel_live
-        jne .out
+        jne .held
+        test al, EVENT_LEFT_PRESS
+        jz .ret
+        call panel_here
+        jne .ret
         push cx
         push dx
         sub cx, PANEL_X0
         cmp cx, PANEL_W
-        jae .off
+        jae .out
         sub dx, [cs:panel_top]
         cmp dx, [cs:panel_rows]
-.off:   pop dx
+.out:   pop dx
         pop cx
-        jae .out
+        jae .ret
         mov word [cs:panel_held], 1
         mov [cs:panel_hx], cx
         mov [cs:panel_hy], dx
         inc word [cs:panel_hits]
-.keep:  and al, ~1
-        jmp .out
-.up:    mov word [cs:panel_held], 0
-.out:   pop dx
-        pop cx
-        pop bx
-        pop es
-        pop bp
+.held:  test al, EVENT_LEFT_LEAVE
+        jz .keep
+        mov word [cs:panel_held], 0
+.keep:  and al, ~(EVENT_LEFT_PRESS | EVENT_LEFT_LEAVE)
+        and bx, ~1
+.ret:   ret
+
+; PANEL_HERE: ZF set if the panel is on screen over the map (PANEL_SHOWN, ON_MAP), for L and a press on it.
+; Not SL's PANEL_LIVE page test (the page on show the one the panel was last drawn into): with a window
+; ON_MAP is already clear, and on the map the test could only keep L and a click from a panel on screen
+; (the owner's report in DOSBox-X: L didn't hide it, clicks went to the game). Registers kept.
+panel_here:
+        cmp byte [cs:panel_shown], 0
+        je .no
+        jmp on_map
+.no:    cmp sp, 0                       ; (ZF clear)
         ret
 
 ; PANEL_DRAW: the picture into the page on show, a plane at a time (DS the game's; registers kept)
@@ -17324,6 +19068,8 @@ int16:
         pushf
         call far [cs:old16]
         jz .none
+        cmp byte [cs:msg_waiting], 0    ; (a key ending a message box's wait: read, not the game's)
+        jne .msg
         mov byte [cs:mk_read], 0
         call map_key
         call our_key
@@ -17341,6 +19087,10 @@ int16:
         call far [cs:old16]
         pop ax
         jmp .peek
+.msg:   xor ah, ah
+        pushf
+        call far [cs:old16]
+        mov byte [cs:msg_ended], 1
 .none:  pop ax
         push bp
         mov bp, sp
@@ -17370,7 +19120,7 @@ our_key:                                ; AX a key: CF set (and counted) if it i
         je .l
         cmp ax, KEY_SHIFT_L
         jne .tabs
-.l:     call panel_live
+.l:     call panel_here
         je .count
         call l_on_map
         jne .no
@@ -18101,7 +19851,11 @@ fig_of:
         mov [cs:fg_bottom], ax
         cmp byte [es:si + 4], 0xFF      ; (none, or planar: FFh "PLNR" / "PLAN")
         je .no
-        call fig_box
+        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        cmp ax, [cs:fg_bottom]
+        jae .feet
+        mov [cs:fg_bottom], ax
+.feet:  call fig_box
         jc .no
         add si, 4
 .row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
@@ -18344,6 +20098,11 @@ fig_record:
         mov [cs:fk_bottom], al
         cmp byte [es:si + 4], 0xFF      ; (none, or planar)
         je .ret
+        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        cmp al, [cs:fk_bottom]
+        jae .feet
+        mov [cs:fk_bottom], al
+.feet:
         mov ax, [cs:sc_next]
         inc word [cs:sc_next]
         cmp word [cs:sc_next], SC_SLOTS
@@ -18405,6 +20164,12 @@ fig_record:
 fk_frame  db 0
 fk_w      db 0
 fk_bottom db 0
+
+; FEET_ROW: AX the lowest row frame ES:SI (width, height, then its rows of runs) draws anything on, its last
+; (FFFFh: none): the figure's feet, which FIG_OF and FIG_RECORD take when higher than the frame's bottom edge
+; (the redrawn figures' frames have a margin all round, ten rows under the party's and up to 22 under the big
+; creatures', so their shadows fell that far below them, the figures floating). Keeps the rest.
+        SHARED_feet_row
 
 ; FIG_BOX: CF set if none of the shadow of the frame (FG_W, FG_BOTTOM) at FG_X, FG_Y can be where the
 ; floor was drawn (the clip); FG_FEET the feet's row on the screen. Registers kept but AX.
@@ -19968,10 +21733,16 @@ save_tick:
         je .req
         cmp word [SCREEN_IS], 1         ; (nor a window up: F9's LOAD window, its own passes of the main
         jne .req                        ;   loop coming here, has the screen word 2)
-        cmp byte [QS_LETTER], QS_PAGE_QUICK
-        jne .req
-        mov al, QS_PAGE_GAME
+        cmp byte [QS_LETTER], QS_PAGE_GAME
+        je .req
+        mov al, QS_PAGE_GAME            ; (QUICK, or a page PgDn turned to: every window opens on the first)
         call qs_page
+        push es
+        mov ax, ds
+        add ax, PG_LIST
+        mov es, ax
+        mov dword [es:0], 0             ; (and on its first row: the one chosen there may be empty here)
+        pop es
         inc word [cs:pages_back]
 .req:   mov ax, [cs:save_req]
         dec ax
@@ -20124,12 +21895,366 @@ greq_write:
 ; in the load's wrapper, the window's first row (ES its data, 2F8h) the GREQ chunk's number is made from
 ; (it, the row and 1): GREQ_PAGE more on the quick saves' page, whose saves GREQ_WRITE numbered so.
 greq_load:
+        push bx
+        call page_base
         mov ax, [es:2]
-        cmp byte [QS_LETTER], 'Q'
-        jne .r
-        add ax, GREQ_PAGE
+        add ax, bx
+        or bx, bx
+        jz .r
         inc word [cs:greq_loads]
-.r:     iret
+.r:     pop bx
+        iret
+
+; ---- MORE SAVES: SL's PROBE_SAVE_PAGE (savepages.py's pages) on the sequel's save and load window ----
+; The window shows ten saves, on five pages, each a letter of the game's two save file names (QS_PAGE):
+; the game's own (SAVE01.SAV to SAVE10.SAV), then SAVB, SAVC and SAVD01.SAV to 10.SAV, and in the load
+; window the quick saves' (SAVQ: QUICK SAVES), in that order. PgDn shows the next page, PgUp the one before
+; (PAGE_KEY); the window's own routines (in its overlay, reached from the site's way back: what they call
+; is resident, so it stays put) search the folder again and draw the rows, the load window chooses the
+; page's first save (passing by pages with none), the row chosen is shown so, and the window is drawn
+; again with the page's name under EXIT (PAGE_LABEL; also as the window opens, PAGE_OPEN). Each page's
+; saves keep their map limits in GREQ chunks of their own (PAGE_BASE: GREQ_SAVE, GREQ_LOAD), as the quick
+; saves' (GREQ_WRITE). The sequel's RESOURCE.GFF has no PAGE buttons to add (no WIND 3009 or EXIT icon of
+; SL's), so the keys alone turn the pages. Every window opens on the game's own page (SAVE_TICK's
+; page-back once the map is the screen again).
+PG_BACK    equ 0x7DABF                  ; (DSUN.EXE: PAGE_KEY's way back, past the INT and site byte at 7DABCh)
+PG_IGNORE  equ 0x7E00F - PG_BACK        ; the routine's end, for a key it has no use for
+PG_DONE    equ 0x7DBD7 - PG_BACK        ; ... after Up or Down: the screen updated, then the end
+PG_SCAN    equ 0x7D3F2 - PG_BACK        ; the overlay's routines: the folder searched (how many),
+PG_ROW     equ 0x7E058 - PG_BACK        ;   a row drawn (its number),
+PG_PICK    equ 0x7E0F4 - PG_BACK        ;   a row shown as chosen, its name below
+PG_KEY     equ 0x12                     ; (the key, at the routine's BP+12h)
+PG_LIST    equ 0x3C4C - QS_DGROUP       ; (less DS) the list's words: +0 the row chosen, +2 the first shown
+PG_WINDOW  equ 0x40AF - QS_DGROUP       ; (less DS) +0 the window (far), +4 1 for the load window
+PG_SAVES   equ 0x6278                   ; DS: the saves (far), 7Dh bytes each, +0 the file's name
+PG_SAVE_SIZE equ 0x7D
+PG_ROW_ID  equ 0x4780                   ; the rows' buttons
+PG_BTN_SEG equ 0x2EBE - QS_DGROUP       ; (resident) a button's state (window, id, state) ...
+PG_BTN_OFF equ 0x071F
+PG_WIN_SEG equ 0x2A8E - QS_DGROUP       ; ... and a window brought to the front and drawn (window)
+PG_WIN_OFF equ 0x060D
+PAGE_COUNT equ 5
+PAGE_QUICK equ 4                        ; (the QUICK page: the load window's only)
+KEY_PGUP   equ 0x4900
+KEY_PGDN   equ 0x5100
+PG_LABEL_X equ 228                      ; (the window's coordinates, its top 32 lines down: under EXIT)
+PG_LABEL_Y equ 64
+page_key:
+        push bp
+        mov bp, sp
+        sti
+        pushad
+        push es
+        mov si, [bp]                    ; (the routine's BP)
+        mov ax, [ss:si + PG_KEY]
+        cmp al, 0xE0
+        jne .keys
+        xor al, al                      ; (the grey keys: as the number pad's)
+.keys:  mov dl, -1
+        cmp ax, KEY_PGUP
+        je .step
+        mov dl, 1
+        cmp ax, KEY_PGDN
+        jne .skip
+.step:  mov [cs:pg_dir], dl
+        mov ax, [bp + 4]                ; (the overlay's routines: from the way back)
+        mov [cs:pg_call + 2], ax
+        mov ax, [bp + 2]
+        mov [cs:pg_ip], ax
+        call page_now
+        mov [cs:pg_was], bl
+.next:  add bl, [cs:pg_dir]
+        cmp bl, PAGE_COUNT
+        jae .none                       ; (no page before the first, or after the last)
+        call pg_es_window
+        cmp bl, PAGE_QUICK
+        jne .page
+        cmp byte [es:4], 0
+        je .none                        ; (QUICK: not for the save window)
+.page:  call pg_page
+        call pg_es_window
+        xor di, di                      ; (the save window: its first row)
+        cmp byte [es:4], 0
+        je .rows
+.first: les bx, [PG_SAVES]              ; (the load window: the page's first save)
+        imul ax, di, PG_SAVE_SIZE
+        add bx, ax
+        cmp byte [es:bx], 0
+        jne .found
+        inc di
+        cmp di, 10
+        jb .first
+        call page_now                   ; (none: the next page that way)
+        jmp .next
+.none:  call page_now
+        cmp bl, [cs:pg_was]
+        je .skip                        ; (where it was: nothing to do)
+        mov bl, [cs:pg_was]             ; (back to the page there was)
+        call pg_page
+        jmp .skip
+.found:
+.rows:  xor cx, cx
+.row:   push cx
+        push cx
+        mov ax, PG_ROW
+        call pg_overlay
+        add sp, 2
+        pop cx
+        inc cx
+        cmp cx, 10
+        jb .row
+        mov ax, ds
+        add ax, PG_LIST
+        mov es, ax
+        push word 5                     ; (the row chosen before: as the others ...)
+        mov ax, [es:0]
+        call pg_button
+        mov ax, ds
+        add ax, PG_LIST
+        mov es, ax
+        mov [es:0], di
+        mov word [es:2], 0
+        push word 4                     ; (... and the one chosen now)
+        mov ax, di
+        call pg_button
+        push di
+        mov ax, PG_PICK
+        call pg_overlay
+        add sp, 2
+        call page_label
+        inc word [cs:page_turns]
+        add word [bp + 2], PG_DONE
+        jmp .out
+.skip:  add word [bp + 2], PG_IGNORE
+.out:   pop es
+        popad
+        pop bp
+        iret
+
+; PAGE_OPEN (site 216, "save_page_open"): "add sp,4" (7D691h, 3 bytes) after the window's opening routine
+; draws it (the far call before it is fixed up as the overlay loads, so no site there): the page's label put in
+; (PAGE_LABEL), then the routine's own "add sp,4" done under the way back. AX to DI, ES kept.
+page_open:
+        inc word [cs:pg_opens]
+        push ax
+        mov ax, ds
+        add ax, PG_WINDOW
+        mov [cs:pg_win_seg], ax         ; (PAGE_MOUSE's test of the window)
+        pop ax
+        pushad
+        push es
+        call page_label
+        pop es
+        popad
+        pop word [cs:pg_near]           ; (the way back, IP, CS and flags, put 4 bytes higher)
+        pop word [cs:pg_far]
+        pop word [cs:pg_far + 2]
+        add sp, 4
+        push word [cs:pg_far + 2]
+        push word [cs:pg_far]
+        push word [cs:pg_near]
+        iret
+
+; PAGE_MOUSE: (MOUSE_EVENT's: CX, DX where, in the game's pixels, AL the events) a left press on "PGUP" or
+; "PGDN" under EXIT, with the save or load window up (its far pointer, PG_WIN_SEG:0, cleared as it shuts), is
+; posted to the game as that key (PAGE_KEY then turns the page), and not the game's. The game's keyboard
+; handler (39E35h) posts each key it reads as an event (1, 0Ah, 0, the key, the shift keys) through
+; PG_POST_SEG:0230h; a key put in the BIOS's buffer instead waits for the next key pressed. AX's press bit
+; cleared for one; others kept.
+PG_HIT_Y0  equ 79                       ; (the screen's pixels: the "PGUP PGDN" line, a little more)
+PG_HIT_Y1  equ 93
+PG_UP_X0   equ 226                      ; PGUP's ...
+PG_DN_X0   equ 254                      ; ... and PGDN's
+PG_DN_X1   equ 282
+PG_POST_SEG equ 0x3464 - QS_DGROUP      ; (resident: an event posted, its far pointer pushed)
+PG_POST_OFF equ 0x0230
+page_mouse:
+        test al, EVENT_LEFT_PRESS
+        jz .ret
+        cmp word [cs:pg_win_seg], 0
+        je .ret
+        cmp dx, PG_HIT_Y0
+        jb .ret
+        cmp dx, PG_HIT_Y1
+        jae .ret
+        cmp cx, PG_UP_X0
+        jb .ret
+        cmp cx, PG_DN_X1
+        jae .ret
+        push ds
+        mov ds, [cs:pg_win_seg]
+        cmp dword [0], 0
+        pop ds
+        je .ret                         ; (no window up)
+        pusha
+        push ds
+        push es
+        mov word [cs:pg_event + 6], KEY_PGUP
+        cmp cx, PG_DN_X0
+        jb .post
+        mov word [cs:pg_event + 6], KEY_PGDN
+.post:  mov ax, [cs:pg_win_seg]
+        sub ax, PG_WINDOW               ; (the game's DS)
+        mov ds, ax
+        add ax, PG_POST_SEG
+        mov [cs:pg_post + 2], ax
+        mov word [cs:pg_post], PG_POST_OFF
+        pushf
+        cli
+        push cs
+        push word pg_event
+        call far [cs:pg_post]
+        add sp, 4
+        popf
+        inc word [cs:pg_clicks]
+        pop es
+        pop ds
+        popa
+        and al, ~EVENT_LEFT_PRESS
+.ret:   ret
+pg_event     dw 1, 0x0A, 0, 0, 0        ; (the key's event, as the game's keyboard handler posts it)
+pg_post      dd 0                       ; (its own: the mouse's handler may come in the middle of PG_FAR's use)
+
+; PAGE_NOW: BL the page shown (0 to 4, by the letter in QS_LETTER: PAGE_LETTERS; another as the first).
+page_now:
+        push ax
+        mov al, [QS_LETTER]
+        xor bx, bx
+.find:  cmp al, [cs:page_letters + bx]
+        je .ret
+        inc bx
+        cmp bx, PAGE_COUNT
+        jb .find
+        xor bx, bx
+.ret:   pop ax
+        ret
+
+; PAGE_BASE: BX the page's GREQ chunks' base (its saves' are this and the slot): the game's own 0, QUICK
+; GREQ_PAGE (GREQ_WRITE's), the others 200, 300, 400. DS the game's; keeps the rest.
+page_base:
+        push ax
+        call page_now
+        mov al, [cs:page_bases + bx]
+        mov bl, 100
+        mul bl
+        mov bx, ax
+        pop ax
+        ret
+
+; PG_PAGE: page BL's letter put in the names (QS_PAGE), and the folder searched again (PG_SCAN).
+pg_page:
+        movzx bx, bl
+        mov al, [cs:page_letters + bx]
+        call qs_page
+        push word 10
+        mov ax, PG_SCAN
+        call pg_overlay
+        add sp, 2
+        ret
+
+; PG_OVERLAY: a far call to the window's overlay at AX from PAGE_KEY's way back (PG_CALL's segment set),
+; its arguments pushed; the game's routines keep neither BX nor ES.
+pg_overlay:
+        add ax, [cs:pg_ip]              ; (offsets from the way back)
+        mov [cs:pg_call], ax
+        pop word [cs:pg_near]           ; (the near way back, kept while the far call runs)
+        call far [cs:pg_call]
+        jmp [cs:pg_near]
+
+; PG_BUTTON: row AX's button set to the state pushed (taken off: PG_BTN_SEG's routine, as the game does).
+pg_button:
+        pop word [cs:pg_near2]
+        add ax, PG_ROW_ID
+        movzx edx, ax
+        call pg_es_window
+        pop cx                          ; (the state)
+        push cx
+        push edx
+        push dword [es:0]
+        mov ax, ds
+        add ax, PG_BTN_SEG
+        mov [cs:pg_far + 2], ax
+        mov word [cs:pg_far], PG_BTN_OFF
+        call far [cs:pg_far]
+        add sp, 10
+        jmp [cs:pg_near2]
+
+pg_es_window:                           ; ES the window's words (PG_WINDOW)
+        mov ax, ds
+        add ax, PG_WINDOW
+        mov es, ax
+        ret
+
+; PAGE_LABEL: the page's name ("PAGE 2", "QUICK") and "PGUP PGDN" under EXIT in the window, which is then
+; drawn again (PG_WIN_SEG's routine). DS the game's; changes all but DS and BP.
+page_label:
+        call pg_es_window
+        mov eax, [es:0]
+        or eax, eax
+        jz .ret
+        mov [cs:c_winptr], eax
+        inc word [cs:pg_labels]
+        mov ax, ds
+        add ax, USE_TEXT_SEG
+        mov [cs:c_draw + 2], ax
+        mov word [cs:c_draw], USE_TEXT_OFF
+        call page_now
+        mov al, '1'
+        add al, bl
+        mov [cs:pg_text + 5], al
+        mov si, pg_text
+        cmp bl, PAGE_QUICK
+        jne .win
+        mov si, pg_quick
+.win:   push si
+        call pg_es_window
+        push dword [es:0]
+        mov ax, ds
+        add ax, PG_WIN_SEG
+        mov [cs:pg_far + 2], ax
+        mov word [cs:pg_far], PG_WIN_OFF
+        call far [cs:pg_far]
+        add sp, 4
+        pop si
+.draw:  push word PG_LABEL_Y
+        push word PG_LABEL_X
+        push cs
+        push si
+        call c_draw_line
+        push word PG_LABEL_Y + 9
+        push word PG_LABEL_X
+        push cs
+        push word pg_keys
+        call c_draw_line
+.ret:   ret
+
+page_letters db QS_PAGE_GAME, 'B', 'C', 'D', QS_PAGE_QUICK
+page_bases   db 0, 2, 3, 4, GREQ_PAGE / 100
+pg_text      db 'PAGE 1', 0
+pg_quick     db 'QUICK', 0
+pg_keys      db 'PGUP PGDN', 0
+pg_was       db 0
+pg_dir       db 0
+pg_ip        dw 0
+pg_call      dd 0
+pg_far       dd 0
+pg_near      dw 0
+pg_near2     dw 0
+page_turns   dw 0               ; (pages turned, for a look in play)
+pg_opens     dw 0               ; (windows opened: PAGE_OPEN)
+pg_win_seg   dw 0               ; (the window's words, as PAGE_OPEN saw them: PAGE_MOUSE)
+pg_clicks    dw 0               ; (PGUP and PGDN clicked: PAGE_MOUSE)
+pg_labels    dw 0               ; (labels drawn: PAGE_LABEL)
+
+; GREQ_SAVE (site 239, "greq_save"): "mov ax,si / inc ax" (7D8A1h, 7D8BAh; 3 bytes) where the SAVE window's
+; wrapper numbers the GREQ chunk it takes out and writes again (the row and 1): the page's base more
+; (PAGE_BASE), so each page keeps its saves' map limits apart. Others kept.
+greq_save:
+        push bx
+        call page_base
+        lea ax, [bx + si + 1]
+        pop bx
+        iret
 
 ; ---- LOOT AND SELL KEYS, M, U and I: DSCLOG's LOOT_KEY, SELL_KEY, MAP_KEY and SHOP_LOOP on the sequel ----
 ; (The Loader's dsloader/loot.py and sell.py do the item moves once the window or the shop is shut, as in
@@ -20702,6 +22827,7 @@ rs_click:
         or dl, dl
         jz .stored
         inc word [cs:rs_recalls]
+        mov byte [cs:cr_age_hold], 1        ; (the stored age shown, not rolled again: CR_AGE)
         mov word [cs:wp_far], RS_SCORES
         mov ax, ds
         add ax, WP_STUB
@@ -20710,6 +22836,7 @@ rs_click:
         mov word [cs:wp_far], .tail
         mov [cs:wp_far + 2], cs
         call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        mov byte [cs:cr_age_hold], 0
         jmp .done
 .tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the site's way back)
         push word 1                         ; (its byte argument: a roll)
@@ -20797,8 +22924,8 @@ rs_xfer:
 ; (sheet 0 / creature 1, offset, bytes): the sheet's race, sex, classes, kit (the key), hit points, rolled
 ; and most PSP; the creature's hit points and PSP, and its six scores
 rs_fields db 0, 0x12, 1, 0, 0x13, 1, 0, 0x1B, 3, 0, 0x3D, 1
-          db 0, 0x08, 6, 1, 0x00, 4, 1, 0x19, 6, 0xFF
-rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 db 0
+          db 0, 0x08, 6, 1, 0x00, 4, 1, 0x19, 6, 0, SHEET_AGE, 1, 0xFF
+rs_buf    times 6 + 6 + 4 + 6 + 1 + 4 + 2 db 0
 rs_have   db 0
 rs_tail   dw RS_TAIL, 0
 rs_stores  dw 0                 ; (STOREs and RECALLs taken, for a look in play)
@@ -20957,6 +23084,7 @@ cr_spells:
         mov [cs:cr_left], di
         or di, di
         jz .ret
+        call cr_scholar         ; (a new Scholar: one more for each preserver level)
         inc word [cs:cr_members]
         mov cl, 1               ; (CL the level, CH its picks)
 .level: movzx di, cl
@@ -20979,6 +23107,28 @@ cr_spells:
 .fill:  call cr_fill
 .done:  mov byte [cs:cr_cap], 0
 .ret:   ret
+
+; CR_SCHOLAR: (CR_SPELLS', the spells given counted) a new member SI with the Scholar kit awake picks one
+; more 1st-level spell for each of its preserver levels (SL's PROBE_CR_SPELLS: KIT_MADE's CL), CR_DUE's and
+; CR_LEFT's. Counted (SCHOLAR_MADE). All registers kept.
+cr_scholar:
+        push ax
+        push bx
+        push es
+        mov ax, si
+        call kit_sheet_ax
+        call kit_is_b
+        db KIT_SCHOLAR
+        jne .out
+        call kit_level
+        movzx ax, al
+        add [cs:cr_due], al
+        add [cs:cr_left], ax
+        add [cs:scholar_made], ax
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 ; CR_ONE: CHOOSE A SPELL for member SI; CF set if it was left with no spell learnt. CX kept; DS the game's.
 cr_one:
@@ -24171,6 +26321,18 @@ install:                        ; DS = ES = PSP, CS = the install's
         int 21h
 .free:
         loop .check
+        mov ax, 3D00h           ; the game's own arrow for the scenes (CP_DATA), if the
+        mov dx, POINTER_FILE    ;   Loader has written it
+        int 21h
+        jc .no_pointer
+        mov bx, ax
+        mov ah, 3Fh
+        mov cx, CP_DATA_BYTES
+        mov dx, cp_data
+        int 21h
+        mov ah, 3Eh
+        int 21h
+.no_pointer:
         mov es, [cs:psp]
         mov es, [es:0x2C]       ; free our copy of the environment
         mov ah, 49h
@@ -24207,6 +26369,17 @@ install:                        ; DS = ES = PSP, CS = the install's
         mov ax, 2516h
         mov dx, int16
         int 21h
+        mov ax, 3533h           ; the mouse driver's (SCROLLING), if there is one
+        int 21h
+        mov ax, es
+        or ax, bx
+        jz .no_mouse
+        mov [old33], bx
+        mov [old33 + 2], es
+        mov ax, 2533h
+        mov dx, int33
+        int 21h
+.no_mouse:
         mov byte [hooked], 1
         mov ax, [far_seg]
         mov [ring_seg], ax

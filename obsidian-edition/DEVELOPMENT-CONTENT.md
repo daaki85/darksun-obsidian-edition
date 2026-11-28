@@ -1089,7 +1089,10 @@ the game's data by `python -m dsloader.docicons GAME_FOLDER`, from the Loader's
 copy of `SEGOBJEX.GFF` in `dos/` (start the game from the Loader once first) and
 the game's palette: each picture twice its size, the rest transparent.
 `docicons.ICONS` names each image's object; a new item needs its line there, and
-`tests/test_docicons.py` checks that every icon the guide shows is there.
+`tests/test_docicons.py` checks that every icon the guide shows is there. Wake of the Ravager's (ITEMS.md's
+"Wake of the Ravager's items", `wotr-*.png`) come from the sequel's own `OBJEX.GFF` and palette (RESOURCE.GFF's
+PAL 1000) with `--ravager WOTR_FOLDER`, by `docicons.RAV_ICONS`; its pictures are PLNR (`wotrart.decode_plnr`)
+or PLAN, the same header and colour map with every pixel's code unpacked (`docicons.decode_plan`).
 
 **Dunesong at the Bowyer's target.** Shooting at the target in Teaquetzl runs script 178, which
 counts the bows in hand (objects 1017, 1039 and 30007: the bow, the Bow +2 and Phrain's Bow) into
@@ -1467,6 +1470,18 @@ the game: one given to Cermak, right-clicked, showed SCROLL, 3000 and Shield's
 icon, and taught Shield (`YOU LEARN THE SPELL`). The roll gives the dice log
 no line: it would tell the player what the body holds before the fight is won.
 
+**In Wake of the Ravager** the same code runs in the sequel's dice log (its `item_watches` step,
+`RavDiceLog._item_watches_pass`: the item table, the free lists and every creature's item lists' heads made
+writable while it runs), on names `ravlog.rav_items` rebinds: `DEFILER_OBJECTS` the sequel's objects whose
+OBJEX.GFF record has the class 18 on its character sheet (`+1Bh`: 3, 6, 160, 369, 434, 436 and 496), the
+spells its wizard spells (0-72h) of levels 1 to 9 and the new ones (320-325), `DEAD_STATUS` its (4, 7), and
+the scroll `ravlog.rav_book`: a spellbook of the sequel's object 31002 (its 1st-level book, which no defiler
+carries, so `is_ours` still knows it), the spell + 1 at `+02h` and in its power (`+10h`), 3000 a level. The
+sequel teaches from a 310xx object by its power (a 313xx one is cast instead), the new spells through
+DSCLOG2's `NS_SCROLL`. Checked in play (`playtest/logs/2026-11-27-ravager-defiler-scrolls.md`): a Draxan in
+Tyr's ambush made a defiler by its object (a test edit) was given a Spellbook of Blink (9,000), which lay in its
+body's container after it died, and Ar'Anda read it: `YOU LEARN THE SPELL`.
+
 ## What the party wears
 
 ([In the features page](FEATURES.md#what-the-party-wears).)
@@ -1539,6 +1554,19 @@ and draws the figure again when the class or the figure changes (`FIG_WAIT`,
 after every click on the screen), and when the screen opens: the game gives
 a new character its class only after it first draws the figure.
 
+Each party member's small figure (the inventory's party column) is drawn by a
+routine of the game's (67964h) from the same handle's entry for the figure
+(20h + the figure), read once at start-up, so it kept the game's own clothes
+and two members of one figure showed the same. DSCLOG's `SMALL_FIGURE` hooks
+the line that picks the entry: with the creature one of the party's (0-3), it
+asks instead for the walking picture the Loader names for that member in
+`SMALL_PICS` (+1893, `Dresser.write_small`: their figure's pair, or their
+place's spare, once dressed), and `INVENTORY_LOAD` reads it from the Loader's
+SEGOBJEX copy with the game's own chunk reader; the routine draws its frame 0,
+so the small figure is the member's map figure, standing, in their class
+outfit and what they wear. A 0 there (no Loader, not dressed yet, the creation
+screen) or a failed read draws the handle's entry as before.
+
 ## Elves and half-elves
 
 ([In the features page](FEATURES.md#elves-and-half-elves).)
@@ -1609,6 +1637,12 @@ makes from the palette when the Loader asks: after each area change, once its
 fade-in is over, and now and then; the colours the game cycles, for water and
 fire, are never picked as darker ones). The rectangles the game draws again when
 a figure moves are widened by the length of a shadow, so none is left behind.
+
+**The feet.** A shadow starts at the figure's feet: the lowest row its frame draws anything on (`FEET_ROW`,
+in `dos/shared_routines.inc`, the frame's last listed row; DSCLOG runs it from its tail, `FEET_FAR`), not the
+frame's bottom edge. Wake of the Ravager's redrawn figures have clear margins round their frames (10 rows under
+the party's, up to 22 under the big creatures'), and until 2026-11-27 their shadows fell that far below them,
+the figures seeming to float as they walked. DSCLOG2's `FIG_OF` and `FIG_RECORD` do the same.
 
 **Pictures out of memory.** The shadow is traced from the figure's picture in the game's picture
 cache, and in a big fight (the arena, ten monsters) the game lets go of most pictures between

@@ -262,6 +262,11 @@ NS_LIST_ENDS = (0x5DDEF, 0x5DE72, 0x5DF06)
 NS_END = 0xD4  # (past the new spells: 196-211, DSCLOG's NS_FIRST + NS_COUNT; game.NEW_SPELLS_END)
 
 
+INVENTORY_FIGURE_SITE, INVENTORY_LOAD_SITE = NS_IMAGE + 128, NS_IMAGE + 129
+SMALL_FIGURE_SITE = NS_IMAGE + 130
+CREATION_PORTRAIT_SITE = NS_IMAGE + 131  # (the creation screen's full-length picture: the inventory's)
+
+
 def _site(number: int, length: int) -> bytes:
     """INT VEC_CR_SPELLS and a site's number, NOPs to LENGTH."""
     return bytes((0xCD, VEC_CR_SPELLS, number)) + b"\x90" * (length - 3)
@@ -885,6 +890,14 @@ PATCHES = (
     # ... and centred, on a thing (191F:01FF) or on (x, y) (191F:0281), at each routine's end: "mov
     # word [11B6h],0" (DSCLOG's CENTRE_THING, CENTRE_XY)
     Patch("panel_centre_thing", 0x1E869, bytes.fromhex("c706b6110000"), _site(CENTRE_THING_SITE, 6)),
+    # Only the inventory supplies an outfit ID to the shared picture reader.
+    Patch("inventory_figure", 0x6D5A3, bytes.fromhex("268b4718051200"), _site(INVENTORY_FIGURE_SITE, 7)),
+    Patch("inventory_figure_load", 0x7303E, bytes.fromhex("66c746fc00000000"), _site(INVENTORY_LOAD_SITE, 8)),
+    # a creature's small figure (the inventory's party column): each member's own walking picture
+    # in their outfit, from the Loader's SEGOBJEX (DSCLOG's SMALL_FIGURE, sprites.small_pictures)
+    Patch("small_figure", 0x6797A, bytes.fromhex("268b4718052000"), _site(SMALL_FIGURE_SITE, 7)),
+    Patch("creation_portrait", 0x632BF, bytes.fromhex("268b4718051200"), _site(CREATION_PORTRAIT_SITE, 7)),
+    Patch("creation_portrait_open", 0x65F9C, bytes.fromhex("268b4718051200"), _site(CREATION_PORTRAIT_SITE, 7)),
     Patch("panel_centre_xy", 0x1E8DC, bytes.fromhex("c706b6110000"), _site(CENTRE_XY_SITE, 6)),
     # a backstab: in the attack, "cmp word [bp+16h],1" just after the damage's roll (its dice kept),
     # and the multiplying (only the dice with RULE_BACKSTAB: DSCLOG's STAB_ROLL, STAB_TIMES)

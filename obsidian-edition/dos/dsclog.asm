@@ -23,16 +23,9 @@ BITS 16
 CPU 386
 %include "save_bands.inc"       ; (SAVE_BASE's code and tables, DSCLOG2's too)
 %include "shared_routines.inc"  ; (the routines both helpers have the same: SHARED_name)
-%macro fig_redraw 0              ; (FIG_WAIT's figure drawn again, in a handler after its PUSHAD, PUSH ES)
+%macro fig_redraw 0              ; (FIG_WAIT's figures drawn again, in a handler after its PUSHAD, PUSH ES)
         call ovr_frame          ; (the way back in a frame the overlay manager can fix up)
-        push word [FIG_BACK]
-        push word [FIG_BACK + 2]
-        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT    ; (its box's background put back, as the game does)
-        add sp, 4
-        push dword FIG_AT
-        push dword [0x11A0]
-        game_far FIG_STUB, FIG_DRAW                     ; (and the figure drawn, as after a race's click)
-        add sp, 8
+        call fig_draws
         pop bp
         pop ax                  ; (OVR_BACK's: the way back as the overlay manager left it)
         pop dx
@@ -213,7 +206,7 @@ section image follows=mz vstart=0
 
 ; ---- header, found by the Loader via SIG (16-byte aligned) ----
 hdr:
-sig      db 'DSCLOGve'          ; +0
+sig      db 'DSCLOGvf'          ; +0
 seq      dw 0                   ; +8   entries written so far (wraps at 65536)
 widx     dw 0                   ; +10  ring slot the next entry goes to
 nent     dw NENT                ; +12
@@ -511,6 +504,10 @@ squares_on dw 0                 ; +1890 the Loader sets 1 to have the squares SQ
 fig_due    db 0                 ; +1892 DSCLOG sets 1 when the character being made has another class or
                                 ;      figure (FIG_WAIT), the Loader writes its figure in the class's
                                 ;      outfit (creationfigure.py) and clears it
+small_pics times 4 dw 0         ; +1893 the Loader's: each party member's (by creature 0-3) walking
+                                ;      picture in their outfit (sprites.Dresser.small_pictures), its
+                                ;      frame 0 drawn as their small figure (SMALL_FIGURE); 0 the
+                                ;      game's own (its preload table's)
 
 ; TEXT BUFFER: what the game sends to its dialogue window, as records of
 ;   byte 0FEh, byte kind (the dialogue window's: 0 = a reply to choose, the
@@ -9304,17 +9301,7 @@ age_dice:
         ret
 
 ; AGE_RAND: AX a random word (AGE_SEED, h * 25173 + 13849, mixed with the BIOS's tick count).
-age_rand:
-        push es
-        push word 0x40
-        pop es
-        mov ax, [es:0x6C]
-        pop es
-        xor ax, [cs:age_seed]
-        imul ax, ax, 25173
-        add ax, 13849
-        mov [cs:age_seed], ax
-        ret
+        SHARED_age_rand
 
 ; AGE_PUT (DONE's, CR_WEAPONS): the new member's sheet at ES:BX, +14h..+17h: no specs, the creation
 ; screen's roll (for its race: rolled now if it wasn't) and the age it gives (+17h: the age less the
@@ -13058,19 +13045,7 @@ cp_rows    db 11
 cp_ncols   db 2
 cp_rgb     db 0, 0, 0, 63, 63, 63
            times (CP_COLS - 2) * 3 db 0
-cp_shape:
-        db 1, 0
-        db 1, 1, 0
-        db 1, 2, 1, 0
-        db 1, 2, 2, 1, 0
-        db 1, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 2, 2, 2, 1, 0
-        db 1, 2, 2, 2, 1, 1, 1, 1, 0
-        db 1, 2, 1, 1, 2, 2, 1, 0
-        db 1, 1, 0xFF, 0xFF, 1, 1, 1, 0
-           times CP_SHAPE_BYTES - 69 db 0
+        SHARED_cp_shape
 CP_DATA_BYTES equ $ - cp_data
 cine_step:
         or dx, dx
@@ -13101,19 +13076,7 @@ cine_step:
         jne .done
         call cine_hide
 .done:  iret
-cine_presses:                           ; ZF: neither button pressed since asked last (AX, BX, CX)
-        push dx
-        mov ax, 5
-        xor bx, bx
-        int 0x33
-        push bx
-        mov ax, 5
-        mov bx, 1
-        int 0x33
-        pop ax
-        or ax, bx
-        pop dx
-        ret
+        SHARED_cine_presses
 cine_mouse:                             ; the driver's ranges the screen's, the pointer in the middle
         pusha
         mov ax, 7
@@ -13201,84 +13164,9 @@ vga_latched:
         pop ax
         out dx, al
         ret
-cp_put:
-        push es
-        call cine_where
-        mov [cs:cp_x], cx
-        mov [cs:cp_y], dx
-        mov ax, 0xA000
-        mov es, ax
-        call cp_vga
-        mov ax, [cs:cp_now]
-        mov [cs:cp_page], ax
-        mov byte [cs:cp_op], 0
-        call cp_pass
-        call cp_vga_back
-        mov byte [cs:cp_drawn], 1
-        pop es
-        ret
-cp_erase:
-        cmp byte [cs:cp_drawn], 0
-        je .out
-        mov byte [cs:cp_drawn], 0
-        pusha
-        push es
-        mov ax, 0xA000
-        mov es, ax
-        call cp_vga
-        mov byte [cs:cp_op], 1
-        call cp_pass
-        call cp_vga_back
-        pop es
-        popa
-.out:   ret
-cp_colours:                             ; CP_MAP: each of the arrow's colours as the palette's
-        xor bx, bx                      ;   nearest (the 3 parts' differences summed; of equals the
-.clear: mov byte [cs:cp_best + bx], 0xFF ;  last: a picture's colours seldom are)
-        inc bx
-        cmp bx, CP_COLS
-        jb .clear
-        mov dx, 0x3C7
-        xor al, al
-        out dx, al
-        mov dx, 0x3C9
-        xor cl, cl                      ; (CL the palette's colour, BL, BH, CH its parts)
-.each:  in al, dx
-        mov bl, al
-        in al, dx
-        mov bh, al
-        in al, dx
-        mov ch, al
-        xor si, si                      ; (SI the arrow's colour's parts, DI the colour)
-        xor di, di
-.col:   mov ax, di
-        cmp al, [cs:cp_ncols]
-        jae .next
-        mov al, bl
-        sub al, [cs:cp_rgb + si]
-        jnc .r
-        neg al
-.r:     mov ah, al
-        mov al, bh
-        sub al, [cs:cp_rgb + si + 1]
-        jnc .g
-        neg al
-.g:     add ah, al
-        mov al, ch
-        sub al, [cs:cp_rgb + si + 2]
-        jnc .b
-        neg al
-.b:     add ah, al
-        cmp ah, [cs:cp_best + di]
-        ja .far
-        mov [cs:cp_best + di], ah
-        mov [cs:cp_map + di], cl
-.far:   add si, 3
-        inc di
-        jmp .col
-.next:  inc cl
-        jnz .each
-        ret
+        SHARED_cp_put
+        SHARED_cp_erase
+        SHARED_cp_colours
 cp_vga:                                 ; the VGA's registers the drawing changes kept and set;
         mov dx, 0x3C4                   ;   CP_NOW the page shown (the scenes' modes unchained)
         in al, dx
@@ -13331,64 +13219,8 @@ cp_vga:                                 ; the VGA's registers the drawing change
         mov al, cl
         out dx, al
         ret
-cp_vga_back:
-        mov dx, 0x3CE
-        xor bx, bx
-.back:  mov al, [cs:cp_gc_ix + bx]
-        mov ah, [cs:cp_gc + bx]
-        out dx, ax
-        inc bx
-        cmp bx, 5
-        jb .back
-        mov al, [cs:cp_gc_i]
-        out dx, al
-        mov dx, 0x3C4
-        mov al, 2
-        mov ah, [cs:cp_mask]
-        out dx, ax
-        mov al, [cs:cp_seq_i]
-        out dx, al
-        ret
-cp_pass:                                ; CP_OP 0: drawn, what's under kept; 1: put back
-        xor si, si                      ; (SI the row, BX the shape's byte, BP CP_UNDER's, CX the x)
-        mov bx, cp_shape
-        mov bp, cp_under
-.row:   mov dx, [cs:cp_y]
-        add dx, si
-        mov cx, [cs:cp_x]
-.col:   mov al, [cs:bx]
-        inc bx
-        or al, al
-        jz .end
-        cmp al, 0xFF
-        je .next
-        cmp dx, 200
-        jae .next
-        cmp cx, 320
-        jae .next
-        push bx
-        movzx bx, al
-        mov ah, [cs:cp_map + bx - 1]
-        pop bx
-        call cp_addr
-        cmp byte [cs:cp_op], 0
-        jne .back
-        mov al, [es:di]
-        mov [cs:bp], al
-        mov [es:di], ah
-        jmp .next
-.back:  cmp [es:di], ah
-        jne .next
-        mov al, [cs:bp]
-        mov [es:di], al
-.next:  inc bp
-        inc cx
-        jmp .col
-.end:   inc si
-        mov ax, si
-        cmp al, [cs:cp_rows]
-        jb .row
-        ret
+        SHARED_cp_vga_back
+        SHARED_cp_pass
 cp_addr:                                ; DI: pixel CX, DX's (its plane read and written)
         push ax
         push cx
@@ -13429,17 +13261,7 @@ cine_end:
 ; mouse driver (AX 0: none): the pointer made to move as far up and down as across (MOUSE_RATIO),
 ; through the intro too, and the "jnz" made.
 MI_SKIP      equ 0x35704 - (0x356F5 + 3)
-mouse_init:
-        or ax, ax
-        jz .none
-        push bp
-        mov bp, sp
-        add word [bp + 2], MI_SKIP
-        pop bp
-        pusha
-        call mouse_ratio
-        popa
-.none:  iret
+        SHARED_mouse_init
 
 ; SPREAD_LOAD: "mov word [1168h],0" (692CEh; 6 bytes) in the routine loading a game (69218h, from
 ; DARKRUN.GFF): there a party member in the leader's figure (its map record's +0, 80h) has the party
@@ -13517,12 +13339,7 @@ mouse_mid:
         mov cx, [cs:mp_x]
         mov dx, [cs:mp_y]
         int 0x33
-mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels up and down made 10:
-        mov ax, 0x0F                    ; with the window's aspect correction a pixel is 1.2 times as
-        mov cx, 8                       ; tall as it is wide, so up and down moves as far on the
-        mov dx, 10                      ; screen as across)
-        int 0x33
-        ret
+        SHARED_mouse_ratio
 
 ; WHIRL_TICK: from the main loop (PROBE_SCROLL; DS the game's): each funnel drawn (WT_TABLE)
 ; turns, its thing's frame (+11h, every copy's) one on each WHIRL_TICKS of the BIOS clock, and its
@@ -20432,6 +20249,10 @@ site_tab:
         site FOLLOW_SITE, panel_follow
         site CENTRE_THING_SITE, centre_thing
         site CENTRE_XY_SITE, centre_xy
+        site NS_IMAGE + 128, inventory_figure
+        site NS_IMAGE + 129, inventory_load
+        site NS_IMAGE + 130, small_figure
+        site NS_IMAGE + 131, creation_portrait
 SITE_COUNT equ ($ - site_tab) / 2
 
 ; NS_CMP: the compare of site RL_SITE (of NS_CMP_SITES), its flags into the INT's frame.
@@ -21588,6 +21409,39 @@ gear_hold:
         pop ax
 .ret:   ret
 
+inventory_figure:
+        mov ax, inventory_figure_far
+        call tail_call
+        iret
+
+; CREATION_PORTRAIT: (632BFh, a race or portrait clicked, and 65F9Ch, the screen opening: "mov ax,
+; es:[bx+18h] / add ax,12h", the preloaded full-length picture of the figure of the creature at ES:BX,
+; the one being made) the inventory's picture for the class being made (CREATION_PORTRAIT_FAR), which
+; INVENTORY_LOAD reads, else the game's.
+creation_portrait:
+        mov ax, creation_portrait_far
+        call tail_call
+        iret
+
+inventory_load:
+        call if_frame
+        push gs                 ; (INVENTORY_LOAD_FAR pops it before its IRET)
+        push cs
+        pop gs
+        push word [cs:tail_seg]
+        push word inventory_load_far
+        retf                    ; keep the INT frame for the reader's way back
+
+; SMALL_FIGURE: (67964h, the routine that draws a creature's small figure in a box: the inventory's
+; party column, the main screen's) "mov ax,es:[bx+18h] / add ax,20h", the preload table's entry of
+; the creature's figure (ES:BX), made the walking picture the Loader names for that party member
+; (SMALL_PICS), which INVENTORY_LOAD reads from the Loader's SEGOBJEX: frame 0 in their outfit.
+small_figure:
+        mov ax, small_figure_far
+        call tail_call
+        iret
+small_fig db 0                  ; (the figure last asked for: INVENTORY_LOAD_FAR's fallback)
+
 ; FIG_WAIT: (PROBE_WP_CLASS, after every click on the creation screen; CR_HP, where the screen opening
 ; shows a new character's class; FIG_OPEN, before its first drawing) the character being made has
 ; another class or figure (its creature's +18h) than when last looked at: with the Loader there (its
@@ -21601,6 +21455,9 @@ FIG_BACK_PUT equ 0x30C3         ;   DROP_SEG:30C3h, as the race's click does: DS
 FIG_AT     equ 0x00160091       ; (x 91h, y 16h)
 FIG_STUB   equ 0x4239 - 0x4356  ; (the overlay's stub that draws it, less DS: (far creature, x, y))
 FIG_DRAW   equ 0x2A
+PORTRAIT_BACK equ 0xE8E         ; (DS: the full-length picture's box's saved background, two words)
+PORTRAIT_STUB equ 0x4272 - 0x4356 ; (the overlay's stub that draws a preloaded picture: (number, x, y),
+PORTRAIT_DRAW equ 0x93          ;   580h:93h in the screen's overlay code)
 fig_seen   dd 0xFFFFFFFF        ; (the classes, the figure in the top byte, as last looked at)
 fig_wait:
         sti
@@ -21633,6 +21490,33 @@ fig_wait:
         ret
 .done:  or sp, sp                       ; (ZF clear)
 .ret:   ret
+
+; FIG_DRAWS: (FIG_REDRAW, in its overlay frame) the screen's two figures drawn again, each over its
+; box's background put back as the game does after a race's click: the full-length picture (the
+; inventory's for the class, CREATION_PORTRAIT_FAR) and the figure at the top. DS the game's; AX, BX
+; and ES changed.
+fig_draws:
+        push word [PORTRAIT_BACK]
+        push word [PORTRAIT_BACK + 2]
+        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT
+        add sp, 4
+        push dword 0x3C
+        push word 0x32          ; (its place, as the game pushes it)
+        les bx, [0x11A0]
+        mov ax, creation_portrait_far
+        call tail_call
+        push ax
+        game_far PORTRAIT_STUB, PORTRAIT_DRAW
+        add sp, 8
+        push word [FIG_BACK]
+        push word [FIG_BACK + 2]
+        game_far DROP_SEG - DGROUP_SEG, FIG_BACK_PUT
+        add sp, 4
+        push dword FIG_AT
+        push dword [0x11A0]
+        game_far FIG_STUB, FIG_DRAW
+        add sp, 8
+        ret
 
 ; FIG_OPEN: "push 160091h" (65FACh; 6 bytes: x and y for the figure's drawing, 4239h:2Ah, as the
 ; creation screen opens): first the Loader's figure in the class's outfit waited for (FIG_WAIT, the
@@ -23919,6 +23803,8 @@ shadow_of:
         mov ax, [es:si + 2]
         dec ax
         mov [cs:f_bottom], ax
+        mov ax, feet_far                ; (the feet on its lowest drawn row: FEET_FAR, in the tail)
+        call tail_call
         call shadow_box
         setnc byte [cs:sh_cast]
         call sc_start
@@ -28600,6 +28486,189 @@ save_far:
         add ax, bx
         mov [gs:sp_call + 2], ax
         ret
+
+; The inventory's full-length picture. Its key in RESOURCE.GFF matches
+; inventoryart.py: 6000h + figure * 256 + one bit per class group.
+; ES:BX is the actual selected creature, including when two share a figure.
+INV_ART_BASE equ 0x6000
+inventory_figure_far:
+        mov ax, [es:bx + 0x18]
+        cmp ax, 14
+        jae .stock
+        push es
+        push bx
+        push cx
+        push dx
+        push si
+        push di
+        mov dx, ax
+        shl dx, 8
+        add dx, INV_ART_BASE
+        imul ax, [es:bx + 4], 0x47
+        les bx, [LV_SHEETS]
+        add bx, ax
+        mov cx, 3
+        cmp byte [es:bx + 0x18], 1
+        jne .slots
+        mov cx, 1               ; human dual classes use the active class
+.slots: xor si, si
+.next:  movzx di, byte [es:bx + si + 0x21]
+        dec di
+        cmp di, 16
+        ja .skip
+        movzx di, byte [gs:di + kit_class_of]
+        dec di
+        bts dx, di
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop di
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop es
+        retf
+.stock: add ax, 0x12
+        retf
+
+; CREATION_PORTRAIT_FAR: (TAIL_CALL: DS the game's) AX the picture for the creation screen's figure
+; (ES:BX its creature): the inventory's key (INVENTORY_FIGURE_FAR's) for the classes of the sheet being
+; made (WP_CREATION: numbered 1-8, the class groups; a human's one class), else 12h + the figure.
+; All other registers kept.
+creation_portrait_far:
+        mov ax, [es:bx + 0x18]
+        cmp ax, 14
+        jae inventory_figure_far.stock
+        push es
+        push bx
+        push cx
+        push dx
+        push si
+        mov dx, ax
+        mov cx, 3
+        cmp ax, 2
+        jae .key
+        mov cx, 1               ; (a human: its one class)
+.key:   shl dx, 8
+        add dx, INV_ART_BASE
+        les bx, [WP_CREATION]
+        xor si, si
+.next:  movzx ax, byte [es:bx + si + 0x21]
+        dec ax
+        cmp ax, 7
+        ja .skip
+        bts dx, ax
+.skip:  inc si
+        loop .next
+        mov ax, dx
+        pop si
+        pop dx
+        pop cx
+        pop bx
+        pop es
+        retf
+
+; SMALL_FIGURE_FAR: (TAIL_CALL: GS DSCLOG's segment, DS the game's) AX the picture to read for the
+; small figure of the creature at ES:BX: its member's SMALL_PICS entry, else 20h + its figure. All
+; other registers kept.
+SMALL_WALK_FIRST equ 2450       ; (sprites.SPRITE_BASE: the walking pictures of objects 300-317)
+SMALL_WALK_END   equ SMALL_WALK_FIRST + 2 * 18
+small_figure_far:
+        mov ax, [es:bx + 0x18]
+        mov [gs:small_fig], al
+        cmp ax, 14
+        jae .stock
+        push dx
+        push cx
+        mov dx, es
+        cmp dx, [CREATURES + 2]         ; (one of the party's creatures, 3Ah each)
+        jne .plain
+        mov ax, bx
+        sub ax, [CREATURES]
+        jb .plain
+        xor dx, dx
+        mov cx, 0x3A
+        div cx
+        test dx, dx
+        jnz .plain
+        cmp ax, 4
+        jae .plain
+        push bx
+        mov bx, ax
+        shl bx, 1
+        mov ax, [gs:bx + small_pics]
+        pop bx
+        cmp ax, SMALL_WALK_FIRST
+        jb .plain
+        cmp ax, SMALL_WALK_END
+        jb .done
+.plain: movzx ax, byte [gs:small_fig]
+        add ax, 0x20
+.done:  pop cx
+        pop dx
+        retf
+.stock: add ax, 0x20
+        retf
+
+; 73034h returns a heap-owned picture. Let the game's GFF reader allocate
+; the outfit on demand. Its caller measures, centers, draws and frees it.
+; (From INVENTORY_LOAD: GS DSCLOG's segment, its own pushed above the INT frame.)
+inventory_load_far:
+        mov dword [bp - 4], 0
+        cmp si, SMALL_WALK_FIRST
+        jb .art
+        cmp si, SMALL_WALK_END
+        jb .read                ; a small figure's walking picture (SMALL_FIGURE)
+.art:   cmp si, INV_ART_BASE
+        jb .out
+        cmp si, INV_ART_BASE + 14 * 256
+        jae .out
+.read:  push ss
+        lea ax, [bp - 4]
+        push ax
+        movzx eax, si
+        push eax
+        push dword 'BMP '
+        mov ax, ds
+        add ax, LOAD_SEG - DGROUP_SEG
+        mov [bp - 6], ax
+        mov word [bp - 8], LOAD_OFF
+        call far [bp - 8]       ; the reader owns these locals until it returns
+        add sp, 12
+        test ax, ax
+        jnz .fallback
+        pop gs
+        push bx
+        mov bx, sp
+        add word [ss:bx + 2], 0x730AB - (0x7303E + 3)
+        pop bx
+        iret
+.fallback:
+        cmp si, INV_ART_BASE
+        jb .small
+        sub si, INV_ART_BASE
+        shr si, 8
+        add si, 0x12            ; read the stock picture from the preload table
+        jmp .out
+.small: movzx si, byte [gs:small_fig]
+        add si, 0x20            ; (the preload table's small figure)
+.out:   pop gs
+        iret
+
+; FEET_FAR: (from TAIL_CALL: GS DSCLOG's segment) F_BOTTOM, the feet's row of SHADOW_OF's frame ES:SI, made its
+; lowest drawn row if that is higher: a frame may have clear rows below the feet, its bottom edge not the feet
+; (as Wake of the Ravager's redrawn figures: DSCLOG2's FIG_OF the same). Keeps all but AX.
+feet_far:
+        call feet_row
+        cmp ax, [gs:f_bottom]
+        jae .ret
+        mov [gs:f_bottom], ax
+.ret:   retf
+
+; FEET_ROW: AX the lowest row frame ES:SI (width, height, then its rows of runs) draws anything on, its last
+; (FFFFh: none). Keeps the rest.
+        SHARED_feet_row
 
 ; TINT_FAR: TINT_PASS's work (from TAIL_CALL: GS DSCLOG's segment, FS the far block).
 tint_far:

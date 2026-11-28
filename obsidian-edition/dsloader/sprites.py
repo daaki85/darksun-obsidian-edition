@@ -39,6 +39,7 @@ from .game import GameData
 SPRITE_BASE = 2450  # (pairs: object 300's walking picture 2450, its combat one 2451, ...)
 PARTY_OBJECTS = range(300, 314)
 SPARES = range(314, 314 + game.PARTY_SIZE)  # (each party place's spare pair: 314 + the member)
+TSR_SMALL_PICS = 1893  # DSCLOG's header: each member's walking picture for their small figure (SMALL_FIGURE)
 # Things on the map: 32 bytes each, by combatant; +0Fh the picture-cache slot it is drawn from,
 # +18h its walking picture's number
 MAP_ENTRIES, MAP_ENTRY_SIZE, MAP_SLOT, MAP_PICTURE = 0x6694, 32, 0x0F, 0x18
@@ -709,6 +710,24 @@ class Dresser:
             else:
                 out.setdefault(obj, (member, obj))
         return out
+
+    def small_pictures(self) -> List[int]:
+        """Each party member's (0-3) walking picture as the copy shows it dressed, 0 for one not
+        dressed yet: DSCLOG's SMALL_PICS, whose frame 0 the game draws as the member's small figure
+        (the inventory's party column; else the plain frame it read once at start-up)."""
+        out = [0] * game.PARTY_SIZE
+        for obj, (member, _) in self.objects().items():
+            if obj in self.shown and member < game.PARTY_SIZE:
+                out[member] = picture_ids(obj)[0]
+        return out
+
+    def write_small(self, tsr_hdr: int, creating: bool = False) -> None:
+        """SMALL_PICTURES written to DSCLOG's SMALL_PICS where they changed (all 0 while a character is
+        being made: the creation screen's figure is creationfigure's)."""
+        want = struct.pack("<%dH" % game.PARTY_SIZE,
+                           *([0] * game.PARTY_SIZE if creating else self.small_pictures()))
+        if self.gd.guest.read(tsr_hdr + TSR_SMALL_PICS, len(want)) != want:
+            self.gd.guest.write(tsr_hdr + TSR_SMALL_PICS, want)
 
     def _point(self, member: int, figure: int, target: int, reload: bool = False) -> bool:
         """MEMBER's things on the map drawn with TARGET's pictures (their FIGURE's object's, or

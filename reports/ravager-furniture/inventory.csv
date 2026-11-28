@@ -1,0 +1,262 @@
+Picture,Family to inspect,Review status,Catalogue package (when listed),Region:placement count
+455,Sacks,Rear sack pile moved 11 px onto the Alliance barrels. Floor piles keep their positions,,001:1 032:6 033:3 038:2
+458,Vase,"On Alliance crate at (599,1261) moved 17 px in total with its support",,001:1 033:7 038:1 03D:1
+515,"Tables, counters and benches",Lowered and placements reviewed,,038:1
+517,"Tables, counters and benches",Lowered and placements reviewed,,034:1 045:1
+522,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:4 033:5 045:1
+523,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:8 033:3 038:2 045:1
+524,Head of two-piece red bed,Joined to 525 before scaling. All four beds verified in DOSBox,,032:1 033:2 038:1
+525,Foot of two-piece red bed,Joined to 524 before scaling. All four beds verified in DOSBox,,032:1 033:2 038:1
+532,Barrels and crates,"Open barrel at (677,1269) moved 7 px to meet its support",,001:1 033:4 038:1 03D:2 045:1
+533,Barrels and crates,Two Alliance barrels moved 7 and 2 px to restore their joins,,001:6 032:1 033:4 038:3 03D:2 03E:1 045:3
+541,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
+543,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
+544,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:4 03E:1
+545,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
+546,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
+567,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+568,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
+569,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+570,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+571,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
+572,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:3
+573,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
+574,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
+575,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:6
+576,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+577,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+578,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+579,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
+580,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
+581,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+626,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
+627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
+628,"Tables, counters and benches",Lowered and placements reviewed,,001:1 033:2
+629,"Tables, counters and benches",Lowered and placements reviewed,,001:1
+630,"Tables, counters and benches",Lowered and placements reviewed,,001:1
+631,Two-state storage or fixture,Both stock states lowered,,001:1
+632,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
+633,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
+634,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:2
+635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
+649,"Occupied beds, beds and basins",Reviewed at current scale,649-cleave-sickbed.zip,001:1
+703,"Counters, stalls and attendants",Moved in play beside Fletch to uncover the book. Retain current scale,,032:1 03C:1
+785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
+787,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,scenery-and-miner.zip,037:1
+788,Tantris seated in his throne,Occupied poses retained. The live transition uses 789 for the vacated throne,alternate-pose-continuity.zip,037:1
+789,Empty throne for Tantris,Lowered and aligned in play with 788 on the temple floor. GPL 256 brings it from Limbo,,0FF:1
+917,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,033:2 038:1
+1014,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
+1015,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
+1016,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
+1032,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1033,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1034,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1035,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
+1115,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,03A:1
+1116,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,0FF:1
+1137,Freestanding shelves,Lowered and placements reviewed,,03A:1
+1140,Freestanding shelves,Lowered and placements reviewed,,03A:1
+1160,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,033:1
+1161,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,033:1
+1170,Freestanding shelves,Lowered and placements reviewed,,033:3
+1171,Freestanding shelves,Lowered and placements reviewed,,033:3
+1172,Freestanding shelves,Lowered and placements reviewed,,033:2
+1247,"Seats, loom and restraints",Reviewed at current scale,1247-sultan.zip,03B:1
+1251,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
+1334,Freestanding shelves,Lowered and placements reviewed,,03D:1
+1342,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
+1376,Lava spires,Retain full terrain height along the lava edge,,03F:36
+1377,Lava spires,Retain full terrain height along the lava edge,,03F:45
+1378,Lava spires,Retain full terrain height along the lava edge,,03F:47
+1477,"Seats, loom and restraints",Seen seated beside the movable bookcase in play. Retain figure redraw,1477-fletch-chair.zip,03C:1
+1479,"Counters, stalls and attendants",Three occupied frames verified in the Mosaic workshop. Empty frame reviewed in the file. Retain redraw,scenery-and-miner.zip,03C:1
+1501,Mosaic bust and pedestal,Terris left in place through the completed puzzle. Retain current height,,03C:2
+1502,Mosaic bust and pedestal,Horace on his stand and empty stand seen in play. Retain current height,,03C:2
+1503,Mosaic bust and pedestal,Ellith on her stand and removed in play. Retain current height,,03C:1
+1504,Mosaic bust and pedestal,Biblid before the book was placed seen in play. Retain current height,,03C:1
+1506,Mosaic bust and pedestal,Tamind uncovered before the offering in play. Retain current height,,03C:1
+1507,Mosaic bust and pedestal,Sheet covered Tamind in play. Retain current height,,03C:1
+1508,Mosaic bust and pedestal,Kaldumeir acknowledged the coins in play. Retain current height,,03C:2
+1509,Mosaic bust and pedestal,Finali before receiving the hand mirror in play. Retain current height,,03C:1
+1510,Mosaic bust and pedestal,Finali displayed the hand mirror in play. Retain current height,,03C:1
+1511,Mosaic bust and pedestal,Khildril before breaking seen in play. Retain current height,,03C:1
+1512,Mosaic bust and pedestal,Khildril in pieces on his stand seen in play. Retain current height,,03C:1
+1617,"Seats, loom and restraints",Reviewed at current scale,1617-kovar.zip,043:1
+1716,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1717,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1718,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1719,Elemental gate capstone,Retain height on the gate supports in both temple layouts,,044:2
+1720,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+1721,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+1722,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+1723,Elemental ritual statue,Retain height through the artifact placement sequence pending live check,,044:2
+2016,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
+2050,"Tables, counters and benches",Lowered and placements reviewed,,033:2
+2166,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:3
+2167,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
+2218,Headquarters beds,Lowered and reviewed in the intact and ruined rooms with their separate pillows,,033:3
+2220,Barrels and crates,Lowered and placements reviewed,,038:2 045:2
+2221,Barrels and crates,Lowered and placements reviewed,,045:1
+2222,Barrels and crates,Lowered and placements reviewed,,038:1
+2223,Barrels and crates,Lowered and placements reviewed,,038:1 045:1
+2224,Barrels and crates,Moved 10 px onto the intact crates below in the Alliance,,033:1
+2225,Barrels and crates,Lowered and placements reviewed,,032:1 033:1 03D:1 045:2
+2226,Mine storage surroundings,Checked the join to the upper Alliance crate in play,,032:4 033:1 038:1 039:4 03D:1 045:3
+2227,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
+2228,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
+2229,Cloud table and rug,Retain the joined rug and its tabletop and seat,,042:1
+2230,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2231,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2232,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2233,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2234,Melantha’s bed,Retain the assembled bed at its approved scale,2783-giant-and-bed.zip,042:1
+2354,Barrels and crates,Lowered and placements reviewed,,034:1
+2356,Barrels and crates,Lowered and placements reviewed,,032:1
+2371,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2374,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2375,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2376,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2377,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2378,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
+2379,Notaku’s assembled stall,Retain the approved stall art. Each piece is visible in the assembled room,2409-notaku-stall-66.zip,032:1
+2380,"Counters, stalls and attendants",Reviewed at current scale,2409-notaku-stall-66.zip,032:1
+2440,Mosaic bust and pedestal,Book displayed on Biblid in play. Retain current height,,03C:1
+2441,Detached Mosaic bust,Ellith detached and placed in backpack in play. Retain bust scale,,0FF:1
+2442,Mosaic bust and pedestal,Horace on the destination stand in play. Script links objects 3220 and 3222. Retain current height,,0FF:1
+2443,Detached Mosaic bust,Horace detached then carried to Ellith’s stand in play. Retain bust scale,,0FF:1
+2444,Mosaic bust and pedestal,Empty stand appearance confirmed in play. Identical artwork also occurs in the empty frames of 1502 1503 and 2442,,03C:1
+2479,Miner at opening,Retain both redrawn frames and their contact with the tunnel,2479-miner.zip,039:2
+2510,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:2
+2511,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2512,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2513,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2514,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2515,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2516,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2517,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2518,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2519,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2520,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2521,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
+2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
+2573,"Occupied beds, beds and basins",Reviewed at current scale,2573-snaggle-sickbed.zip,0FF:2
+2574,"Occupied beds, beds and basins",Reviewed at current scale,,001:1
+2585,"Tables, counters and benches",Lowered and placements reviewed,,033:1
+2589,"Tables, counters and benches",Lowered and placements reviewed,,033:2 038:1
+2590,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:9 033:6
+2591,Red chair,Thirteen chair placements reviewed across Tyr and the Alliance,,032:9 033:4
+2624,"Tables, counters and benches",Lowered and placements reviewed,,033:2 03D:1
+2625,"Tables, counters and benches",Lowered and placements reviewed,,03D:5 03E:4
+2626,"Tables, counters and benches",Lowered and placements reviewed,,03D:3 03E:5
+2627,"Tables, counters and benches",Lowered and placements reviewed,,03D:5 03E:4
+2628,Freestanding shelves,Lowered and placements reviewed,,03D:4 03E:3
+2629,Freestanding shelves,Lowered and placements reviewed,,03D:4 03E:1
+2630,"Tables, counters and benches",Lowered and placements reviewed,,033:1 03D:1 03E:2
+2631,Freestanding shelves,Lowered and placements reviewed,,032:1 033:2 03D:2 03E:1
+2674,Freestanding shelves,Lowered and placements reviewed,,036:1
+2675,Freestanding shelves,Lowered and placements reviewed,,036:1 03A:1
+2676,Freestanding shelves,Lowered and placements reviewed,,036:1 03A:1
+2692,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:2
+2693,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
+2694,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
+2695,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:4
+2696,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
+2697,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
+2698,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:2
+2699,Thick camp cushions,Lowered cushion edges and reviewed all placements around the seated figure and in other tents,,03B:4
+2701,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
+2703,"Tables, counters and benches",Lowered and placements reviewed,,033:1
+2704,Pale table,Six table placements reviewed in the Alliance,,033:6
+2732,Temple braziers,Lowered the bowls to 15 rows beneath the intact smoke and checked all six placements,,037:4
+2733,Temple braziers,Lowered the bowls to 15 rows beneath the intact smoke and checked all six placements,,037:2
+2769,Camp baskets,Lowered and reviewed beside the loom,,03B:1
+2770,Camp baskets,Lowered and reviewed beside the loom,,03B:1
+2783,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
+2784,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
+2785,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
+2786,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
+2789,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
+2790,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
+2793,"Tables, counters and benches",Lowered and placements reviewed,,03A:1
+2794,Two-piece weapon display,Lowered together from the common floor line in both palettes,,036:1 03A:1
+2795,Two-piece weapon display,Lowered together from the common floor line in both palettes,,036:1 03A:1
+2824,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:3
+2825,Two-state storage or fixture,Both stock states lowered,,032:4 033:2
+2840,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
+2979,Freestanding shelves,Lowered and placements reviewed,,033:5 03D:1
+2980,Freestanding shelves,Lowered and placements reviewed,,033:4 03D:1
+2981,Freestanding shelves,Lowered and placements reviewed,,03D:1
+2982,Freestanding shelves,Lowered and placements reviewed,,033:2 03D:1
+3072,Headquarters beds,Lowered and reviewed in the intact and ruined rooms with their separate pillows,,033:2
+3073,Loose pillow against torn bedding,Both placements lowered 11 pixels to follow the bed,,033:2
+3074,Floor pillow,Reviewed beside damaged beds and retained on the floor,,033:2
+3078,Torn red couch,Lowered and compared with the intact red couch,,033:2
+3172,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
+3173,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
+3174,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
+3231,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3246,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:6
+3247,"Tables, counters and benches",Lowered and placements reviewed,,034:1
+3248,"Tables, counters and benches",Lowered and placements reviewed,,034:2
+3249,"Tables, counters and benches",Lowered and placements reviewed,,034:2
+3250,Two-state storage or fixture,Both stock states lowered,,034:1
+3275,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:2
+3276,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:1
+3277,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3279,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:4
+3280,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:4
+3287,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3356,Freestanding shelves,Lowered and placements reviewed,,03E:1
+3364,Barrels and crates,Lowered and placements reviewed,,03A:1
+3414,Freestanding shelves,Lowered and placements reviewed,,03A:2
+3416,Freestanding shelves,Lowered and placements reviewed,,03A:2
+3442,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3443,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3503,"Tables, counters and benches",Lowered and placements reviewed,,033:2
+3504,"Tables, counters and benches",Lowered and placements reviewed,,032:2
+3505,"Tables, counters and benches",Lowered and placements reviewed,,033:2 045:1
+3511,"Tank, platform and mine openings",Reviewed at current scale,3511-elderbrain.zip,03A:1
+3525,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
+3527,"Tables, desks and benches",Retain floor display at current depth,,03D:1
+3528,"Tables, desks and benches",Retain floor display at current depth,,03D:1
+3529,"Tables, desks and benches",Retain floor display at current depth,,03D:1
+3554,Storage jars and sacks,Reviewed at their existing height in the Yuan-ti storeroom,,032:6 033:2 036:1 03D:1 045:1
+3555,Mine storage surroundings,Already revised in the baseline art. Reviewed beside the barrel and sack pile,,032:1 036:1 039:2 03D:1 045:1
+3558,Barrels with sacks,Lowered to 82% at five placements to keep both lids visible over the wall in Tyr,,032:2 039:1 03D:1 045:1
+3613,Miner with pick,Retain both redrawn frames and pick animation,scenery-and-miner.zip,039:1
+3627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
+3628,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:5
+3629,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
+3633,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3634,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3635,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3636,Central ritual platform,Retain adjoining stonework around the elemental statues,,044:2
+3668,"Occupied beds, beds and basins",Reviewed at current scale,3668-sickbed.zip,045:1
+3695,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3698,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:3
+3699,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
+3733,Two-state mine fixture,Retain both states. Interaction in play pending,,039:2
+3777,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
+3778,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
+3779,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
+3792,Headquarters beds,Lowered and reviewed in the intact and ruined rooms with their separate pillows,,033:1
+3793,Headquarters beds,Lowered and reviewed in the intact and ruined rooms with their separate pillows,,033:2
+3795,Broken crates,Lowered to 82% and reviewed as two piles with their pottery,,033:2
+3796,Broken crates,Lowered to 82% and reviewed as two piles with their pottery,,033:1
+3797,Broken crates,Lowered to 82% and reviewed as two piles with their pottery,,033:2
+3798,Broken crates,Lowered to 82% and reviewed as two piles with their pottery,,033:2
+3807,Pot on broken crate,Moved down 15 pixels with the storeroom crate,,033:1
+3824,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3825,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3826,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3828,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3829,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:2
+3830,Crypt tables and seats,Lowered and reviewed in the barracks rooms,,043:1
+3831,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
+3832,Key under the green table and neighboring seat,Retain height and sightline to the key in Jumah’s office,,043:1
+3835,Crypt beds,Lowered and reviewed at all four placements,,043:2
+3836,Crypt beds,Lowered and reviewed at all four placements,,043:2
+3866,"Seats, loom and restraints",Reviewed at current scale,3866-generoe-chair.zip,041:1
+3870,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
+3871,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:1

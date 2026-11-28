@@ -59,9 +59,162 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
-Pull requests #146 to #263 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
+**New: Wake of the Ravager.** The inventory's party column shows each member's small figure in their class outfit,
+as Shattered Lands' does, and so does the creation screen's small figure, which changes as the class, race or sex does:
+DSCLOG2's SMALL_FIG (site 254) asks for the Loader's frame for the figure and its classes (BMP 7000h + the figure
+* 256 + a bit per class group in OBJEX2.GFF, 290 of them made at the copy by `ravdress`), which INV_LOAD reads.
+
+**New: Wake of the Ravager.** The party wears its class outfits there too, on the map and in a fight:
+the Loader's copy holds each party picture as the Loader's own Shattered Lands figure with room for an outfit,
+and the dice log writes each member's outfit into it and has the game load it again (`ravdress`). Worn gear,
+a second member with the same figure, the creation preview and the small figures are still to come.
+
+**New: Wake of the Ravager, the view in fights, the whole party in view and steady pace** (branch
+`claude/ravager-view-and-pace`). Three of Shattered Lands' controls the sequel lacked: in a fight the view
+stays put while a walker is on the screen, the party is spread out after a load and after a fight (6 still
+gathers it), and the steady pace switch now works there. DSCLOG2's sites 230-234, from Codex's unmerged
+`codex/ravager-map-controls` branch, reviewed and played (`playtest/logs/2026-11-27-ravager-view-and-pace.md`).
+
+**New: Wake of the Ravager, the creation screen's age and quicker screens; Fixed: "Out of arrows" after a
+chatkcha throw** (branch `claude/ravager-creation-age`). The sequel's creation screen shows the age the
+character will start at beside PSP, rolled with the die and kept by CON and RECALL, as Shattered Lands' does;
+the new member keeps it. Its inventory, View Character, USE and talk screens no longer wait for the screen's
+refresh at each page flip (the pointer stalls less as items are moved). In both games the arrows left float
+only over a weapon that shoots ammunition: a thrown chatkcha said "Out of arrows" after every throw. DSCLOG2's
+sites 235-237 (`playtest/logs/2026-11-28-ravager-creation-age.md`).
+
+**New: Wake of the Ravager, more saves** (branch `claude/ravager-save-pages`). The sequel's save and load
+window has Shattered Lands' four pages of ten and, in the load window, the QUICK page: PgDn and PgUp, or a click
+on PGUP or PGDN under EXIT, turn the page (the load window passes by empty pages and chooses the page's first save), the page's name shows under
+EXIT, and the window opens on page 1. The sequel's RESOURCE.GFF has no PAGE buttons, so the label stands in for
+them. Each page's saves keep their map limits apart, and the named saves copy all four pages. DSCLOG2's sites
+216, 238 and 239, and its mouse handler (`playtest/logs/2026-11-28-ravager-save-pages.md`).
+
+Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.
+
+**Changed: the small party figures in their class outfits** (branch `claude/small-party-figures`)
+- The inventory's party column drew each member's small figure from the game's own picture, read once at
+  start-up, so it kept the stock clothes (and two members of one figure looked alike). DSCLOG now has the
+  game draw each member's own walking picture from the Loader's copy, standing: their class outfit and
+  what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
+
+**Changed** (Wake of the Ravager)
+- Lowered 19 freestanding shelf pictures at 54 placements and 61 other furniture and storage pictures
+  at 217 placements, including the open and closed states of three fixtures. Another 18 pictures lower the Forest
+  dining sets, the Alliance vase-bearing crate and the Mines 3 throne at 41 placements. The Jann cushions and baskets and the Silt Sea Giants’ furnishings
+  add another 26 placements. Crypt barracks furniture and Cloud pottery add 14 more. A shared barrel and sack pile now sits lower in five places,
+  with both barrel lids visible over the Tyr wall. The Alliance beds, torn couch and broken crates,
+  the Yuan-ti vessels and the shared weapon display add 24 placements. Six braziers around the throne
+  in El’s Temple have lower bowls with their smoke trails preserved. The empty throne stays in place when Tantris rises. The two-piece red beds now have a continuous blanket in Tyr, both Alliance layouts and Mines 1. The Alliance storeroom barrels, sacks and intact vase crate sit on their supports. The
+  [all-area furniture review](reports/ravager-furniture/README.md) tracks the remaining work
+  and compares occupied furniture with the earlier figure redraws.
+
+**Docs: the sequel's creature figures as the game draws them** (branch `claude/ravager-creature-figures`)
+- CREATURES.md's Wake of the Ravager figures are the pose each one's animation script stands in, not the
+  picture's first frame: a redraw that adds its frames after the game's (Ptar, the Beasthead Giant, the
+  village giants, Magnolia and the jann, the great elementals, the Magma Golem) showed the game's figure.
+  *Redrawn* now means the figure shown differs from the game's; the four the redrawing kept say *the game's
+  (kept)*; the Tarrasque shows its fight's figure; the colours are Tyr's map palette (no magenta).
+
+**Docs: a readable priest spells picture, a shorter Ravager page** (branch `claude/docs-review-trims`)
+- `new-priest-spells.png` shows the ten 6th-level priest spells' description boxes at full size, not ten
+  whole USE screens shrunk to fit (1920x1600 to 592x840).
+- RAVAGER.md's "The mod in the sequel": the 45-line kits entry split into kits, weapon specs, new wizard
+  spells, the creation screen, the screens and choosing an enemy; the level cap and first spells entries
+  cut to the sequel's own facts. The detail stays on KITS, WEAPON-SPECS and PLAYER-GUIDE, linked.
+
+**Changed: Shattered Lands inventory portraits** (branch `claude/inventory-redraws`)
+- Both human figures have a separate fitting for each of the eight active classes. The Preserver wears the open plum mantle, the Gladiator has a single guard and diagonal strap, and the Fighter wears paired bone caps. [Human portraits and their map outfits](obsidian-edition/docs/class-outfits/README.md#human-inventory-fittings)
+
+**Docs: Wake of the Ravager's side of the features, creatures and dice log pages** (branch `claude/ravager-docs-side`)
+- CREATURES.md covers both games: the sequel's 198 creatures from its own data, each in the figure the mod
+  draws (183 redrawn, marked), its size by the sequel's table and the cahulaks' answer as the sequel decides
+  it (`doccreatures.write_ravager`). Six man-sized monsters named in `sizes.RAV_NAMES` (no change in play).
+- Every FEATURES entry ends with a line saying whether the sequel has it. Its sequel-only passages (the
+  sequel's own party, its quick saves, its named saves) moved to RAVAGER.md; the gaps found (the four
+  controls, more saves, steady pace, the arrows left over an archer, the cahulaks sparing only by size) are
+  on RAVAGER's "Not in the sequel yet". DICE-LOG.md has a sequel section.
+
+**Changed: the sequel's no-speaker box and shop panel as Shattered Lands'** (branch `claude/portrait-empty-shop`)
+- A message with no speaker (the XP at a fight's end) shows Shattered Lands' stone dark-sun emblem in the
+  frame, where the sequel had a grey wash (its BMP 12000's frame 1, from the player's Shattered Lands, in
+  the sequel's colours; the wash without one, or with `sl_interface` off).
+- The shop's right-hand panel is Shattered Lands': the merchant's face in its frame at (252, 11), SELL
+  under it and MORE alone at the bottom (WIND 13500's two buttons moved, the face's two shop patches
+  pointed there; the item list was already at Shattered Lands' places).
+- The panel's picture (BMP 13004, Shattered Lands' since `sl_interface`) keeps its shade: its 16 greys
+  were rounded to the sequel's 7 (the top lighter, the foot darker); now each pixel takes the nearest
+  of the sequel's colours near its own plus what its neighbours missed (Floyd-Steinberg,
+  `ravui.DITHERED`), so the shade holds and the grain reads like Shattered Lands' (a 4 by 4 pattern,
+  tried first, showed as a regular checker: the owner asked for the texture too).
+- Played against Shattered Lands' own shop and the earlier build. Tests: `test_ravportraits.py`,
+  `test_ravui.py`.
+
+**Changed: the sequel's talk portraits at Shattered Lands' size** (branch `claude/ravager-portrait-size`)
+- Wake of the Ravager's faces (72 by 72, frame drawn in) made Shattered Lands' 32 by 32 in a 48 by 46
+  frame by `dsloader/ravportraits.py`: the faces in GPLDAT2.GFF (each start, from the game's own, the
+  frame its own cut down), the empty frame's two pictures (BMP 12000) and the talk window (WIND 12500: 58
+  high, the text at x 58, as Shattered Lands' WIND 3007) in RESOURC2.GFF, and five patches to the face's
+  routine (88E67h) putting it at (8, 6), the shop's in the middle of its old place. The owner's ask.
+  `RAV_SKIP=small_portraits` is the control. Played: Uhubito's and Notaku's talks, the opening talk,
+  Notaku's shop, the first fight's XP message, against the control. Tests: `test_ravportraits.py`.
+
+**Docs: the research recipes split by subject** (branch `claude/research-guide-split`)
+- The playtest kit's research recipes (`playtest/RESEARCH.md`, 42,000 words in one page) are seven pages
+  now: memory edits for a test, sounds and pictures, the game's code and other targets, and four on Wake
+  of the Ravager (starting and driving it; its pictures and screens; its records, kits and saves; the port
+  audit's notes). The text moved as it was; `RESEARCH.md` is their index, so old links still land, and
+  every link into a moved section points at its new page.
+
+**Fixed: one Dragonsbane, metal in both games; the sequel's item box shows the damage against large foes** (branch `claude/dragonsbane-metal`)
+- SSI made the sequel's Dragonsbane (object 675, +4) an obsidian long sword; Shattered Lands' is metal. The
+  user's call: "It is metal in Shattered Lands, then it should be metal in the sequel". The Loader's copy makes
+  it the sequel's metal long sword (type 97; `ravager.RAV_OBJECT_TYPES`, `RAV_SKIP=object_types` the control),
+  4 lb as in Shattered Lands, so SL's Dragonsbane crosses as the sequel's own again (one sword, not a second
+  Loader-made one). `test_item_weights.py` has no Dragonsbane exception left. Played: logs/2026-11-27-dragonsbane-metal.md.
+- The sequel's item box shows a weapon's damage against a large foe too, as Shattered Lands' (`1D8+4/1D12+4`):
+  DSCLOG's SIZE_LINE and SIZE_PRE ported (DSCLOG2 sites 249, 250 in the line routine 7AF9Eh; Shillelagh's line
+  1D6+1/2D4 as SL's). Tests: `test_ravsizeline.py` (emulated).
+
+**Fixed: weapons keep their material and kind in Wake of the Ravager; the bone great sword 11 lb in both games** (branch `claude/ravager-weapon-materials`)
+- A party taken across lost five backported weapons' material: the metal great sword, lotulis and
+  javelin, the obsidian lotulis and the bone great sword went as the sequel's one type of their kind (a
+  water cleric's Bone Great Sword +1 an obsidian sword it couldn't wield, a fire cleric's Obsidian
+  Lotulis +1 a stone one). They are now the mod's own types there (141-145, `ravager.MOD_TYPES` 44).
+- The user's wider ask (every SL weapon kind and material in the sequel too): of SL's 337 weapon
+  objects, 20 crossed with another material or kind by SSI's `ITEMS.BIN` pairs (bone Long Swords made
+  obsidian, the Great Axe +3 obsidian, the Polearm +1 a double spear, Terror Blade stone...). Those pairs
+  are dropped and the Loader makes the weapon in a sequel type of its kind and material
+  (`ravtransfer.weapon_pairs`, `ravitems.weapon_type`); the sequel had no bone long sword, so SL's is
+  added (type 146, `ravager.SL_EXTRA_TYPES`); its club, bow and sling get SL's wood and leather
+  (`ravager.RAV_MATERIALS`; SSI's had none, so earth and water priests were refused them). An earlier
+  transfer's object of the old type is made anew; saves already in the sequel are not touched.
+- The bone great sword weighs 110 (11 lb) in both games (was 150, as the obsidian one).
+- SL's darts (wood) go across as the mod's own darts (140), not the sequel's stone ones (43); `game.RAVAGER_TYPES`
+  said 38 (of no material). Every backported Ravager weapon is now checked for kind and material on the real files.
+- The sequel's item box named a Great Sword "Long Sword": the transfer's keepsakes' names began at 306, over the
+  mod's last six (the Ravager weapons' Great Sword to Darts). They begin at 312 now (`ravager.KEEPSAKE_NAMES_FIRST`).
+- Tests: every SL weapon object checked on the real files (`test_every_weapon_keeps_kind_and_material`),
+  DSCLOG2's class limits on type 146, the materials. Played: logs/2026-11-27-ravager-weapon-materials.md.
+
+**Docs: Wake of the Ravager's items, and pictures and gaps** (branch `claude/docs-pictures-sequel-gaps`)
+- ITEMS.md has every item of Wake of the Ravager: its magic weapons, missile weapons, armour, worn and held
+  items, scrolls and the like, and its plain weapons and armour by type and material, the mod's among them,
+  each with where it is (from the sequel's data, the story's rewards from a play) and the sequel's own icon
+  (`docicons --ravager`, which reads its PLNR and PLAN pictures); and what Shattered Lands' items become.
+- Kalzith's talk and body pictures retaken with the class outfits.
+- RAVAGER.md: the seven features the full review couldn't confirm in the sequel, settled from its patches:
+  the Effects screen's click works there; more save pages, the 29-character roster, steady pace, the view
+  in fights, the pointer in scenes and the whole party in view are on "Not in the sequel yet".
+
+**Docs: the Options tab's reference in the README** (#268)
+- "The Options tab at a glance" (every switch, its default and when it counts) and "Elsewhere in the
+  Loader" moved from the player's guide to the README, after the Loader's window, where a player looks
+  for the Loader; the links to it follow.
+- The list of what is always on is kept once, in the features page's "Always on": the Options reference
+  and the README's Loader paragraph link it instead of repeating it.
 
 **Docs: the full docs review** (branch `claude/docs-review-full`)
 - Fogbolt's picture retaken in play with the class outfits; the gear picture's caption names Gerakis a
@@ -84,6 +237,50 @@ page](obsidian-edition/RAVAGER.md) have the detail.
 **Dev**: `ravitems.region_palettes`, the sequel's region palettes read once for the four modules that read
 them; `launch._clear_end_files`; `test_dosboxx_pin.py` (the release and the test package bring the same
 DOSBox-X).
+
+**New: Defilers' scrolls in Wake of the Ravager** (branch `claude/sequel-defiler-scrolls`)
+- A defiler in a fight carries a scroll one time in 20 in the sequel too, with the switch: its seven defiler
+  objects (`ravlog.RAV_DEFILER_OBJECTS`), any of its wizard spells of levels 1 to 9 and the new ones, and the
+  sequel's kind of scroll that teaches, a Spellbook (`ravlog.rav_book`, 3,000 a level). The dice log's
+  `item_watches` step, the defilers' part (the people's gear is still to come).
+- `ravdice.py`'s `RAV_DEFILER_CHANCE` for a test.
+
+**New: Wake of the Ravager's dice log with the missing-item report** (#281)
+- The sequel's dice log watches the party's items as Shattered Lands' does, and saves an item report when
+  one is gone with nothing ordinary to show for it. The ordinary losses are the sequel's own item types
+  (`ravlog.RAV_USED_UP`, `RAV_SPELL_MADE`, `RAV_BROKEN`, from the item weights report's table): arrows, coins
+  and keys, gems and berries, scrolls and powerstones, the Flameblade, Rainbow, Shillelagh and Spirit hammer,
+  a Broken Weapon. That was the last dice log gap on the sequel's list.
+
+**New: Wake of the Ravager's dice log with the XP lines, the prime requisites' bonus and the level-ups** (#278)
+- The sequel's dice log runs Shattered Lands' tracker whole: after a kill the XP each member gained and for
+  which kills, the 10% for high prime requisites added to the sheet as in Shattered Lands (`XP: Terrannus
+  +1100 (+100 for Cleric, WIS 19) ... (for Draxan 4000)`), the level-ups with their hit points, and XP held
+  at the sequel's own cap (5,625,000: `tracker.CAP`, `SHARE`). The party's sheets' XP is made writable for
+  it: the sequel's log writes nowhere else.
+- The round's initiative line comes as the round's rolls end, as in Shattered Lands (it waited for the
+  next roll before).
+
+**New: the kits on Wake of the Ravager's DAM lines and creation THAC0** (#277)
+- The inventory's and View Character's DAM lines show the kits' part as Shattered Lands' do: a Ravager's 1 more
+  damage, a Brute's 2 with a two-handed weapon, a Ghetto Fighter's 1 with a dagger, and a Battle Mage's,
+  Crusader's or Mind Warrior's attacks with its chosen weapon (DSCLOG2's `DAM_KIT_MELEE`, `DAM_EXPERT`).
+- The creation screen's THAC0 line has a new Scholar's 1 worse as soon as the kit is chosen or taken back
+  (`CR_KIT_THAC0`); before, only after the next roll.
+
+**New: the Scholar kit in Wake of the Ravager** (#270)
+- A Scholar there is as in Shattered Lands: its THAC0 1 worse (from creation and every level up), one more
+  spell on CHOOSE A SPELL at each preserver level up, and, made new, one more 1st-level spell for each of its
+  preserver levels (DSCLOG2's `SCHOLAR_THAC0`, `SCHOLAR_LEVEL_UP`, `CR_SCHOLAR`).
+
+**New: Wake of the Ravager with the in-game rolls, no Loader window; Show Save for its saves** (#264)
+- **`Play Wake of the Ravager (in-game rolls).bat`** (`python -m dsloader play --ravager`) starts the sequel
+  as `Play Dark Sun (in-game rolls).bat` does Shattered Lands: its folder found as for the Loader's button,
+  the dice log unseen with the sequel's own rules and lines, a problem in a message box and `play.log`. The
+  in-game-rolls start now makes its dice log by the helper the game loaded, as the window does.
+- **`Show Save.bat`** (`python -m dsloader save FILE`) shows a Wake of the Ravager save's party too (its
+  sheets read as the game wrote them, 42h, or as the Loader widened them, 48h).
+- The follow-up code audit's P1 (the sequel figures zip) settled by the owner: it stays in the mod.
 
 **Docs: the follow-up docs review** (#263)
 - [Wake of the Ravager's page](obsidian-edition/RAVAGER.md#not-in-the-sequel-yet) now ends with what
@@ -295,6 +492,11 @@ DOSBox-X).
   toward their base, walls kept): `sl_figures.py squash RGN032 0.66 furniture` on the stock files before
   the catalogue's import, 54 of its 60 pictures (Notaku's stall, 2371-2379, is the catalogue's own); the
   region's placements needed no change. In the same `ravager-figures.zip` (#253).
+- Codex's fixes after the stock comparison (catalogue 865a5e4, re-packed): the Tarrasque's attack run
+  uses the stock script's frames again (the old one vanished on one step), its side poses follow the
+  stock foot line, its walk steps through its poses square by square (played), and the fire drake is
+  the stock dragon's size (played). The mod's copy of the catalogue (`reports/ravager-figure-redraws/`)
+  brought up to the same revision.
 
 **New: Shattered Lands' screens and icons in the sequel**
 - `dsloader/ravui.py` puts Shattered Lands' 45 interface pictures and 221 icons (130 from another number:

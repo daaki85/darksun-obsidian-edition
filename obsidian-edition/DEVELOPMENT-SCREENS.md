@@ -413,7 +413,11 @@ dice log running:
   (`art.Font`); without it the panel has no lines. A new picture is written
   only when something in it changes.
 - **Scrolling (Stage 3).** DSCLOG's mouse handler (`PANEL_MOUSE`, in
-  `MOUSE_EVENT`) notes where the pointer is (header `+332`, game pixels, as
+  `MOUSE_EVENT`; DSCLOG2's `PANEL_EVENT`, in its own `MOUSE_EVENT`, with
+  `PANEL_HERE`, the panel shown on the map, in place of `PANEL_LIVE`'s page
+  test, for L too; the sequel's first version looked for the press in the
+  main loop's call for the pointer, which missed a quick click and let the
+  game walk there) notes where the pointer is (header `+332`, game pixels, as
   the driver gives them), and a left press on the panel, while the page on
   show is the one the panel was last drawn into (not under a game window), is
   counted with where it was (`+338` on) and kept from the game with its
@@ -468,7 +472,10 @@ dice log running:
 
 - **The quiver's count.** After each party shot the dice log floats "Arrows: N left" (the quiver's
   count) or "Out of arrows" over the archer (`quiver.py` through `labels.py`, in the charges' blue
-  and priority; none with names over figures off). The turn kept when the quiver runs dry: [An
+  and priority; none with names over figures off), for a missile weapon whose type's first word has
+  bit 3 set (`SHOOTS_AMMO`: what both games' count of a shot's ammunition asks, SL's 58C97h, the
+  sequel's 5D3BAh; a chatkcha has none, and the sequel's sling neither). The sequel's attack routine
+  logs its d20 at the same code (5D05Ch, SL's 589C0h) with SL's frame, so the same step serves it. The turn kept when the quiver runs dry: [An
   archer's last arrow](DEVELOPMENT-CONTENT.md#an-archers-last-arrow-and-a-dry-quiver).
 - **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
   number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
@@ -567,6 +574,9 @@ whose pace may hang on it. Measured with a save (Zulak's inventory,
 (85 on average) before, 42-45 putting an item down and 63-67 picking one up
 after; skipping every retrace wait saves no more, and the rest is the game's
 own drawing (a faster game speed shortens it). Nothing else in the game changes.
+In Wake of the Ravager the flip is the same code (its call to the wait at 1698Fh, the wait at 13BA4h):
+DSCLOG2's `FLIP_WAIT` (site 237, `flip_wait`) does the same, `SCREEN_IS` at `DS:0DABh` (seen: 2 with the
+inventory up, the flips there counted in `flip_quick`, the map's waiting as before).
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the
@@ -1232,6 +1242,13 @@ keeps the pointer it reports off the edges meanwhile. The Loader only switches
 it (`dsloader/scrolling.py`). (Turning the wheel isn't used: DOSBox 0.74,
 GOG's, never passes it on to the game.)
 
+**In Wake of the Ravager** DSCLOG2 does the same, always (its header's +228,
+`scroll_on`): the same `INT 33h` hook in front of the game's handler, and the
+drag in its `PROBE_SCROLL` (the sequel's main loop's pointer read, where its
+pointer box and the panel already are), centring the view with the sequel's own
+routine (1C5F:01F3, the camera at DS:1408h) while the map is up and no label or
+picture is being drawn.
+
 ## M, U and I: open a screen, close it again
 
 ([In the features page](FEATURES.md#m-u-and-i-open-a-screen-close-it-again).)
@@ -1269,6 +1286,12 @@ still one figure. (A 5 put in the BIOS's buffer waits there: the game reads
 keys only in its keyboard interrupt.) Switch: `gamepatch.PARTY_SPREAD`
 (`party_spread`, always on: [the switches always on](DEVELOPMENT-RULES.md#the-switches-always-on)).
 
+**In Wake of the Ravager** (DSCLOG2's PARTY_LOAD, PARTY_GATHER and SPREAD_TICK, sites 231 and 232): the
+same store, `mov byte [13FAh],0`, where a load finds the party in the leader's figure (70DA6h) and in the
+gathering routine (6A823h, overlay stub 46BD:0025); its caller ([BP+2], [BP+4]) tells a fight's end
+(18C9:21C6h and 18C9:31A9h) from the 6 key (18C9:0ED6h). SPREAD_TICK calls the 5 key's routine through its
+stub, 46BD:002Ah, with the fight state's +19h (segment 3C10h) 0.
+
 ## The view in fights
 
 ([In the features page](FEATURES.md#the-view-in-fights).)
@@ -1297,6 +1320,12 @@ table), and a first version, which put other code there, ran garbled.
 opening, the party walking out through the gate: held still, the party never
 left the view and the scene never went on), so there it is as the game has it,
 as is the map's own walking.
+
+**In Wake of the Ravager** (DSCLOG2's CAMERA_WALK, site 230): the sequel's routine stepping a fight's
+figure (1FD6Bh) centres the view at once when the figure leaves the middle of the screen (64-256 across,
+64-136 down) and otherwise steps it toward the figure (262C:0D80). The site, over `mov bx,[426Dh]`
+(200B7h), sends the routine to its end (2019Bh) in a fight while the figure's feet (SI, DI) are on the
+screen. The turn's start still scrolls the view to whoever's turn it is (21341h), as the game has it.
 
 ## The pointer in scenes, and where it starts
 
@@ -1373,6 +1402,33 @@ The two are switches (`SCENE_POINTER`: `cine_step`, `cine_end`; `MOUSE_START`:
 `mouse_set`, `mouse_init`). The room in upper memory came from the freeze
 report's records (32 to 16, taken half as often).
 
+**In Wake of the Ravager** (DSCLOG2, always on). The sequel plays its films
+(FLI, the intro and the rest) with a player of its own (831D4h) in mode 13h,
+chained, and asks after each frame for the Shift keys only (`test ax,3` at
+8335Ch: Shift held about a second skips the intro; no other key does). Its
+narrated opening after START GAME, and any spoken map scene, waits in a loop
+for the speech to end (69BDDh: `call 230:51 / or al,al / jnz`), with a planar
+picture up, and can't be skipped at all. DSCLOG2 puts SL's arrow in both:
+`FLI_KEY` after each frame (a press makes the Shift bits, so the game's own
+skip follows; the arrow drawn each frame, as a frame overwrites it), `FLI_END`
+as the player ends (the arrow wiped), and `SPEECH_WAIT` in the speech loop (a
+press stops the speech with the game's own routine, 37B3h:3A5h, and the loop
+ends as if it had; the arrow drawn only when the pointer moves or every 4 BIOS
+ticks: the loop runs hundreds of times a second while the speech plays, with
+the game's timer at about 1 kHz, and redrawing on each pass left the arrow
+never on screen). The drawing is SL's (`cp_draw`), with each pixel's address
+by the sequencer's chain-4 bit: `y*320+x` chained, SL's plane and offset
+otherwise. The pointer's start and speed are SL's `MOUSE_SET` (2F110h, after
+the ranges) and `MOUSE_INIT` (39F0Bh, after the reset). The sequel has no ICON
+6001 or PAL 1, so the Loader writes `POINTER.BIN` from the Shattered Lands
+folder (`ravager.write_pointer`).
+
+**The message box in the sequel** (NO PATH FROM HERE, NO LINE OF SIGHT, a
+scroll's YOU LEARN THE SPELL) waits the options' message time from
+`MSG_SHOWN`; a left or right press (taken from the game's events by DSCLOG2's
+mouse handler while the box waits) or a key (taken by its INT 16h hook) ends
+the wait at once, as Shattered Lands' own box closes on a key or a click.
+
 ## Spells on the Effects screen
 
 ([In the features page](FEATURES.md#spells-on-the-effects-screen).)
@@ -1399,6 +1455,18 @@ the last three stay as they are. The routine and its clicks are the game's: only
 ## More saves
 
 ([In the features page](FEATURES.md#more-saves).)
+
+**In the sequel** (DSCLOG2's MORE SAVES): the same letters in the same two names (DS:2088h, 20B9h), the keys
+alone (its RESOURCE.GFF has no PAGE buttons to copy). Site 238 takes the window routine's way out for a key
+it has no use for (7DABCh): PgUp and PgDn change the letter and run the window's own routines, as DSCLOG
+does (search the folder, draw the ten rows, choose the first row, its name below), then draw the page's
+name and "PGUP PGDN" under EXIT. Site 216 draws them as the window opens (in place of the `add sp,4` after
+the opening routine draws the window: the far call before it is fixed up as the overlay loads). Site 239
+gives each page's GREQ chunks their own numbers (B 200 + the slot, C 300, D 400, QUICK 100), and the load's
+GREQ read (site 84) takes the same base. A left press on the label's PGUP or PGDN, with the window up, is
+taken in DSCLOG2's mouse handler (PAGE_MOUSE) and posted to the game as that key, through the routine its own
+keyboard handler posts keys with (3464:0230), so PAGE_KEY turns the page as for the key. The map's first pass after a window shuts puts the game's page and
+its first row back, so every window opens on page 1.
 
 How: the save names the game searches the folder for and writes a save to
 (`SAVE??.SAV`, `SAVE%.2d.SAV`) are two strings in its memory; DSCLOG changes
@@ -1636,6 +1704,12 @@ pixels, not by a shadow's 72 and 44.
 A walker now raises a puff every 6 pixels, as meant. Before, the clock's tick
 was added in place of the distance, so it raised one nearly every pass. A
 walker off the view raises none.
+
+**In Wake of the Ravager** (DSCLOG2's PACE_PASS and PACE_DRAW, sites 233 and 234): the sequel's map frame
+(21A61h) has Shattered Lands' shape: the step for everything 21E0:2BB9 (its "something moved" a byte at
+[BP-1]), the drawing and flip 21E0:1478, the step flag DS:265Ah and the clock DS:145Eh set by the timer
+(2A1AAh), the list of what moved at 42A2h:0028h. The counters `pace_ran`, `pace_lost` and
+`pace_skipped` are in DSCLOG2's segment (offsets from `nasm -l`).
 
 ## Picture and music
 

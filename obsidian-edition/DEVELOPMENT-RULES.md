@@ -566,8 +566,15 @@ None is counted twice: the age is saved with the sheet (seen: saved and loaded a
 came back the same, and the dice log gave none again), and a load's first look only records. Dead is the sequel's status 7 (`RAV_DEAD_STATUS`, bound to `kalzith.DEAD_STATUS`
 by `apply_layout`). DSCLOG2's `PROBE_CHAR` writes `AGE: 23` between SP and STR (`AGE_Y` 2Dh) from the
 sheet and the races' bases (`age_bases`), with RULE_HI_AGING. Not ported: Restore Youth (the mod's own
-spell, not in the sequel), the creation screen's roll (a new character gets its age when it joins), the Characters
-tab's other numbers from STATS. A character brought over by CHARTRAN gets a new age (its SL age was
+spell, not in the sequel), the Characters tab's other numbers from STATS. The creation screen's age (2026-11-28):
+DSCLOG2's sites 235 and 236 (`CR_AGE_NEW`, `CR_AGE_CON`, in place of PROBE_CR_HP's INTs after PSP is drawn, 6D6AEh
+and 6B79Ch, which they go on to) draw `AGE: 23` at x 146 on PSP's line, the PSP box (the 8th, `DS:122Ch`) widened to
+x 200 (`cr_age_box`). The sheet being made (`DS:1429h`) is the game's 42h bytes with the creature straight after it,
+so the age goes in its +41h alone (the byte: the dice's count, their roll less it, and 1) and DONE brings it over
+with the sheet; `aging.screen_roll` works the roll out from it when `give_ages` first sees the new member, and
+puts it beside the weapon specs as for anyone else. A new roll at the die, a choice and the screen's opening; a
+click on CON, a RECALL (`CR_AGE_HOLD`; the byte is one of STORE's fields) and EDIT's member keep the sheet's age.
+Seen in the sequel: ages of 19 to 23 for a human, CON and RECALL keeping it, DONE's member with the same byte. A character brought over by CHARTRAN gets a new age (its SL age was
 beside the weapon specs, which the transfer leaves behind).
 
 ## Two weapons
@@ -1661,9 +1668,13 @@ of the six kinds SL took from it are of those kinds, by name, dice and the
 two-handed bit (its item types' +0Bh 40h): the Twohand Sword (101) and the
 Crystal sword (35, a long sword before), both two-handed 1d10, are two-handed
 swords; the Lotulis (61), Double Spear (39), Trikal (100), Javelin (59) and the
-two Darts (38, 43) their own kinds. None of the mod's types in the sequel
-(102-134, SL's first 33) is of the six: SL's types of them (148 on) go across as
-the sequel's own (`ravager.sequel_weapon_type`). With them: `MISSILE_RATE` has
+two Darts (38, 43) their own kinds. The mod's types in the sequel are
+102-145 (SL's 115-158, `ravager.MOD_TYPES` 44): SL's plain ones of five of those
+kinds (148-152) go across as the sequel's own (`ravager.sequel_weapon_type`;
+their places 135-139 kept unused), SL's darts (153, wood: the sequel's are
+stone or of no material) as the mod's own (140), their metal, obsidian and bone ones (154-158)
+as the mod's own (141-145), their material kept; after them SL's bone long sword
+(146, `ravager.SL_EXTRA_TYPES`), and `KIND_TYPES` is 147. With them: `MISSILE_RATE` has
 DSCLOG's `MISSILE_RAV` (the javelin's and darts' rates of fire), `LARGE_DICE`
 SL's 22 rows (the sequel's own weapons go by `RAV_LARGE` first, the Darts 38's
 1d2 kept there), the Effects screen's `EF_KINDS` the six names, `PSI_KINDS`
@@ -2194,7 +2205,7 @@ Assassin's multiplier one more there, rule or not (the attacker `[BP+0Eh]`, a pa
 `kit_stabs` counts them). The dice log
 reads the round's count at `game.ATTACKS_MADE_LOCAL` (ravlog's -16h). Tests: test_ravthief.py (with
 `DSUN_WOTR`, the sites in the game's own code too); test_dicelog's `test_rule_off`,
-`test_attacks_made_local`. Found statically (playtest/RESEARCH.md, "Thieves as in AD&D in the sequel").
+`test_attacks_made_local`. Found statically (playtest/RESEARCH-RAVAGER.md, "Thieves as in AD&D in the sequel").
 
 ## Picking pockets
 

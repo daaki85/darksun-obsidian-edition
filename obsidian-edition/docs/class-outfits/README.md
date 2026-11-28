@@ -16,6 +16,31 @@ Compare the borrowed Thief hoods and Fighter shoulder guards across five races a
 
 **Approved shoulder fit (art revision `ccd86dd`).** The Fighter/Psionicist guard follows the lit upper arm on both half-giants, both halflings and the Mul. Each direction in the walk comparison repeats the same four steps with the floor and camera fixed. Each pair shows the previous guard on the left and the revised guard on the right. [Watch the walk from all three sides](shoulder-walk.gif) · [Inspect profile step two](shoulder-fit-by-race.png) · [Compare the bare arm and both fittings through all 29 poses](shoulder-fit-by-race.gif)
 
+## Inventory portraits
+
+In Shattered Lands and Wake of the Ravager, every race's inventory figure wears the selected character's classes. The two humans show their active class in eight outfits. The dwarf, elf, half-elf, half-giant, halfling and mul figures have a painting for each class and multiclass a character of that race can take, 270 in all, and the thri-kreen has one painting for all its builds. A figure the Loader finds no painting for, or a game with figures of other sizes, keeps the retail picture. Individual equipped items appear in the surrounding slots. On the creation screen, in both games, the full-length picture at the top left is the same painting for the classes being picked, and the small figure beside it is a class preview built from the walking sprite. The small figures in the party column beside the portrait are each member's own map figure, standing, so they show the class outfit and what is worn on every race that has one. The full-length redraws here serve the inventory and the creation screen.
+
+### Human inventory fittings
+
+The male and female portraits use separately fitted artwork for all eight classes. The Gladiator’s strap crosses the chest from a single shoulder guard, while the Fighter wears a closed jerkin with paired bone caps. The Cleric’s cream panel falls to the ankles. The Preserver’s plum mantle opens over the waist and falls behind the arms. The foreground fists on the man and the woman’s hands at her waist come from their original inventory poses.
+
+The man shows his hair above the collar and wears an open hood as a Thief. The Druid wears a green folded wrap above the ochre kilt. Dark leather distinguishes the Fighter’s overlapping hip flaps and the Gladiator’s harness against exposed skin.
+
+The sheet shows Loader-rendered portraits at 2× on sand and at native size on a dark ground. Each map inset shows the corresponding human in front idle. [Compare the original poses and the previous and revised fittings](human-inventory-fittings.png).
+
+![All eight human outfits, with male and female inventory portraits and their map references](human-inventory.png)
+
+### Importing a repainted figure
+
+A class can also be painted as one whole figure at native size (48×95 for the man, 44×88 for the woman). `python -m dsloader.inventoryart import GAME_DIR FIGURE CLASS PICTURE` turns it into the class's layer in `dsloader/inventory-garments.zip`. FIGURE is 0 for the man or 1 for the woman. CLASS is 1–8, in this order: Cleric, Druid, Fighter, Gladiator, Preserver, Psionicist, Ranger, Thief. `python -m dsloader.inventoryart import-roster GAME_DIR FOLDER` imports a whole roster at once: one subfolder per figure (`human-male` … `halfling-female`, `mul`, `thri-kreen`), each picture named by its classes (`cleric-fighter-thief.png`), and the thri-kreen's one `general.png`. Multiclass layers are named `{figure}/body{classes}`, the class numbers joined by hyphens (`4/body1-3-6`). The import command does four things:
+
+- It keeps the stock face. On the woman that includes her hair and tiara. Add `--repaint-head` for a class whose hood covers the head.
+- It keeps every pixel that matches the stock.
+- It cuts back to the parchment wherever the picture leaves stock bare.
+- It moves every colour into the palette entries that no area changes (16–79 and 128–222, without 19 and 21).
+
+The inventory is drawn in the current area's palette. Entries 80–127 and 223–248 change from area to area, so a kilt painted tan in them shows grey-green in the slave pens. `python -m dsloader.inventoryart steady GAME_DIR` moves every layer that is already in the zip into the fixed colours.
+
 ## Dwarf outfits
 
 The five single classes are Cleric, Fighter, Gladiator, Psionicist, and Thief. The five two-class and two three-class outfits combine their identifying details. The Cleric/Fighter wears pale bone caps over cream, and the Fighter/Psionicist wears a narrow teal sash over leather. Each tile below pairs the female front view with the male rear view. [See all twelve class combinations](dwarves.md)

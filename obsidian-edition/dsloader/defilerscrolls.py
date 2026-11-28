@@ -17,6 +17,11 @@ the roll: what a defiler carries is for the party to find on its body.
 The scroll is the game's own kind of item (kalzith.scroll), of the game's first scroll object, 1400
 (one the game teaches from when right-clicked: 1400-1499): the spell is the item's own, so one
 object serves every spell; priced as the game prices its scrolls, 3000 a spell level.
+
+In Wake of the Ravager (ravlog.rav_items rebinds the names below) the defilers are the sequel's objects
+whose records have the class (RAV_DEFILER_OBJECTS in ravlog), the spells its wizard spells of levels 1 to 9
+and the mod's new ones, and the scroll the sequel's kind that teaches: a spellbook (ravlog.rav_book, of the
+sequel's first spellbook object, which no defiler carries), 3000 a level as its own books.
 """
 
 import random
@@ -38,12 +43,18 @@ CREATURE_OBJECT = 0x06  # (a creature record's object, negated: the record's cop
 SCROLL_OBJECT = kalzith.SCROLL_FROM  # (the game's first scroll object, whose picture all scrolls share)
 PRICE_PER_LEVEL = 3000
 WIZARD_SPELLS = range(0, 69)  # (the game's wizard spells: 0-68, of levels 1 to 5)
+MOST_LEVEL = 5  # (the highest wizard spell level: the sequel's 9)
+NEW: Optional[Iterable[int]] = None  # (the new spells the rule adds: None, game.NEW_SPELLS; the sequel's own)
+MAKE: Optional[Callable[[int, int], bytes]] = None  # (the scroll's record, SPELL and its PRICE: None, the
+# game's scroll object's, kalzith.scroll; the sequel's spellbook)
 SEEN = 128  # creature records looked at (as kalzith.CREATURES_SEEN)
 DEAD_STATUS = kalzith.DEAD_STATUS
 
 
 def scroll(spell: int, level: int) -> bytes:
     """A scroll item teaching SPELL (of spell level LEVEL), of the game's scroll object."""
+    if MAKE is not None:
+        return MAKE(spell, PRICE_PER_LEVEL * max(level, 1))
     rec = bytearray(kalzith.scroll(spell, PRICE_PER_LEVEL * max(level, 1)))
     struct.pack_into("<h", rec, kalzith.ITEM_OBJECT, -SCROLL_OBJECT)
     return bytes(rec)
@@ -56,9 +67,10 @@ def is_ours(rec: bytes) -> bool:
 
 def spells(levels: Callable[[int], int], new_spells: bool) -> List[int]:
     """The preserver spells a scroll may be of: the game's wizard spells and, with their rule on,
-    the new ones the game has set up (a spell level of 1 to 5 in its table)."""
-    pool: Iterable[int] = list(WIZARD_SPELLS) + (sorted(game.NEW_SPELLS) if new_spells else [])
-    return [spell for spell in pool if 1 <= levels(spell) <= 5]
+    the new ones the game has set up (a spell level of 1 to MOST_LEVEL in its table)."""
+    new = sorted(game.NEW_SPELLS if NEW is None else NEW)
+    pool: Iterable[int] = list(WIZARD_SPELLS) + (new if new_spells else [])
+    return [spell for spell in pool if 1 <= levels(spell) <= MOST_LEVEL]
 
 
 class DefilerScrolls:

@@ -44,8 +44,6 @@ NAMED = {
     (b"AXE", 48): "the sequel's obsidian axe (30, as SL's obsidian axe, type 50); SL's Axe is its metal one (70)",
     (b"BAG", 9): "one bag among the sequel's small things (1); its bags' own type, 10, weighs SL's 10",
     (b"ROCK", 94): "the sequel's rock to strike with, a weapon (10); SL's Rock is a small thing (1)",
-    (b"DRAGONSBANE", 73): "the sequel's Dragonsbane is an obsidian long sword (30), SL's a metal one (40): "
-                          "another material, so another type (the owner's call)",
 }
 
 
@@ -66,6 +64,7 @@ class ItemWeightTests(unittest.TestCase):
         cls.sl_names = next(v for k, v in sorted(gpl.items()) if k[0] == "NAME")
         cls.sl_objects = _read(SL, "SEGOBJEX.GFF")
         cls.objects = _read(WOTR, "OBJEX.GFF")
+        cls.objects.update(ravager.retyped_objects(cls.objects))  # (as the Loader's copy: Dragonsbane metal)
         cls.types = ravager.weighted_table(cls.objects[ravager.TYPES_CHUNK])
         cls.resources = _read(WOTR, "RESOURCE.GFF")
 
@@ -119,10 +118,12 @@ class ItemWeightTests(unittest.TestCase):
                 with self.subTest(name=name, type=kind):
                     self.assertIn(w, weights)
 
-    def test_named_are_still_so(self):
-        """Each of NAMED still differs (else it comes off the list)."""
-        self.assertEqual(self.weight(73), 30)
-        self.assertEqual(self.sl_weight(47), 40)
+    def test_dragonsbane_one_sword(self):
+        """The sequel's Dragonsbane (675) is SL's metal long sword in the Loader's copy (the sequel's 97, 40),
+        not SSI's obsidian one (73, 30): the same sword in both games (the user's, 2026-11-27)."""
+        rec = dataitems.records(self.objects[("RDFF", 675)])[0][0].data
+        self.assertEqual(struct.unpack_from("<H", rec, ravitems.ITEM_TYPE)[0], 97)
+        self.assertEqual((self.weight(97), self.sl_weight(47)), (40, 40))
 
 
 if __name__ == "__main__":

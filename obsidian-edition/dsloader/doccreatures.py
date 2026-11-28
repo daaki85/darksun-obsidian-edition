@@ -107,27 +107,30 @@ def tangle(c: Creature) -> str:
 
 INTRO = """# Creatures
 
-*Part of Obsidian Edition's documentation. **Spoilers:** this page names every creature in the game,
+*Part of Obsidian Edition's documentation. **Spoilers:** this page names every creature in both games,
 those met late in the story too.*
 
-Every creature Shattered Lands defines, each with its figure as the game draws it standing, and
-whether [cahulaks](FEATURES.md#cahulaks) can tangle it (a hit that does damage
-tangles a man-sized or smaller creature that fails a save against petrification, and it loses
-its next turn). The game keeps no size for its creatures, so who is too big is the mod's call,
-from AD&D's sizes: half-giants and anything large or bigger can't be tangled (nor anyone Enlarged,
-while the spell lasts), nor anything with
-nothing a rope could hold, nor two the mod keeps from being tangled by name (the Sand Howler and
-the Strine). The people the party meets in towns are here too: any of them can be fought. Names
-are the game's own, cut short as the game has them ("Lsr Fire Elem"). The mod's own people (the
-slave pens' and the arena's, and the champions) are on [their own page](PEOPLE.md).
+Every creature [Shattered Lands](#shattered-lands) and [Wake of the Ravager](#wake-of-the-ravager) define,
+each game's in its own tables, with its figure as the game draws it standing, its size, and whether
+[cahulaks](FEATURES.md#cahulaks) can tangle it (a hit that does damage tangles a man-sized or smaller
+creature that fails a save against petrification, and it loses its next turn). The people the party meets
+in towns are here too: any of them can be fought. The mod's own people (Shattered Lands' slave pens' and
+arena's, and the champions) are on [their own page](PEOPLE.md).
 
-**Size** is AD&D's (T tiny, S small, M man-sized, L large, H huge, G gargantuan), which the game
-doesn't keep either: people by race (a half-giant large, a halfling small), the
-rest by name, from AD&D's and Dark Sun's monster books; a **?** marks the mod's guess, for the
-game's own creatures no book describes. [Creature size](FEATURES.md#creature-size) goes by it: a
-large one (or bigger) takes AD&D's large weapon dice and isn't held or charmed by Hold Person,
-Charm Person, or Charm Person or Mammal (on a person). A name the game gives more than one kind of
-creature says, in brackets, where each is met.
+**Size** is AD&D's (T tiny, S small, M man-sized, L large, H huge, G gargantuan), which neither game
+keeps: the mod gives people theirs by race (a half-giant large, a halfling small) and the rest by name,
+from AD&D's and Dark Sun's monster books; a **?** marks the mod's guess, for the games' own creatures no
+book describes. [Creature size](FEATURES.md#creature-size) goes by it: a large one (or bigger) takes AD&D's
+large weapon dice and isn't held or charmed by Hold Person or Charm Person (nor, in Shattered Lands, by
+Charm Person or Mammal on a person).
+
+## Shattered Lands
+
+Who is too big for the cahulaks is the mod's call: half-giants and anything large or bigger can't be
+tangled (nor anyone Enlarged, while the spell lasts), nor anything with nothing a rope could hold, nor
+two the mod keeps from being tangled by name (the Sand Howler and the Strine). Names are the game's own,
+cut short as the game has them ("Lsr Fire Elem"). A name the game gives more than one kind of creature
+says, in brackets, where each is met.
 """
 
 
@@ -135,7 +138,7 @@ def table(rows: List[Creature]) -> str:
     out = [INTRO.rstrip("\n")]
     for title, people in (("People", True), ("Monsters", False)):
         race = "Race | " if people else ""  # (a monster's race is the figure's name's last word: monster, undead...)
-        out += ["", f"## {title}", "", f"| Figure | Creature | {race}Size | Cahulaks can tangle it |",
+        out += ["", f"### {title} in Shattered Lands", "", f"| Figure | Creature | {race}Size | Cahulaks can tangle it |",
                 "|---" * (5 if people else 4) + "|"]
         for c in rows:
             if (1 <= c.race <= 8) == people:
@@ -144,8 +147,239 @@ def table(rows: List[Creature]) -> str:
     return "\n".join(out) + "\n"
 
 
-def write(game_dir: str, root: str) -> int:
-    """docs/creatures/*.png and CREATURES.md under ROOT; how many creatures."""
+# --- Wake of the Ravager: its creatures (OBJEX.GFF), drawn as the mod draws them ---
+
+RAV_FOLDER = "ravager"  # (their figures: docs/creatures/ravager/*.png)
+RAV_PARTY = frozenset(range(32000, 32004))  # (the sequel's own party, Terrannus, Thy-rohk, Gerrakis, Ar'Anda: not foes)
+RAV_CREATURE_KIND, RAV_SHEET_KIND = 2, 3  # (an object's records, dataitems: the creature's and its sheet's)
+RAV_PALETTE = ("RGN032.GFF", ("PAL ", 50))  # (the sequel's map colours in Tyr, as the figure catalogue draws them: RESOURCE.GFF's PAL 1000 leaves the colours each map sets, 32-95, magenta)
+# the creatures the sequel draws in their fights from RESOURCE.GFF's pictures, redrawn there too (ravfigures'
+# RESOURCE.GFF chunks: the Tarrasque's halves 11001-11002, whose object's own picture is blank)
+RAV_FIGHT_DRAWN = {"Tarrasque": 11001}  # (the name, and its fight's picture in RESOURCE.GFF)
+# the pictures the redrawing kept as the game has them, judged fit beside Shattered Lands' figures (Garzak's and
+# the psurlons', the Bit o'Tarrasque's, the dust devil's, Mordenk's Sword's): "the game's (kept)", not a gap
+RAV_KEPT = frozenset((849, 1736, 2395, 3238))
+# a picture's script (SCMD, as the game plays it): 36 slots, each the step an animation starts at (FFFFh none),
+# then 8-byte steps (byte 0 the frame, byte 2's 20h: from the combat picture, CBMP). Slot 16 stands facing us:
+# a redraw that keeps the game's frames and adds its own after them (Ptar's, the giants') points it at its own
+RAV_SLOTS, RAV_STEP, RAV_STANDING, RAV_COMBAT = 36, 8, 16, 0x20
+RAV_RACES = {**game.RACE_NAMES, 9: "undead", 14: "elemental", 15: "yuan-ti", 16: "illithid"}  # (the rest: "monster")
+class RavCreature(NamedTuple):
+    obj: int
+    name: str
+    race: int
+    picture: Optional[int]  # (its picture's number as the mod draws it, None for an object with none)
+
+
+def rav_creatures(chunks, mod=None) -> List[RavCreature]:
+    """Wake of the Ravager's creatures in its OBJEX.GFF CHUNKS (an object's records, dataitems, with a
+    creature record and a sheet, the game's sizes: ravager.CREATURE_SIZE, GAME_SHEET_SIZE), one for each name
+    and race, its lowest object with a picture (in MOD, the chunks as the mod has them), or the lowest
+    without; the sequel's party left out; people first, then by name."""
+    from . import dataitems, ravager
+    mod = mod if mod is not None else chunks
+    name_at = ravager.creature_field(game.CREATURE_NAME)
+    race_at = ravager.sheet_field(game.SHEET_RACE)
+    seen: Dict[Tuple[str, int], RavCreature] = {}
+    for (kind, obj), data in sorted(chunks.items()):
+        if kind != "RDFF" or obj in RAV_PARTY:
+            continue
+        try:
+            recs, _ = dataitems.records(data)
+        except (ValueError, struct.error):
+            continue
+        creature = [r.data for r in recs if r.kind == RAV_CREATURE_KIND and len(r.data) == ravager.CREATURE_SIZE]
+        sheet = [r.data for r in recs if r.kind == RAV_SHEET_KIND and len(r.data) == ravager.GAME_SHEET_SIZE]
+        if not creature or not sheet:
+            continue
+        name = creature[0][name_at:name_at + 16].split(b"\0", 1)[0].decode("cp437").strip()
+        race = sheet[0][race_at]
+        if not name:
+            continue
+        rec = mod.get(("OJFF", obj))
+        picture = struct.unpack_from("<H", rec, PICTURE)[0] if rec is not None and len(rec) >= PICTURE + 2 else None
+        if picture is not None and not _size(rav_standing(mod, picture)):
+            picture = None  # (none, or blank: the Tarrasque's, RAV_FIGHT_DRAWN)
+        old = seen.get((name, race))
+        if old is None or (old.picture is None and picture is not None):
+            seen[(name, race)] = RavCreature(obj, name, race, picture)
+    return sorted(seen.values(), key=lambda c: (not 1 <= c.race <= 8, c.name.lower(), c.race))
+
+
+def _rav_frame(chunk: bytes, index: int) -> Optional[List[List[Optional[int]]]]:
+    """Frame INDEX of a sequel's picture in any of its forms (art's, PLNR, PLAN), None a clear pixel."""
+    from . import wotrart
+    try:
+        offset, = struct.unpack_from("<I", chunk, 6 + 4 * index)
+        mark = chunk[offset + 4:offset + 9]
+        if mark == art.PLNR:
+            rows = wotrart.decode_plnr(chunk, index)
+        elif mark == docicons.PLAN:
+            rows = docicons.decode_plan(chunk, index)
+        else:
+            return art.decode_frame(chunk, index)[2]
+    except (ValueError, IndexError, struct.error):
+        return None
+    return [[p or None for p in row] for row in rows]
+
+
+def rav_standing(chunks, number: int) -> Optional[List[List[Optional[int]]]]:
+    """Picture NUMBER's figure standing, facing us, as the game draws it: the frame its script's standing
+    animation starts with (RAV_STANDING; from the combat picture where the step says so), or, with no script
+    (or none for standing), its first frame."""
+    frame, kind = 0, "BMP "
+    script = chunks.get(("SCMD", number))
+    if script and len(script) >= RAV_SLOTS * 2:
+        step = struct.unpack_from("<H", script, RAV_STANDING * 2)[0]
+        at = RAV_SLOTS * 2 + RAV_STEP * step
+        if step != 0xFFFF and at + RAV_STEP <= len(script):
+            frame, kind = script[at], ("CBMP" if script[at + 2] & RAV_COMBAT else "BMP ")
+    if (kind, number) not in chunks:
+        return None
+    return _rav_frame(chunks[(kind, number)], frame)
+
+
+def rav_race_name(race: int) -> str:
+    return RAV_RACES.get(race, "monster")
+
+
+def rav_slugs(rows: List[RavCreature]) -> Dict[int, str]:
+    """Each creature's figure's name (by object): its name and race as slug's, and its object's number after
+    them for a second of the same ("Guard" of two kinds of monster, "Int. Devourer" and "Int.Devourer")."""
+    out: Dict[int, str] = {}
+    for c in rows:
+        base = re.sub(r"[^a-z0-9]+", "-", c.name.lower().replace("'", "")).strip("-") + "-" + rav_race_name(c.race)
+        out[c.obj] = base if base not in out.values() else f"{base}-{c.obj}"
+    return out
+
+
+def rav_size_text(c: RavCreature) -> str:
+    """The size's letter by the sequel's table (sizes.RAV_NAMES: people by race, the rest by name, else
+    man-sized), and " ?" for the mod's guess (sizes.RAV_UNSURE, a thri-kreen, and any name the table lacks)."""
+    from . import sizes
+    people = 1 <= c.race <= 8
+    if not people and c.name in sizes.RAV_NAMES:
+        return sizes.RAV_NAMES[c.name] + (" ?" if c.name in sizes.RAV_UNSURE else "")
+    letter = sizes.RACES.get(c.race, "M")
+    return letter + (" ?" if (c.race in sizes.UNSURE_RACES if people else True) else "")
+
+
+def rav_tangle(c: RavCreature) -> str:
+    """The cahulaks in the sequel (DSCLOG2's CAH_HIT): no half-giant, nothing large or bigger by the sequel's
+    table (IS_LARGE); no list by name, as Shattered Lands' cahulaks.why_not has."""
+    if c.race == 5:
+        return "no: too big (a half-giant)"
+    if rav_size_text(c)[0] in "LHG":
+        return "no: too big"
+    return "yes"
+
+
+def rav_redrawn(c: RavCreature, chunks, mod, data: Optional[dict] = None) -> bool:
+    """C's figure is redrawn: the mod moved its object to a new picture (ravfigures), or draws it standing
+    otherwise than the game (CHUNKS, the game's OBJEX.GFF; MOD, the mod's), or it is one of RAV_FIGHT_DRAWN."""
+    from . import ravfigures
+    if c.name in RAV_FIGHT_DRAWN:
+        return True
+    if c.picture is None:
+        return False
+    data = data or ravfigures.load()
+    if any(o == c.obj for o, _, _ in data["objects"]):
+        return True
+    return rav_standing(mod, c.picture) != rav_standing(chunks, c.picture)
+
+
+RAV_INTRO = """## Wake of the Ravager
+
+Every creature [the sequel](RAVAGER.md) defines (its OBJEX.GFF), each with its figure as the mod draws it
+standing and facing you (the pose its animation script stands in, in Tyr's colours): the **Drawn** column
+says *redrawn* for the ones [redrawn in Shattered Lands' style](RAVAGER.md#the-mod-in-the-sequel) (the
+Loader puts them in each start), *the game's (kept)* for the few the redrawing looked at and kept as they
+are, and *the game's* for the rest. The sequel's own party (Terrannus, Thy'rokh, Gerakis, Ar'Anda) is left
+out; a creature the sequel gives no figure of its own (one only its scripts name) says *none*. A name in two rows is two kinds of creature, each with its own figure, and a
+name met in both games is a different creature in each (its own figure and numbers), so it is in each
+game's tables. Names are the sequel's own, cut short as it has them ("Grt Air Elem").
+
+**Size** goes by the sequel's own table, as Shattered Lands' does: people by race, the monsters the mod has
+looked up by name. A name the table doesn't have is taken as man-sized and marked **?**. The cahulaks in the
+sequel go by size alone: a half-giant or anything large or bigger can't be tangled (nor anyone Enlarged),
+but the shapeless (a shadow, a dust devil) and Shattered Lands' creatures kept from being tangled by name have
+no counterpart yet ([a gap](RAVAGER.md#not-in-the-sequel-yet)).
+"""
+
+
+def rav_drawn(c: RavCreature, chunks, mod, data: Optional[dict] = None) -> str:
+    """The Drawn column: "redrawn", "the game's (kept)" (RAV_KEPT), "the game's", or "none" (no figure)."""
+    if c.name in RAV_FIGHT_DRAWN:
+        return "redrawn (its fight's figure; none on the map)"
+    if c.picture is None:
+        return "none"
+    if rav_redrawn(c, chunks, mod, data):
+        return "redrawn"
+    return "the game's (kept)" if c.picture in RAV_KEPT else "the game's"
+
+
+def rav_table(rows: List[RavCreature], chunks, mod, drawn: frozenset, data: Optional[dict] = None) -> str:
+    """The sequel's part of CREATURES.md: ROWS, a figure for each object in DRAWN (its PNG written)."""
+    out = [RAV_INTRO.rstrip("\n")]
+    slugs = rav_slugs(rows)
+    for title, people in (("People", True), ("Monsters", False)):
+        race = "Race | " if people else ""
+        out += ["", f"### {title} in Wake of the Ravager", "",
+                f"| Figure | Creature | {race}Size | Cahulaks can tangle it | Drawn |",
+                "|---" * (6 if people else 5) + "|"]
+        for c in rows:
+            if (1 <= c.race <= 8) != people:
+                continue
+            figure = f"![](docs/creatures/{RAV_FOLDER}/{slugs[c.obj]}.png)" if c.obj in drawn else "none"
+            cells = [figure, c.name] + ([rav_race_name(c.race)] if people else [])
+            out.append("| " + " | ".join(cells + [rav_size_text(c), rav_tangle(c), rav_drawn(c, chunks, mod, data)])
+                       + " |")
+    return "\n".join(out) + "\n"
+
+
+def rav_mod_chunks(rav_dir: str):
+    """The sequel's OBJEX.GFF chunks as the game has them, and as the mod has them (the redrawn figures:
+    ravfigures.object_chunks; RESOURCE.GFF's pictures too, for an object whose picture is there)."""
+    from . import ravfigures
+    with open(os.path.join(rav_dir, "OBJEX.GFF"), "rb") as f:
+        chunks = gff.read_gff(f.read())
+    mod = dict(chunks)
+    mod.update(ravfigures.object_chunks(chunks))
+    return chunks, mod
+
+
+def write_ravager(rav_dir: str, root: str) -> Tuple[str, int]:
+    """docs/creatures/ravager/*.png under ROOT, and the sequel's part of CREATURES.md (returned)."""
+    chunks, mod = rav_mod_chunks(rav_dir)
+    name, key = RAV_PALETTE
+    with open(os.path.join(rav_dir, name), "rb") as f:
+        palette = art.palette_colours(gff.read_gff(f.read())[key])
+    rows = rav_creatures(chunks, mod)
+    out_dir = os.path.join(root, "docs", "creatures", RAV_FOLDER)
+    os.makedirs(out_dir, exist_ok=True)
+    for old in os.listdir(out_dir):
+        os.remove(os.path.join(out_dir, old))
+    from . import ravfigures
+    data = ravfigures.load()
+    resource = data["files"].get("RESOURCE.GFF", {})
+    slugs, drawn = rav_slugs(rows), set()
+    for c in rows:
+        if c.name in RAV_FIGHT_DRAWN:
+            figure = rav_standing(resource, RAV_FIGHT_DRAWN[c.name])
+        else:
+            figure = rav_standing(mod, c.picture) if c.picture is not None else None
+        if not _size(figure):
+            continue
+        zoom = 1 if max((len(r) for r in figure), default=0) > BIG else docicons.ZOOM
+        with open(os.path.join(out_dir, slugs[c.obj] + ".png"), "wb") as f:
+            f.write(docicons.png(figure, palette, zoom))
+        drawn.add(c.obj)
+    return rav_table(rows, chunks, mod, frozenset(drawn), data), len(rows)
+
+
+def write(game_dir: str, root: str, rav_dir: Optional[str] = None) -> int:
+    """docs/creatures/*.png and CREATURES.md under ROOT (with RAV_DIR, the sequel's folder, its part too:
+    write_ravager); how many creatures."""
     with open(os.path.join(game_dir, "SEGOBJEX.GFF"), "rb") as f:
         chunks = gff.read_gff(f.read())
     with open(os.path.join(game_dir, "GPLDATA.GFF"), "rb") as f:
@@ -158,11 +392,15 @@ def write(game_dir: str, root: str) -> int:
         zoom = 1 if max((len(r) for r in figure), default=0) > BIG else docicons.ZOOM
         with open(os.path.join(out_dir, slug(c) + ".png"), "wb") as f:
             f.write(docicons.png(figure, palette, zoom))
+    text, count = table(rows), len(rows)
+    if rav_dir:
+        rav_text, rav_count = write_ravager(rav_dir, root)
+        text, count = text + "\n" + rav_text, count + rav_count
     with open(os.path.join(root, "CREATURES.md"), "w", encoding="utf-8") as f:
-        f.write(table(rows))
-    return len(rows)
+        f.write(text)
+    return count
 
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    print(write(sys.argv[1], here), "creatures")
+    print(write(sys.argv[1], here, sys.argv[2] if len(sys.argv) > 2 else None), "creatures")

@@ -8,7 +8,8 @@ with most of the mod, and a Shattered Lands party can go on into it. This page i
 there: how to start it, how the party comes across, and the mod's rules, screens and keys in the
 sequel. Which kits work there: [In Wake of the Ravager](KITS.md#in-wake-of-the-ravager). Which of
 the game's bugs are mended there: [the game's bugs](GAME-BUGS.md#in-wake-of-the-ravager). The levels
-past Shattered Lands': [the player's guide](PLAYER-GUIDE.md#in-wake-of-the-ravager).
+past Shattered Lands': [the player's guide](PLAYER-GUIDE.md#in-wake-of-the-ravager). Its creatures, their sizes and redrawn
+figures: [Creatures](CREATURES.md#wake-of-the-ravager). Its dice log: [the dice log](DICE-LOG.md#in-wake-of-the-ravager).
 
 ## Starting the sequel
 
@@ -17,7 +18,9 @@ of the Ravager.bat`, starts it from its folder in the same engine as Shattered L
 engine](FEATURES.md#the-engine-gogs-dosbox-or-dosbox-x)), with the mod's fixes and rules ported to it
 (below) and the dice log of its fights. When the Loader hasn't found it, the button says so and points
 to **Choose its folder...** ([starting it](README.md#other-ways-to-start)). **It converts the sequel's
-roster and saves first** ([below](#your-sequel-saves-are-converted)).
+roster and saves first** ([below](#your-sequel-saves-are-converted)). `Play Wake of the Ravager (in-game rolls).bat` starts it with
+the in-game additions and no Loader window, as `Play Dark Sun (in-game rolls).bat` does Shattered Lands (a
+problem said in a message box and written to `play.log`).
 
 ### Your sequel saves are converted
 
@@ -60,65 +63,99 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Scrolls come across as the sequel's scroll of that spell (a wizard learns a spellbook's spell from its
   box outside a fight); a spell the sequel lacks makes a keepsake.
   Weapons a spell made (Shillelagh, Flame Blade, Spiritual Hammer) stay behind. The sequel's own
-  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal,
-  javelin and darts, their metal and magic ones too) go back as the sequel's own weapon of that
-  kind, and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
-  the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
+  weapons the mod brought into Shattered Lands (the two-handed sword, lotulis, double spear, trikal
+  and javelin, and their magic ones of the same material) go back as the sequel's own weapon of that
+  kind (the darts, wooden, as the mod's own: the sequel's are stone or of no material), and a spec in one of them stays that spec, for the sequel's own weapons of it ([In Wake of
+  the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). **Every weapon keeps its kind and its
+  material**: the metal great sword, lotulis and javelin, the obsidian lotulis and the bone great sword
+  (a fire cleric's Obsidian Lotulis +1, a water cleric's Bone Great Sword +1) are their own types there,
+  with Shattered Lands' damage, weight and who may wield them; and where SSI's own swap gave one of
+  Shattered Lands' weapons another material or kind (a bone Long Sword the sequel's obsidian one, the
+  Great Axe +3 an obsidian axe, the Polearm +1 a double spear, Terror Blade a stone dagger, Bloodwrath a
+  metal sword) the Loader makes it in its own material and kind instead. The sequel had no bone long
+  sword: the Loader adds Shattered Lands' to it. Dragonsbane is metal in both games (SSI made the sequel's
+  obsidian), so Shattered Lands' Dragonsbane crosses as the sequel's own, and there is one of it.
+  A weapon's item box shows its damage against a large foe too, as Shattered Lands' does
+  (`1D8+4/1D12+4`; [creature size](FEATURES.md#creature-size)). Its club and bow are wood and its sling leather, as in
+  Shattered Lands (SSI made them of no material), so an earth or water cleric, druid or ranger may use
+  them there too.
 - **Time passes between the games**: 3 to 12 months, rolled once. Each member ages a year with a
   chance of the months in twelve, with the [age rule](FEATURES.md#ages-and-magical-aging)'s usual effects.
 - **The roster**: the sequel's own is kept first as CHARSAVE.GFF.BAK (the first time). A character
   taken across before takes its old place again; the others take free places. With too few free, the
   Loader says so: delete characters in the sequel first.
 
+## The sequel's own party
+
+The sequel's own four (a new game started with no party made) are fitted to the mod as [Shattered Lands' own
+party](FEATURES.md#the-games-own-party) is, the owner's choices of 2026-11-26. The Loader does so once, when
+it finds them with no weapon specs and no kit (a game saved before, too), and says so in the dice log:
+
+| Character | Weapon specialization | With kits |
+|---|---|---|
+| **Gerakis**, half-giant gladiator | the long sword, the gythka and the trikal | **Wild Fighting**, as in Shattered Lands |
+| **Thy'rokh**, thri-kreen fighter and fire druid | the gythka (mastery at once: he is a 6th-level fighter) | a **Grove Warden's AC**: 1 better for every 3 druid levels |
+| **Terrannus**, human earth cleric | the long sword, his kit's chosen weapon spec | a **Crusader** (a warrior's THAC0, expertise with the long sword, a warrior's extra attacks), at the kit's full cost: one fewer spell slot at each spell level |
+| **Ar'Anda**, elf preserver, psionicist and thief | | the **Elven Shadow-walker's** hiding (never halved in daylight), and she **casts in light armour** (leather, or of no material), though a multiclass preserver |
+
+Without these, the sequel's level up would ask each of them for weapon specs, as it does in Shattered Lands
+for a game begun before the rule.
+
+## Saves in the sequel
+
+The sequel's save and load window has [more saves](FEATURES.md#more-saves) as Shattered Lands' does: four
+pages of ten (`SAVE01.SAV` to `SAVE10.SAV`, then `SAVB..`, `SAVC..` and `SAVD..`) and, in the load window, the
+QUICK page, turned with PgDn and PgUp or a click on PGUP or PGDN under EXIT (with the page's name: the sequel has
+no PAGE buttons). It opens on
+page 1.
+
+[Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) work in the sequel too
+(started from the Loader), with the same switches, in its own save and load window: F9 opens its LOAD window
+on the quick saves (`SAVQ01.SAV` to `SAVQ10.SAV` beside the game's `SAVE..`), and once it is shut the window
+is back on the game's own ten (the sequel's own F1 and F2 windows never open on the quick saves). Its
+autosaves have shorter names, to fit its narrower rows (`Auto Day 1, 09:05 Mines 1`, `Auto Day 1, 00:06
+fight`). Each quick save keeps its own part of the map's limits, which the sequel stores beside a save, so
+loading one never takes another save's. There is no camp in the sequel, so no camp autosave. While the
+switch is on and the Loader is there, F5 is the quick save, not the sequel's own F5 (the sound effects on
+and off: F4 and the game's menu still have the music, and the menu the sound effects); with the switch off
+or without the Loader, F5 is the game's again.
+
+[Saves under their names](FEATURES.md#saves-under-their-names) work for the sequel too: its ten manual slots
+are copied into **Named saves (Wake of the Ravager)** (`Page 1 slot 02 - In Tyr.SAV`), the **Wake of the
+Ravager's** button opens that folder, and a sequel's save put back into a slot is made the Loader's (the
+bigger character sheets) as it goes in (a game already running lists it from its next start).
+
 ## The mod in the sequel
 
 - **[The combat log in the game](FEATURES.md#the-combat-log-in-the-game)**: L on the map shows the dice
-  log's lines over the sequel's map too, as in Shattered Lands.
-- **Kits, weapon specs, spells and the starting age** come across with each character, on its
-  character sheet as in Shattered Lands (the Elementalist's second sphere and the new spells known
-  with the kits). The [new wizard spells](FEATURES.md#new-wizard-spells) come across too: a character who knows them
-  casts them in the sequel as in Shattered Lands, and a preserver learns them there at a level up, at creation
-  or from a spellbook. Notaku in Tyr sells a spellbook of each (Cat's Grace 6000, the others 3000), and three of
-  the sequel's wizards carry one ([the mod's gear](#the-mods-gear-in-the-sequel)). The kits work there as in Shattered Lands, nearly all of them whole: their rules in a
-  fight, spell slots, casting levels, cures, the spells they know, PSP costs, hit dice, and the gear
-  each forbids or allows, refused when it is put on or in a hand (a Ravager's shield and bow). The
-  Effects screen names each kit (`KIT: RAVAGER`). A new character takes a kit in the sequel as in
-  Shattered Lands: KITS on the creation panel opens the KIT page ([Choosing a
-  kit](KITS.md#choosing-a-kit)), and a human with no kit is asked for one on the game's menu right
-  after DUAL. A new character's starting gear is fitted to its kit from the sequel's own items, and a
-  Spellarcher makes spell arrows on the USE screen there as here, with the spell's sound, and they are
-  the Spellarcher's alone. Kit by kit, with the few that work
-  only in part (the Scholar, the Wanderer, the Spellarcher): [In Wake of the
-  Ravager](KITS.md#in-wake-of-the-ravager). The creation screen has [STORE and
-  RECALL](FEATURES.md#store-and-recall-on-the-creation-screen) too, and a new character gets [fuller starting
-  gear](FEATURES.md#fuller-starting-gear) from the sequel's own items (a sling, leather where it is free, a weapon in hand it
-  can use: an air cleric's obsidian dagger, a fire cleric's obsidian mace; the sequel's daggers are the air
-  clerics' too, as the game's are in Shattered Lands), given before the character is first shown and written to the roster. Its
-  weapon starts in the weapon hand: the sequel's own gear put a new fighter's +1 long sword (and a cleric's,
-  druid's, preserver's or psionicist's weapon) in the left hand, which swings once a round whatever the
-  weapon specs, the fighter's behind its shield in the right; now the weapon is in the right hand and the
-  shield in the left. A new
-  fighter, gladiator or ranger picks its weapon specs on the weapon window after DONE, as in Shattered Lands
-  ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)), and its starting weapon becomes a +1
-  weapon of its first pick's kind (a two-handed one sends the shield to the backpack; a bow or sling goes to
-  the missile slot, a bow with +1 arrows, the missile weapon there before going to the backpack). The weapon specs work there:
-  a specialist's +1 to hit and +2 damage, mastery and grand mastery, a warrior's plain rate with a
-  weapon not chosen and a specialist's rate of fire, in all twenty-two weapon specs: the sequel's Twohand
-  Sword and Crystal sword are two-handed swords, its Lotulis, Double Spear, Trikal, Javelin and Darts
-  those weapon specs, as the mod's own in Shattered Lands ([In Wake of the
-  Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)). The screens show them as in Shattered Lands: the inventory's and View Character's
-  DAM lines the attacks a round and the damage the attack has (and the off hand's one a round), and
-  the Effects screen's lower panel each one's weapon kinds, and an effect's charges in its name
-  (ARMOR (14 CHARGES)) ([the Effects screen](FEATURES.md#the-effects-screen)). The Look box's whole description of a monster comes up in the
-  dialogue window as the box closes there too. [Choosing an
-  enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings) works there as well: in a fight, on a party
-  member's turn, Tab chooses the nearest enemy (then the next; Shift+Tab goes back), a red ring on
-  the ground marks it, the dice log names it with [the chance to hit](FEATURES.md#the-chance-to-hit-before-the-swing)
-  (`Chosen with Tab: Draxan (12 HP), needs 14+ (35%) - Enter attacks it`), and Enter attacks it;
-  the chance to hit floats over the enemy under the pointer too. An enemy chosen off the screen is
-  scrolled into view, so Enter reaches it. (Without the Loader,
-  Tab opens the sequel's own menu, as it does out of fights.) The Loader's
-  copy of the sequel gives every character sheet six more bytes for them, its own characters' too.
+  log's lines over the sequel's map too, as in Shattered Lands: L again hides it, and its buttons, filters
+  and scrollbar take clicks without the party walking there (until 2026-11-27 a quick click went past
+  it to the game, and in DOSBox-X L could leave it up).
+- **[Kits](KITS.md#in-wake-of-the-ravager)** come across with each character on its character sheet
+  (with its spells and starting age), and work there nearly all whole: their fight rules, spell slots,
+  spells known, PSP costs, hit dice and the gear each forbids or allows (a Ravager's shield and bow are
+  refused). The Effects screen names each kit (`KIT: RAVAGER`). A new character takes one from KITS on
+  the creation panel, and a human with no kit is asked for one right after DUAL. The Wanderer and
+  the Spellarcher work only in part: [kit by kit](KITS.md#in-wake-of-the-ravager).
+- **[Weapon specs](WEAPON-SPECS.md#in-wake-of-the-ravager)** come across and work there, in all twenty-two
+  (the sequel's Twohand Sword and Crystal sword are two-handed swords). A new fighter, gladiator or ranger
+  picks them on the weapon window after DONE, and its starting weapon becomes a +1 weapon of its first
+  pick's kind, in the weapon hand (the sequel's own gear put it in the left hand, where it swung once a round).
+- **The [new wizard spells](FEATURES.md#new-wizard-spells)** come across, and a preserver learns them there
+  at a level up, at creation or from a spellbook: Notaku in Tyr sells one of each (Cat's Grace 6000, the
+  others 3000), and three of the sequel's wizards carry one ([the mod's gear](#the-mods-gear-in-the-sequel)).
+- **The creation screen** has [STORE and RECALL](FEATURES.md#store-and-recall-on-the-creation-screen), and a
+  new character gets [fuller starting gear](FEATURES.md#fuller-starting-gear) fitted to its kit from the
+  sequel's own items.
+- **The screens** show it all as in Shattered Lands: the DAM lines (the kits' damage and a kit's
+  expertise too), the creation screen's THAC0 (a Scholar's), the Effects screen's weapon kinds and an
+  effect's charges in its name ([the Effects screen](FEATURES.md#the-effects-screen)), and the Look box's whole
+  description of a monster in the dialogue window.
+- **[Choosing an enemy](FEATURES.md#choosing-an-enemy-tab-enter-and-the-rings)** with Tab and Enter works in
+  the sequel's fights, with the red ring and [the chance to hit](FEATURES.md#the-chance-to-hit-before-the-swing)
+  (without the Loader, Tab opens the sequel's own menu).
+- The Loader's copy of the sequel gives every character sheet six more bytes for all this, its own
+  characters' too.
 - **The mod's items work as they did**: who may wield them, the spells they cast on a hit or put on
   their wearer (taken off, the spell ends), the AC and saves of the rings, cloak, bracers and robes,
   the Veiled Robe's extra spells, the Boots of Speed, the girdles, the Amulet of Magic Resistance and
@@ -172,21 +209,12 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Control swung once a round from 2 squares); with the Loader its range is 1, as Shattered Lands' double
   spear's, and it swings at the warrior's rate ([In Wake of the Ravager](WEAPON-SPECS.md#in-wake-of-the-ravager)).
 - **[A level cap by XP](FEATURES.md#level-cap-by-xp)** of its own in the sequel: **5,625,000 XP**, shared between a
-  character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th; levels go on
-  past the sequel's XP table (20th) to 30th by AD&D's tables, as far as the cap allows. Most characters
-  of three classes reach 15th, of one or two higher (a fighter alone 30th, with another class 19th, with
-  two more 15th; a preserver alone 25th, a druid 20th: [the
-  table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). XP stops at the cap: each level up holds a
-  character's XP at its share, so nothing is left over at the top. View Character names the class the
-  next XP is for, and a level up past 20th says "21st", not "21th". THAC0 stops at AD&D's best
-  (a warrior's 1, a priest's 8, a thief's or psionicist's 11, a preserver's 14), and a preserver's
-  level up offers spells up to 9th level only: the sequel's four 10th-level spells stay the monsters'. A thief rolls its d6 for hit points to 10th (a psionicist to 9th),
-  the thief skills go on by AD&D's table to 17th, spell slots to 30th (a preserver's 7 7 7 7 7 7 7 6 6),
-  a druid's stop growing at 15th, a ranger's
-  priest spells are the Player's Handbook's (cast at its level less 7, no higher than 9th), and the
-  **saving throws** are the Player's Handbook's by class group and level: the game held every save at
-  its table's last row, a warrior at 11/11/11/13/11 from 10th level and no save better than 8, and a
-  psionicist saved as a thief (Shattered Lands' bugs too, [fixed there](FEATURES.md#adds-class-tables) the same way).
+  character's classes as Shattered Lands' 749,999 is, in place of the game's stop at 15th. Levels go past
+  the sequel's table (20th) to 30th by AD&D's tables, as far as the share allows: most characters of three
+  classes reach 15th, a fighter alone 30th ([the table](PLAYER-GUIDE.md#in-wake-of-the-ravager)). THAC0, thief
+  skills, spell slots and **saving throws** go on by AD&D's tables too (the game held every save at its
+  table's last row, and a psionicist saved as a thief), and a preserver learns spells up to 9th level only:
+  the sequel's four 10th-level spells stay the monsters'. A level up past 20th says "21st", not "21th".
 - **[Shops as in AD&D](FEATURES.md#the-leaders-cha-at-shops)** hold in the sequel too: the party leader's CHA takes 5%
   (CHA 18) to 40% (25) off what a shop asks, a shop pays 60% of an item's price, and a magical item sold
   (a plus or a power: a scroll, a ring, a wand...) goes into the merchant's pack, listed again to be
@@ -210,10 +238,19 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   plain gear of the member on show and shuts the shop back to the talk. M is the sequel's own overhead map
   (its O). No purse sound plays in the sequel. Without the Loader, T and S are the game's keys and leave the
   window or the shop open.
+- **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down, in fights too (the
+  stock sequel scrolls only at the screen's edge).
+- **[The pointer in scenes, and where it starts](FEATURES.md#the-pointer-in-scenes-and-where-it-starts)**:
+  the arrow is on screen in the sequel's films and in the narrated opening after START GAME, and a click
+  skips them (the stock sequel skips its intro only with Shift held about a second, and its opening not
+  at all). The pointer starts in the middle, keeps its place between screens and moves as far up and down
+  as across, as in Shattered Lands. The arrow is Shattered Lands' (the sequel has none of its own for
+  scenes), taken from your Shattered Lands folder each start (a plain arrow without it).
 - **The sequel's messages are seen**: its message box (a scroll's [YOU LEARN THE
   SPELL](FEATURES.md#what-a-scroll-says) and the rest, a shop's I COULDN'T SELL THAT) was never on screen, drawn
   and gone at once; now it stays for the time the game's options set (five seconds at first) while the
-  game waits, and with it [a wizard's INT](FEATURES.md#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
+  game waits, or until a click or a key closes it, as in Shattered Lands (NO PATH FROM HERE or NO LINE
+  OF SIGHT need not hold up a fight), and with it [a wizard's INT](FEATURES.md#preservers-int)'s YOU FAIL TO LEARN THE SPELL and TOO MANY
   SPELLS OF THAT LEVEL.
 - **The Loader's Dialogue and Journal tabs follow the sequel**: every conversation with the replies
   offered and the one chosen (`You chose: Who are you?`), the speaker named once a talk shows whose
@@ -222,6 +259,7 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
   sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
   and Memory tools tabs read the sequel's spells and records.
+- **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon leaves it on in the sequel too.
 - **[Squares in reach](FEATURES.md#squares-in-reach), [F10](FEATURES.md#f10-takes-a-whole-move-back) and
   [Alt](FEATURES.md#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
   small crosses mark the squares they can still walk to, and R hides or shows them. After the last
@@ -237,8 +275,16 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   Shattered Lands', its elementals Shattered Lands' own). The Loader puts them into its copies of the
   sequel's files each start (nothing in the sequel's folder changes), with the Mines' dining room laid
   out again for its smaller furniture, and Tyr's tables, chairs, beds and other furniture lowered to
-  two-thirds of their height for Shattered Lands' steeper view (the walls keep theirs). 275 pictures and
-  54 lowered; the air and fire drakes seen fighting on their own maps.
+  two-thirds of their height for Shattered Lands' steeper view. The same treatment now reaches 19
+  freestanding shelf pictures used in Tyr, the Veiled Alliance headquarters, the Yuan-ti area, Mines 3
+  and both inhabited volcano levels. Another 61 pictures lower loose furniture and storage in nine regions,
+  including Forest beds, the Mines 1 worktable and the volcano tables and stools. The Forest dining sets, the Veiled Alliance crate and vase, and
+  the two-piece Mines 3 throne now have coordinated heights and placements. The Jann camp cushions sit lower around the Sultan,
+  and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The Crypt barracks beds, tables and seats and the Cloud jars
+  use the same proportions. Jumah’s table still partly conceals the key. In the ruined Alliance headquarters, the loose pillows and
+  broken pottery sit against the lowered beds and crates. Both halves of the weapon display line up in the Yuan-ti tunnels and Mines 3.
+  In El’s Temple the bowls of the six braziers sit lower beneath their curling smoke. When Tantris rises, the empty throne keeps its lowered height and its place between the braziers. The barrel and sack pile shared by the mines and Tyr
+  sits lower while both barrel lids remain visible over the Tyr wall. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the
   END menu and the other screens the two games share draw Shattered Lands' own pictures (smoother, a little
   bluer stone), and 221 spell, psionic and button icons are Shattered Lands' drawings of the same thing,
@@ -246,6 +292,30 @@ on its CREATE CHARACTERS screen. A window lists what came across.
   buttons stay the sequel's, since they sit on its own talk boxes. Without a Shattered Lands folder the
   sequel's own are used. The box "Shattered Lands' screens and icons in Wake of the Ravager", in the Options
   tab's Wake of the Ravager section, turns it off (from the sequel's next start).
+- **Class pictures on the inventory**: as in Shattered Lands, the inventory shows a full-length picture
+  dressed for the character's classes: a human in the active class's clothes (eight classes, the man and
+  the woman), the dwarf, elf, half-elf, half-giant, halfling and mul in a picture for each class and
+  multiclass, and the thri-kreen in one picture for all its builds. They are Shattered Lands' figures,
+  dressed as there, taken from your Shattered Lands folder each start and put in the sequel's colours that
+  no area changes. The creation screen's full-length picture is the same, for the classes being picked,
+  changing with a class, the race or the sex. Without a Shattered Lands folder the sequel's own pictures are
+  used throughout.
+- **Talk portraits at Shattered Lands' size**: the sequel's faces in its talk and message boxes were 72 by
+  72 in a box 72 high, the text starting a quarter of the way across. The Loader's copy draws them as
+  Shattered Lands does: a 32 by 32 face in a 48-pixel stone frame at the box's top left, the box 58 high
+  and the text from the same place as Shattered Lands' (five lines, as there). The empty frame at the end
+  of a fight ("Each party member receives ... experience points!") and the merchant's face in a shop are
+  the smaller size too. The faces are the sequel's own, made smaller each start, with the sequel's own
+  frame cut down round them: each small pixel the average colour of the big pixels it covers, put back
+  to the nearest colour the face itself uses, so it is smooth shading as in Shattered Lands' faces, not
+  the big picture's dithering left as speckle ([the faces side by side](docs/ravager-portrait-resample.png)).
+  ![Before and after: Uhubito's talk box and the XP message at the end of the first fight](docs/ravager-small-portraits.png)
+  With no speaker the frame holds Shattered Lands' stone dark-sun emblem, as there (taken from the
+  player's Shattered Lands with its interface; the sequel's grey wash without it), and the shop's
+  right-hand panel is laid out as Shattered Lands': the merchant's face at the top, SELL under it, MORE
+  alone at the bottom.
+  ![The no-speaker frame: Shattered Lands' and the sequel's now](docs/ravager-no-speaker.png)
+  ![The shop's right-hand panel: Shattered Lands', the sequel's with a first pattern, the sequel's now](docs/ravager-shop-panel.png)
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
   party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
   toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
@@ -259,17 +329,15 @@ on its CREATE CHARACTERS screen. A window lists what came across.
 - **[See-through figures](FEATURES.md#see-through-figures)** in the sequel too: a party member hidden in shadows in
   a fight, and anyone invisible (unless the party detects invisibility), is drawn half see-through.
 - **[Preservers' first spells](FEATURES.md#preservers-first-spells) and [psionic powers at
-  creation](FEATURES.md#psionic-powers-at-creation)** are picked in the sequel too. Its own grants are not Shattered
-  Lands': a new (7th-level) preserver is given ten spells, some drawn at random (four of 1st level, three
-  of 2nd, two of 3rd, one of 4th), and a psionicist a fixed eighteen powers, anyone else four or five of its
-  discipline. With the Loader, **DONE** opens the game's **CHOOSE A SPELL** for as many as it would have
-  given, level by level from 1st (the window's pages no higher than the level being picked), then **PICK A
-  PSIONIC POWER** for the powers (a psionicist's from all three disciplines, anyone else's from its own;
-  Mind Blank and Detonate given as the game gives them). **EXIT** leaves the rest to the game's own, each
-  spell level's first; **EDIT** on a member that keeps its classes and disciplines keeps its powers.
+  creation](FEATURES.md#psionic-powers-at-creation)** are picked in the sequel too, in place of its own
+  grants (a new 7th-level preserver's ten spells, some at random, and a psionicist's fixed eighteen powers).
+  With the Loader, **DONE** opens **CHOOSE A SPELL** for as many as the game would have given, level by
+  level, then **PICK A PSIONIC POWER**. **EXIT** leaves the rest to the game, and **EDIT** keeps the powers
+  of a member whose classes and disciplines stay.
 
 ## The mod's gear in the sequel
 
+[The item tables](ITEMS.md#wake-of-the-ravagers-items) list every item of the sequel and where it is.
 Wake of the Ravager has no short sword at all and no magic pick, and few magic great axes, cahulaks,
 staff slings and polearms. The mod adds 14 magic weapons, +1 to +3, plain-named as the game's own,
 and puts the 15 plain items the mod brought to Shattered Lands (bone, metal and obsidian short swords,
@@ -307,29 +375,33 @@ its spell (not in the shop's screen). Three of the sequel's wizards who carry a 
 Fogbolt, Spook or Reflected Image, as a defiler in Shattered Lands may. In Shattered Lands Kalzith sells Cat's
 Grace. A game saved before gets them at Notaku's as the weapons (four of the six fit his pack).
 
+## The sequel's colours
+
+Wake of the Ravager keeps its own colours (the owner's choice, 2026-11-27). Matching them to Shattered Lands' is a
+long-term job for the [recompiled program](https://github.com/daaki85/darksun-recompiled) (its plan's Phase 10):
+a tone grade toward Shattered Lands' lighter, warmer look, applied where the picture goes to the screen, and later
+Shattered Lands' interface art drawn in its own exact colours. It depends on the sequel playing in the recompiled
+program past the start of Tyr. Why the mod doesn't do it here: the two games number their 256 colours differently, so
+Shattered Lands' palettes can't simply be used in the sequel, and no palette slot is free in every one of the sequel's
+areas (a count over every picture, the redrawn figures included). That leaves no room for Shattered Lands' interface
+greys, which is why [its interface art](#the-mod-in-the-sequel) is matched to the sequel's nearest colours.
+
 ## Not in the sequel yet
 
 The mod's rule is that both games get each change. These are the parts of the mod that Shattered Lands has
 and the sequel does not yet, each checked against the Loader's code (2026-11-27):
 
-- **[What the party wears](FEATURES.md#what-the-party-wears)**: the class outfits, and the new character's
-  figure on the creation screen. The sequel keeps its own figures, [drawn in Shattered Lands'
-  style](#the-mod-in-the-sequel).
-- **Starting without the Loader's window**: `Play Dark Sun (in-game rolls).bat` starts Shattered Lands only,
-  and `Show Save.bat` reads Shattered Lands' saves only.
+- **[What the party wears](FEATURES.md#what-the-party-wears)**: the party wears its class outfits on the map and in a fight
+  (2026-11-27), but not yet its worn gear over them, a second member with the same figure (they share the first's
+  picture). The party column's and the creation screen's small figures wear the outfits too.
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **Kits**: a Scholar's THAC0, and the kits' part of the inventory's and View Character's DAM lines (the
-  kits' damage is in the attack; the line doesn't show it yet). [KITS.md](KITS.md) says which kits the sequel
-  has.
-- **[Scrolling the map](FEATURES.md#scrolling-the-map)** with the mouse wheel held down: the sequel's map
-  scrolls only at the screen's edge, as the game has it.
+- **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
+- **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
+  shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the
+  large ([its creatures](CREATURES.md#wake-of-the-ravager)).
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
-- **[Defilers' scrolls](FEATURES.md#defilers-scrolls)** (in the sequel Notaku sells the new spells' books
-  and three of its wizards carry one), and the game's people wearing and wielding their gear as they come on
-  the map.
-- **The dice log**: the XP each kill gave and the level-ups (it names the kills), the report when an item goes
-  missing from the party, and the line of each round's initiative scores.
+- **The game's people** wearing and wielding their gear as they come on the map.
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).

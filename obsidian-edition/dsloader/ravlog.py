@@ -19,12 +19,13 @@ Lands' (dicelog.DiceLog), run with:
     rolls (its people, items and screens), only the rolls' lines and the fight's tally.
 """
 
+import os
 import struct
 import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+from . import aging, combatlog, defilerscrolls, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, locks, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
     gff, shadows, sizes, spellarrows, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
 
@@ -418,10 +419,49 @@ def rav_pocket_sized(typ: bytes) -> bool:
     return True
 
 
+# The sequel's item types whose going is ordinary, for the missing-item watch (itemwatch.py: Shattered Lands'
+# USED_UP, SPELL_MADE, BROKEN), by reports/wake-of-the-ravager-item-weights.md's table: arrows (6, 7), coins,
+# keys, fruit and orbs (9), gems, berries and vouchers (14), scrolls, spellbooks and rods (77), psionic
+# powerstones (78); the spells' Flameblade (47), Rainbow (87), Shillelagh (90) and Spirit hammer (95); a
+# Broken Weapon (21)
+RAV_USED_UP = frozenset((6, 7, 9, 14, 77, 78))
+RAV_SPELL_MADE = frozenset((47, 87, 90, 95))
+RAV_BROKEN = frozenset((21,))
+
+# Defilers' scrolls in the sequel (defilerscrolls.py, rebound by rav_items): the sequel's objects whose records
+# (OBJEX.GFF's RDFF, its character sheet's classes) have the defiler's class: the Lord Warrior (3), El (6),
+# Fermin (160), the Defiler (369), the Yuan-ti (434), Solurnis (436) and Raenika (496); and 363, the number the
+# running game gives the Pyramid's five Defilers (placed as 369; seen so in the stock game too, 2026-11-27, though
+# 363 has no record of its own). The scroll is the
+# sequel's kind that teaches (a 310xx object: the game teaches the spell its power names, DSCLOG2's NS_SCROLL
+# for the new ones): a spellbook of its 1st-level book object, which no defiler carries, so one object serves
+# every spell as Shattered Lands' scroll object does; 3000 a level, as its books
+RAV_DEFILER_OBJECTS = frozenset((3, 6, 160, 363, 369, 434, 436, 496))
+RAV_BOOK_OBJECT = 31002
+RAV_BOOK_TYPE, RAV_BOOK_NAME, RAV_BOOK_SIZE_BYTE = 77, 4, 5  # (its record's type, name and +12h: the game's book's)
+RAV_ITEM_SPELL, RAV_ITEM_POWER, RAV_ITEM_SIZE_BYTE = 0x02, 0x10, 0x12
+
+
+def rav_book(spell: int, price: int) -> bytes:
+    """A spellbook item teaching SPELL, priced PRICE, as the game's own book object's record (in no list and no
+    slot): its object, the spell + 1 at +2 and in its power (+10h), the link and contents 9999 (none)."""
+    rec = bytearray(ravager.ITEM_SIZE)
+    struct.pack_into("<h", rec, 0, -RAV_BOOK_OBJECT)
+    struct.pack_into("<H", rec, RAV_ITEM_SPELL, spell + 1)
+    struct.pack_into("<H", rec, game.ITEM_NEXT, game.NO_ITEM)
+    struct.pack_into("<H", rec, 0x06, price)  # (the price: itemwatch.ITEM_VALUE)
+    struct.pack_into("<H", rec, 0x08, game.NO_ITEM)  # (a container's contents: none)
+    struct.pack_into("<H", rec, RAV_ITEM_TYPE, RAV_BOOK_TYPE)
+    struct.pack_into("<H", rec, RAV_ITEM_POWER, spell + 1)
+    rec[RAV_ITEM_SIZE_BYTE], rec[RAV_ITEM_SLOT] = RAV_BOOK_SIZE_BYTE, 0xFF
+    struct.pack_into("<H", rec, ravager.ITEM_NAME, RAV_BOOK_NAME)
+    return bytes(rec)
+
+
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import icons, itemgate, locks, loot, pickpocket, ring, startgear
+    from . import defilerscrolls, icons, itemgate, itemwatch, locks, loot, pickpocket, ring, startgear
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
             # (a lock failed: the map things' object numbers and places, SL's 6694h + 1Ah and 669Dh, 32 bytes
@@ -434,7 +474,11 @@ def rav_items() -> Dict[object, Dict[str, object]]:
             loot: {"OPEN": RAV_LOOT_OPEN, "STATUS_GONE": RAV_DEAD_STATUS},
             icons: {"fit": lambda gd, item: None},
             startgear: {"LEATHER": RAV_LEATHER, "CLOAK": RAV_CLOAK, "_weapon": rav_weapon,
-                        "HANDS": game.WEAPON_HANDS}}
+                        "HANDS": game.WEAPON_HANDS},
+            itemwatch: {"USED_UP": RAV_USED_UP, "SPELL_MADE": RAV_SPELL_MADE, "BROKEN": RAV_BROKEN},
+            defilerscrolls: {"DEFILER_OBJECTS": RAV_DEFILER_OBJECTS, "SCROLL_OBJECT": RAV_BOOK_OBJECT,
+                             "WIZARD_SPELLS": range(0, ravager.RAV_WIZARD_LAST + 1), "MOST_LEVEL": 9,
+                             "NEW": ravager.RAV_NEW_WIZARD_SPELLS, "MAKE": rav_book, "DEAD_STATUS": RAV_DEAD_STATUS}}
 
 
 def _layout_holders() -> Tuple[object, ...]:
@@ -447,6 +491,14 @@ def _layout_holders() -> Tuple[object, ...]:
 
 
 _SAVED: List[Tuple[object, str, object]] = []  # (module, name, Shattered Lands' value) as apply_layout found them
+
+
+def rav_xp_share(sheet: bytes) -> int:
+    """A sequel sheet's share of RAV_XP_CAP (ravager.xp_share: its classes, levels and race, at the sequel's
+    offsets), for tracker.SHARE."""
+    classes = sheet[game.SHEET_CLASSES:game.SHEET_CLASSES + 3]
+    levels = sheet[game.SHEET_LEVELS:game.SHEET_LEVELS + 3]
+    return ravager.xp_share(classes, levels, sheet[game.SHEET_RACE] == game.HUMAN)
 
 
 def apply_layout() -> int:
@@ -503,6 +555,10 @@ def apply_layout() -> int:
         for name, value in names.items():
             _SAVED.append((module, name, getattr(module, name)))
             setattr(module, name, value)
+    from . import tracker  # (the XP cap the party's XP is held at: the sequel's, DSCLOG2's LEVEL_ROOM)
+    _SAVED.append((tracker, "CAP", tracker.CAP))
+    _SAVED.append((tracker, "SHARE", tracker.SHARE))
+    tracker.CAP, tracker.SHARE = ravager.RAV_XP_CAP, rav_xp_share
     from . import kalzith  # (dying and dead: the sequel's 4 and 7, SL's 4 and 5; aging.kill's dead)
     _SAVED.append((kalzith, "DEAD_STATUS", kalzith.DEAD_STATUS))
     kalzith.DEAD_STATUS = RAV_DEAD_STATUS
@@ -896,7 +952,8 @@ class RavGameData(game.GameData):
 
     def creating(self) -> bool:
         """Never (SL's test reads its creation screen's pointers, not the sequel's): the sequel's screen
-        rolls no age, so the character being made may have one given at once (aging.give_ages)."""
+        keeps the character being made apart from the party (DS:1429h, not a party slot), so give_ages
+        never reaches it; DSCLOG2's CR_AGE puts the age it shows in that sheet, and DONE brings it over."""
         return False
 
     def spell_level(self, spell: int) -> int:
@@ -1738,6 +1795,32 @@ class RavDiceLog(dicelog.DiceLog):
             self._rav_ghosts.update(self.game, hdr, self.show_ghosts, self._dac_changes(),
                                 lambda: shadows.redraw(self.game, hdr))
 
+    def _dress_pass(self, now: float) -> None:
+        """The party's figures in their class outfits (ravdress.RavDresser), four times a second, once the game
+        reads the Loader's OBJEX2.GFF; nothing without Shattered Lands' folder (the pictures are made from it)."""
+        if now < self._next_dress or self.game is None:
+            return
+        self._next_dress = now + DRESS_INTERVAL
+        if self._rav_dresser is None:
+            if now < self._dresser_retry:
+                return
+            self._dresser_retry = now + 30.0
+            from . import launch, ravdress
+            copy = os.path.join(launch.DOS_DIR, ravager.OBJECTS_COPY)
+            sources = ravdress.Sources.from_files(launch.find_game_dir(),
+                                                  ravager.find_dir(launch.load_settings().get("game_dir")))
+            if sources is None or not os.path.exists(copy):
+                return
+            self._rav_dresser = ravdress.RavDresser(self.game, sources, copy)
+        try:
+            with self._writable(self._rav_dresser.writable()):
+                self._rav_dresser.update()
+        except (struct.error, IndexError, ValueError, OSError):
+            pass
+
+    _next_dress = 0.0
+    _dresser_retry = 0.0
+    _rav_dresser = None
     _next_ghost = 0.0
     _rav_ghosts: Optional[RavGhosts] = None
     show_ghosts = True  # (the see-through figures: RAV_NO_GHOST, a control, turns them off)
@@ -2302,13 +2385,37 @@ class RavDiceLog(dicelog.DiceLog):
                 self.guest.writable = before
             self._ef_stats_written = data
 
-    def _kills_pass(self, now: float) -> List[str]:
-        """The monsters killed ("Draxan is killed": tracker.PartyTracker's look at the monsters, the one part of its
-        check ported; its XP lines and the prime requisites' bonus are not), which the fight's tally counts: the
-        sequel's pass had no such step, so every fight's summary said "0 kills". Nothing while a game loads."""
+    def _tracker_pass(self, now: float) -> List[str]:
+        """Shattered Lands' tracker (tracker.PartyTracker.check): the monsters killed ("Draxan is killed"), which
+        the fight's tally counts; the XP each gain gave and for which kills, with the bonus for high prime
+        requisites; the level-ups; the XP held at the sequel's cap (tracker.CAP, SHARE). The party's sheets' XP
+        (+0, a dword) made writable while it runs, for the bonus and the hold (else the read-only view drops
+        them, and the next look takes the bonus back). Nothing while a game loads."""
         if self.tracker is None or self._party_check(now):
             return []
-        return self.tracker._check_monsters(now)
+        gd = self.game
+        ranges = [] if gd is None else \
+            [(aging.sheet_address(gd, i) + game.SHEET_XP, 4) for i in range(game.PARTY_SIZE)
+             if len(gd.creature(i)) >= game.CREATURE_SIZE and gd.creature(i)[game.CREATURE_NAME]]
+        with self._writable(ranges):
+            return self.tracker.check(now)
+
+    def _item_watches_pass(self) -> List[str]:
+        """Shattered Lands' watches that move items (DiceLog._item_watches), the sequel's part: a defiler in a
+        fight may carry a scroll (defilerscrolls.py, the sequel's names: rav_items). The item moves writable while
+        it runs (_items_writable, and every creature's item lists' heads: a defiler's list may be new)."""
+        gd = self.game
+        if gd is None or not self.defiler_scrolls:
+            return []
+        creatures = game.table_pointer(self.guest, gd.ds, game.CREATURES_PTR)
+        heads = [(creatures + c * game.CREATURE_SIZE + game.CREATURE_ITEM_LISTS[0], 6)
+                 for c in range(defilerscrolls.SEEN)]
+        new_spells = bool(gd.rules & game.RULE_NEW_SPELLS)
+        try:
+            with self._items_writable(), self._writable(heads):
+                return self._step(lambda: self.defilers.watch(gd, new_spells))
+        finally:
+            itemgate.release(gd)
 
     def _psp_ability_changes(self, now: float) -> List[str]:
         """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep
@@ -2429,6 +2536,7 @@ def make(guest, **kwargs) -> dicelog.DiceLog:
 # in, regeneration, spells' damage), the kills, PSP and ability scores, effects, the names over figures,
 # the USE screen's slots, a wizard's try at a scroll, Psionic Blast's wounds, the creation screen's tries,
 # the combat log's panel, the dialogue and messages (DSCLOG2's TEXT; the journal its own chain).
+DRESS_INTERVAL = 0.25  # (seconds between the class outfits' passes: SL's dressing, four times a second)
 _take, _own = dicelog.pass_step, dicelog.PassStep
 RavDiceLog.PASS = (
     _own("gear", lambda log, now, loading: log._gear_pass()),  # (a new character's fuller starting gear: DONE waits)
@@ -2437,7 +2545,8 @@ RavDiceLog.PASS = (
     _own("answer_arrows", lambda log, now, loading: log._answer_arrows()),  # (a Spellarcher's: SPELL ARROWS)
     _own("strays", lambda log, now, loading: log._strays_pass()),  # (spell arrows only a Spellarcher carries)
     _own("hp_changes", lambda log, now, loading: log.hp_changes(now)),
-    _own("kills", lambda log, now, loading: log._kills_pass(now)),  # (the fight's tally counts them)
+    _own("tracker", lambda log, now, loading: log._tracker_pass(now)),  # (kills, XP, level-ups)
+    _take("initiative"),  # (the round's order once its rolls are still: INITIATIVE_WAIT)
     _own("psp_abilities", lambda log, now, loading: log._psp_ability_changes(now)),
     _own("blast", lambda log, now, loading: log._blast_pass(now)),
     _own("creation", lambda log, now, loading: log._creation_pass(now)),
@@ -2449,6 +2558,7 @@ RavDiceLog.PASS = (
     _own("squares", lambda log, now, loading: log._squares_pass(now), says=False, quiet=True),
     _own("dust", lambda log, now, loading: log._dust_pass(now), says=False, quiet=True),  # (DSCLOG2's DUST)
     _own("ghost", lambda log, now, loading: log._ghost_pass(now), says=False, quiet=True),  # (the see-through)
+    _own("dress", lambda log, now, loading: log._dress_pass(now), says=False, quiet=True),  # (class outfits: ravdress)
     _take("move_back"),  # (F10 after the last step: moveback.py)
     _take("usable_key"),  # (Alt held: what can be used ringed, usable.py)
     _take("hover", run=lambda log, now, loading: log._hover_pass(now) if log._label_slots() is not None else None,
@@ -2471,6 +2581,8 @@ RavDiceLog.PASS = (
          if log.game is not None and log.game.rules & game.RULE_AGING else None, dicelog.EFFECTS),
     _own("own_party", lambda log, now, loading: log._party_pass(), dicelog.EFFECTS),  # (its weapon specs and features)
     _take("loading"),
+    _own("item_watches", lambda log, now, loading: log._item_watches_pass(), dicelog.LOADED),  # (defilers' scrolls)
+    _take("itemwatch"),  # (an item gone from the party with nothing ordinary to show for it: the item report)
     _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
     _take("journal_sync"),  # (the Journal tab: the sequel's own chain)
     _take("flush"),  # (dice no spell claimed in PENDING_SECONDS, as Shattered Lands')
@@ -2481,18 +2593,13 @@ PASS_LEFT_OUT = {
     "answer_use": "the USE screen's slots are written ahead (write_slots), not answered",
     "gear_due": "the sequel's starting gear is its own step (gear)",
     "creation_figure": "the sequel has no class outfits",
-    "changes": "split into hp_changes, kills, psp_abilities and blast",
+    "changes": "split into hp_changes, psp_abilities and blast (the kills: tracker)",
     "write_stats": "not ported",
-    "tracker": "not ported",
-    "item_watches": "not ported",
     "arena_ring": "Shattered Lands' arena only",
     "drawn": "Shattered Lands' story only",
     "kalzith_sold_out": "Shattered Lands' story only",
     "quest_look": "Shattered Lands' quests only",
-    "dress": "the sequel has no class outfits",
-    "itemwatch": "not ported",
     "scroll": "not ported",
-    "initiative": "not ported",
     "creation_tries_moved": "the sequel's creation screen is its own step (creation)",
     "creation_lines": "the sequel's creation screen is its own step (creation)",
 }

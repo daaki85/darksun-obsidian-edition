@@ -10,7 +10,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravspells  # noqa: E402
+from dsloader import dataitems, game, gamepatch, gff, icons, launch, npcitems, ravager, ravportraits, ravspells  # noqa: E402
 
 WOTR = os.environ.get("DSUN_WOTR")
 
@@ -44,16 +44,16 @@ class TableTests(unittest.TestCase):
                 own.add(p.name)
         self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
-                               "pic_full", "pic_place", "pic_count", "pic_fail", "arrows_close", "arrows_lit_on", "arrows_lit_off", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3",
-                               "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
+                               "pic_full", "pic_place", "pic_count", "pic_fail", "arrows_close", "arrows_lit_on", "arrows_lit_off", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3", "camera_still", "party_spread", "party_gather", "pace_pass", "pace_draw",
+                               "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "flip_wait", "save_page", "save_page_open", "greq_save", "greq_save_2", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",
                                "two_handed_other", "two_handed_new", "cahulaks_two", "cahulaks_swing",
-                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "second_foe_back", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
+                               "cahulaks_hit", "cahulaks_move", "nauseated_name", "reach", "second_foe_back", "no_double", "ranger_level", "enlarge_roll", "enlarge_dice", "scroll_learn", "learn_said", "learn_refused", "pick_any", "pick_list", "pick_page", "blur_save", "fire_shield_save", "stinking_cloud_round", "classless_save_level", "chaos_int", "color_spray_level", "cloudkill_save", "cloudkill_kills", "flame_arrow_count", "biofeedback_least", "cast_level_kept", "lower_resistance_manual", "strength_dice", "cell_adjustment_heal", "feeblemind_psionics", "rainbow_pattern_damage", "hold_undead_level", "turn_undead_manual", "spell_hit", "spell_hit_immune", "rest_hp", "rest_spells", "class_can_use", "thief_skill_armour", "thief_skill_armour_out", "cast_armour", "item_weapon", "item_skip", "item_armour", "mc_con", "mc_uncon", "rl_score", "rl_hp", "rl_roll_4", "rl_roll_6", "rl_roll_7", "rl_con", "rl_sum", "priest_thac0", "scholar_thac0", "adnd_slots", "regen_rate", "con_save", "dual_level_menu", "dual_level_view",
                             "kit_initiative", "kit_ranger_cast", "kp_disc_win", "kp_sphere_win", "kp_disc_click",
                             "kp_sphere_click", "kp_shown", "kp_class", "kp_race", "kp_open", "dual_kit",
                             "el_sphere_know", "el_sphere_level", "el_sphere_cast",
                             "psionic_blast", "blast_knockout", "rl_try", "roll_store", "gear_done",
                             "price_shown", "price_afford", "price_buy", "sell_price", "sell_keep",
-                            "message_window", "message_shown", "text", "message",
+                            "message_window", "message_shown", "text", "message", "mouse_init", "mouse_set", "speech_wait", "fli_key", "fli_end",
                             "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
@@ -68,12 +68,15 @@ class TableTests(unittest.TestCase):
                             "avenger_cause_one",
                             "cr_die", "cr_psp_wis", "cr_psp", "shinobi_cast_level", "shinobi_level_up", "poison_hit", "arrow_plus",
                             "lock_site", "shots_left", "roster_delete", "gladiator_armour", "ai_wall", "kreen_claws",
-                            "berserk_add", "berserk_end", "ef_charges"}
+                            "berserk_add", "berserk_end", "ef_charges", "size_line", "size_pre",
+                            "inventory_figure", "inventory_figure_load",
+                            "creation_portrait", "creation_portrait_open", "small_figure"}
                          | {"sheet_stride_%x" % at for at in ravager.SHEET_STRIDES}  # (the 48h sheet)
                          | {"sheet4_%x" % f[0] for f in ravager.SHEET4_FIELDS}  # (the summoned ally's sheet)
                          | {"xp_need_%x" % at for at in ravager.XP_READS}  # (DSCLOG2's own interrupts)
                          | {"item_name_%x" % at for at in ravager.NAME_READS}
-                         | {p.name for p in ravspells.program_patches()})  # (the new spells)
+                         | {p.name for p in ravspells.program_patches()}  # (the new spells)
+                         | ravportraits.PATCH_NAMES)  # (the talk portraits at Shattered Lands' size)
         self.assertEqual(len({p.name for p in ravager.PATCHES}), len(ravager.PATCHES))
 
     def test_gear_hands(self):
@@ -361,7 +364,7 @@ class ItemTypeTests(unittest.TestCase):
         data = _gff({("ALL ", 4): bytes(range(102)) * 15, ("ALL ", 5): b"names", ("OJFF", 1): b"o" * 16})
         out, done = ravager.objects_fixed(data, {"weights"})
         got = gff.read_gff(out)
-        self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], 135, b"names"))
+        self.assertEqual((done, len(got[("ALL ", 4)]) // 15, got[("ALL ", 5)]), (["mod_types"], ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES), b"names"))
         self.assertEqual(got[("ALL ", 4)][102 * 15:103 * 15], ravager.wotr_type(npcitems.TYPES[0]))
         self.assertEqual(ravager.objects_fixed(data, {"mod_types", "weights"}), (data, []))
         with self.assertRaises(ravager.RavagerError):  # (a table whose weights aren't SSI's)
@@ -369,6 +372,25 @@ class ItemTypeTests(unittest.TestCase):
         with self.assertRaises(ravager.RavagerError):
             ravager.objects_fixed(_gff({("ALL ", 4): bytes(15)}))
 
+
+    END = dataitems.HEADER.pack(dataitems.END, 0, 0, 0, 0, 0)
+
+    def test_retyped_objects(self):
+        """Dragonsbane (675) of the sequel's metal long sword (97): its item's type word and its copy of the
+        type (number and record, ALL 4's); an object not SSI's (another type) is left as it is."""
+        types = bytes(k % 256 for k in range(ravager.GAME_TYPES) for _ in range(ravager.TYPE_SIZE))
+        item = bytearray(23)
+        struct.pack_into("<hH", item, 0, -675, 0)
+        struct.pack_into("<H", item, 0x0A, 73)
+        rdff = dataitems.chunk([dataitems.Record(1, 0, 1, 366, 0, bytes(item)),
+                                dataitems.Record(3, 0, ravager.TYPE_KIND_RECORD, 73, 5, types[73 * 15:74 * 15])], self.END)
+        got = ravager.retyped_objects({ravager.TYPES_CHUNK: types, ("RDFF", 675): rdff})
+        recs, _ = dataitems.records(got[("RDFF", 675)])
+        self.assertEqual(struct.unpack_from("<H", recs[0].data, 0x0A)[0], 97)
+        self.assertEqual((recs[1].number, recs[1].data), (97, types[97 * 15:98 * 15]))
+        struct.pack_into("<H", item, 0x0A, 16)
+        other = dataitems.chunk([dataitems.Record(1, 0, 1, 366, 0, bytes(item))], self.END)
+        self.assertEqual(ravager.retyped_objects({ravager.TYPES_CHUNK: types, ("RDFF", 675): other}), {})
 
     @staticmethod
     def _ssi_table() -> bytes:
@@ -427,7 +449,7 @@ class ItemTypeTests(unittest.TestCase):
         self.assertEqual(out[1].data[2], 40)
 
     def test_mod_kinds_in_dsclog2(self):
-        """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 33 (SL's 115-147 as
+        """DSCLOG2's kind_of_type goes on past the sequel's 102 types with the mod's 44 (SL's 115-158 as
         mod_type numbers them), each SL's kind (specialize.KIND_OF_TYPE) + 1: its class restrictions,
         polearm reach and large dice take them in (KIND_TYPES)."""
         from dsloader import specialize
@@ -442,10 +464,34 @@ class ItemTypeTests(unittest.TestCase):
             if not code.startswith("db "):
                 break
             rows += [int(n) for n in code[3:].split(",")]
-        self.assertEqual(len(rows), ravager.GAME_TYPES + ravager.MOD_TYPES)
+        self.assertEqual(len(rows), ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES))
         self.assertIn("KIND_TYPES  equ %d" % len(rows), asm)
         for sl in range(game.GAME_TYPES, game.GAME_TYPES + ravager.MOD_TYPES):
             self.assertEqual(rows[ravager.mod_type(sl)], specialize.KIND_OF_TYPE.get(sl, -1) + 1, sl)
+        for i, sl in enumerate(ravager.SL_EXTRA_TYPES):  # (SL's own weapon types the sequel lacks)
+            self.assertEqual(rows[ravager.EXTRA_FIRST + i], specialize.KIND_OF_TYPE[sl] + 1, sl)
+        self.assertEqual(ravager.rav_kinds()[ravager.EXTRA_FIRST], specialize.KINDS.index("long sword"))
+
+    def test_materials(self):
+        """The sequel's club, toothed club, bow and sling of SL's materials (wood, wood, wood, leather, with the
+        80h that spares them a weaker material's to-hit), in ALL 4 and the objects' copies; another byte left."""
+        table = bytearray(ravager.GAME_TYPES * ravager.TYPE_SIZE)
+        for t, (ssi, _) in ravager.RAV_MATERIALS.items():
+            table[t * ravager.TYPE_SIZE + ravager.TYPE_MATERIAL] = ssi
+        table[85 * ravager.TYPE_SIZE + ravager.TYPE_MATERIAL] = 0x40
+        got = ravager.materialled_table(bytes(table))
+        self.assertEqual([got[t * 15 + 4] for t in (29, 89, 18, 93, 85)], [0x80, 0x80, 0x80, 0x85, 0x40])
+        self.assertEqual(ravager.materialled_table(got), got)
+
+    def test_extra_records_are_sls(self):
+        """SL_EXTRA_RECORDS hold SL's types SL_EXTRA_TYPES' records (the bone long sword's: bone, 2 lb, a long
+        sword of SL's kinds)."""
+        from dsloader import restrict, specialize
+        for t, rec in zip(ravager.SL_EXTRA_TYPES, ravager.SL_EXTRA_RECORDS):
+            self.assertEqual(len(rec), 20)
+            self.assertEqual(specialize.KINDS[specialize.KIND_OF_TYPE[t]], "long sword")
+            self.assertEqual(restrict.material(rec), restrict.BONE)
+            self.assertEqual(struct.unpack_from("<H", rec, 4)[0], 20)
 
 
 class LayoutTests(unittest.TestCase):
@@ -511,24 +557,32 @@ class GameFileTests(unittest.TestCase):
                       and len(game[k]) == ravager.SPELL_SIZE
                       and struct.unpack_from("<H", game[k], ravager.SPELL_FLAGS)[0] & 0x86}
             self.assertEqual(changed_spells, {s for s, _ in ravager.SPELL_FIXES.values()} | dodged)
-            gpl = open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read()
-            own = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-            places = gff.index_places(own, "GPL ")
-            differ = [i for i, (a, b) in enumerate(zip(gpl, own)) if a != b]
-            wanted = []
+            gpl = gff.read_gff(open(os.path.join(d, ravager.SCRIPT_COPY), "rb").read())
+            own = gff.read_gff(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
+            fixed = {}
             for chunk, offset, original, replacement in ravager.SCRIPT_FIXES.values():
-                at = places[chunk][1] + offset
-                self.assertEqual(gpl[at:at + len(replacement)], replacement)
-                wanted += [at + i for i in range(len(original)) if original[i] != replacement[i]]
-            self.assertEqual((len(gpl), differ), (len(own), sorted(wanted)))
+                script = bytearray(fixed.get(chunk, own[("GPL ", chunk)]))
+                self.assertEqual(bytes(script[offset:offset + len(original)]), original)
+                script[offset:offset + len(original)] = replacement
+                fixed[chunk] = bytes(script)
+            faces = {k for k in own if k[0] == "PORT"}  # (made smaller: ravportraits)
+            self.assertEqual(set(gpl), set(own))
+            self.assertEqual({k for k in own if own[k] != gpl[k] and k[0] != "GFFI"},
+                             {("GPL ", c) for c in fixed} | faces)
+            for c, script in fixed.items():
+                self.assertEqual(gpl[("GPL ", c)], script)
+            self.assertTrue(all(struct.unpack_from("<HH", gpl[k], struct.unpack_from("<I", gpl[k], 6)[0])
+                                == (ravportraits.WIDTH, ravportraits.HEIGHT) for k in faces))
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
             own = gff.read_gff(open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read())
             types = objs[ravager.TYPES_CHUNK]
-            mended = bytearray(ravager.ranged_table(ravager.weighted_table(own[ravager.TYPES_CHUNK])))  # (weighed, the double spear's range 1; the daggers the air clerics' too)
+            mended = bytearray(ravager.materialled_table(ravager.ranged_table(ravager.weighted_table(
+                own[ravager.TYPES_CHUNK]))))  # (weighed, the double spear's range 1, the club's, bow's and sling's
+            # material SL's; the daggers the air clerics' too)
             for t in ravager.AIR_DAGGER_TYPES:
                 mended[t * ravager.TYPE_SIZE + ravager.TYPE_CLASSES] |= ravager.AIR_CLERIC_BIT
             self.assertEqual(types[:len(own[ravager.TYPES_CHUNK])], bytes(mended))
-            self.assertEqual(len(types), (ravager.GAME_TYPES + ravager.MOD_TYPES) * ravager.TYPE_SIZE)
+            self.assertEqual(len(types), (ravager.EXTRA_FIRST + len(ravager.SL_EXTRA_TYPES)) * ravager.TYPE_SIZE)
             sheets = {k for k in own if k[0] == "RDFF" and any(
                 r.kind == ravager.SHEET_KIND for r in dataitems.records(own[k])[0])}
             self.assertEqual(len(sheets), 352)  # (the monsters, each with a sheet: made 48h, zeros added)
@@ -544,9 +598,26 @@ class GameFileTests(unittest.TestCase):
             self.assertEqual({k for k in own if own[k] != objs[k] and k[0] != "GFFI"},
                              {ravager.TYPES_CHUNK} | sheets | shine | set(weighed)
                              | {k for k in figures if k in own})  # (GFFI: the index)
-            rgn = gff.read_gff(open(os.path.join(d, "RGN03A2.GFF"), "rb").read())  # (the dining room's copy)
-            rgn_own = gff.read_gff(open(os.path.join(WOTR, "RGN03A.GFF"), "rb").read())
-            self.assertEqual({k for k in rgn_own if rgn_own[k] != rgn[k] and k[0] != "GFFI"}, {("ETAB", 58)})
+            for name, copy in ravfigures.REGIONS.items():
+                with open(os.path.join(d, copy), "rb") as f:
+                    region = gff.read_gff(f.read())
+                with open(os.path.join(WOTR, name), "rb") as f:
+                    original = gff.read_gff(f.read())
+                key = ("ETAB", int(name[3:6], 16))
+                self.assertEqual({k for k in original if original[k] != region[k] and k[0] != "GFFI"}, {key})
+                before = ravfigures.load()["files"].get(name, {}).get(key, original[key])
+                changes = []
+                for old, new in zip(struct.iter_unpack("<HHBBh", before), struct.iter_unpack("<HHBBh", region[key])):
+                    if old != new:
+                        x, y, height, flags, obj = old
+                        self.assertEqual(new, (x, new[1], height, flags, obj))
+                        changes.append((obj, x, y, new[1]))
+                self.assertEqual(len(region[key]), len(before))
+                expected = [move for region, _, moves in ravfigures.ASSEMBLIES if region == name for move in moves]
+                self.assertCountEqual(changes, expected)
+            ravager.write_regions(WOTR, d, {ravfigures.SKIP})
+            for copy in ravfigures.REGIONS.values():
+                self.assertFalse(os.path.exists(os.path.join(d, copy)))
             for k, chunk in weighed.items():  # (every copy of a type now ALL 4's record of it)
                 for r in dataitems.records(objs[k])[0]:
                     if r.kind == ravager.TYPE_KIND_RECORD and r.number < ravager.GAME_TYPES:
@@ -575,7 +646,7 @@ class GameFileTests(unittest.TestCase):
 
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES))
+        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES) | {ravportraits.SKIP})
         self.assertEqual((same, done), (data, []))
 
     def test_manual_check_decodes(self):

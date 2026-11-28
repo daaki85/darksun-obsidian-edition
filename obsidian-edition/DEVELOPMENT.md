@@ -127,7 +127,7 @@ The steps are told in full in [How the dice log works](DEVELOPMENT-INTERNALS.md#
 | `layouts/` | the game's memory layout (`shattered_lands.json`), for the Loader's window and Memory tools |
 | `tests/` | the unit tests, and `make_fake_party.py` for [practising without the game](DEVELOPMENT-INTERNALS.md#practising-without-the-game) (not in the release zip) |
 | `docs/` | the screenshots the documentation shows; `docs/items/`, the item icons (`docicons.py`), and `docs/creatures/`, the creatures' figures (`doccreatures.py`) ([Generated pages](#generated-pages)) |
-| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
+| `*.bat` | what players double-click: `Start Obsidian Edition.bat` runs `view`, `Start Game with Dice Log.bat` `launch`, `Play Dark Sun (in-game rolls).bat` `play` (no console), `Play Wake of the Ravager (in-game rolls).bat` `play --ravager`, `Play Wake of the Ravager.bat` `launch --ravager`, `Show Save.bat` `save` on the file dropped on it |
 | `README.md`, `PLAYER-GUIDE.md`, `FEATURES.md`, `KITS.md`, `WEAPON-SPECS.md`, `ITEMS.md`, `PEOPLE.md`, `CREATURES.md`, `GAME-BUGS.md`, `DICE-LOG.md`, `HOW-THE-GAME-WORKS.md` | the player's pages (made into the manual's web pages; `CREATURES.md` by `doccreatures.py`) |
 | `DEVELOPMENT*.md` | these pages (not in the release zip) |
 | `manual/` | the manual: the player's pages and the patch notes as web pages, made by `manual.py` ([Build](#build)); the Loader's **Help** opens `manual/index.html` |
@@ -146,7 +146,7 @@ nasm -f bin -I dos/ -o dos/DSCLOG2.EXE dos/dsclog2.asm
 ```
 
 Both include `dos/save_bands.inc` (the saving throws' code and tables), hence `-I dos/`. The build fails if DSCLOG outgrows its 64 KB segment or the room it has in upper memory ([Room
-and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGve` now:
+and memory](DEVELOPMENT-INTERNALS.md#room-and-memory)). The header's signature (`DSCLOGvf` now:
 after Z, lowercase) goes up whenever DSCLOG and the Loader must change together (`HDR_SIG` in
 `dsloader/dicelog.py`), so a Loader never talks to an older DSCLOG.
 
@@ -190,7 +190,7 @@ straight from the unzipped folder.
 Two more are made from the game's own data, so they need its folder (the one holding `DSUN.EXE`):
 
 ```
-python -m dsloader.docicons GAME_FOLDER       # docs/items/*.png, the icons in ITEMS.md
+python -m dsloader.docicons GAME_FOLDER [--ravager WOTR_FOLDER]  # docs/items/*.png, the icons in ITEMS.md
 python -m dsloader.doccreatures GAME_FOLDER   # CREATURES.md and docs/creatures/*.png
 ```
 
