@@ -25,6 +25,8 @@ After exporting the outfit archives, run `PYTHONPATH=prototypes:obsidian-edition
 
 For Wake of the Ravager, preview the same frames through the sequel's existing `ravdress.Colours` mapping and the steady entries from its region palettes. Select ridges and shadows that stay distinct after both mappings. Green and light blue can converge on teal in the sequel. Use cloth value, cut and trim to keep the classes legible there. Keep the sequel's palette intact. [Fighter leather](steady-leather.png) · [Linen and teal](steady-cloth.png) · [All 29 poses in both palettes](steady-materials.gif)
 
+Follow the human Priest’s lit fold through the waist in rear walk 08. On the narrower elf figures, check the leather edge where the jerkin turns above the belt and the crease where the linen swings toward the foot. A Psionicist’s broad lit panel takes a deeper teal while a thin multiclass sash can keep its brighter accent. [Second material pass beside the retail and party figures](round-two-materials.png)
+
 ## First fitting review
 
 Use the exposed torso, shoulder armor and robe to check the new figure before borrowing their shapes for other outfits. Start with front idle, a rear step, the widest profile stride, a strike with the head lowered and a drawn bow. Then run the same comparison through every native pose, including recoil and fall.
