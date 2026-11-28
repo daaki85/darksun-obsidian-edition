@@ -910,6 +910,10 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("inventory_figure_load", 0x7B831, bytes.fromhex("66c746fc00000000"), _site(252, 8)),
     Patch("creation_portrait", 0x6B04F, bytes.fromhex("268b4710051500"), _site(253, 7)),
     Patch("creation_portrait_open", 0x6DBC4, bytes.fromhex("268b4710051500"), _site(253, 7)),
+    # ... and the party column's small figures (SL's small_figure, DSCLOG's SMALL_FIGURE): their preloaded picture's
+    # number ("mov ax,[es:bx+10h] / add ax,23h", 6F7EAh, SL's 6797Ah): DSCLOG2's SMALL_FIG (site 254) names the
+    # Loader's frame in the class outfit (ravdress.SMALL_BASE in OBJEX2.GFF), which INV_LOAD reads.
+    Patch("small_figure", 0x6F7EA, bytes.fromhex("268b4710052300"), _site(254, 7)),
     # The Effects screen's lines (SL's PROBE_EF_ROWS, PROBE_EF_CLICK): the end of its routine that fills the
     # selected character's cells (8AC6Fh, SL's 7EDFAh: "pop di / pop si / leave" at 8AFA9h) and its handler for
     # them (8AB13h, SL's 7EC97h: "mov si,[bp+8]" at 8AB1Ah): DSCLOG2's EF_ROWS (site 73) lists the kits and
