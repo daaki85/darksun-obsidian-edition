@@ -256,6 +256,7 @@ schedules and diffs a log made or used.
 | [2026-11-28](2026-11-28-ravager-silt-sea-giants.md) | All twelve Silt Sea Giants furnishings, Generoe rocking at home and the village giant’s standing artwork in two native rooms |
 | [2026-11-28](2026-11-28-ravager-volcano-core-spires.md) | All 128 Volcano Core spires, the shorter DOSBox trial and the separate collapsible rocks |
 | [2026-11-28](2026-11-28-ravager-pyramid-furniture.md) | Kalak’s Pyramid, 23 lowered furnishings and both placements of the usable teleportation cabinet |
+| [2026-11-28](2026-11-28-ravager-mines1-and-under-tyr.md) | Mines 1 barrel join, six empty cots, Sicky and all listed Under Tyr furnishings |
 | [2026-11-28](2026-11-28-ravager-voice-volume.md) | The sequel's quiet speech: the game menu's SOUND EFFECT VOLUME starts at half, which the emulated mixer makes 24 dB (DOSBox-X) or 16 dB (GOG's DOSBox) under the CD music; the sequel now starts at full, Shattered Lands at 79 in DOSBox-X (as loud as GOG's at 63), the roster set to match; the volume's bytes, the menu by key, `sbmixer=false` tried and dropped |
 | [2026-11-27](2026-11-27-ravager-volcano-furniture.md) | Both Volcano levels’ furniture and 21 shelves, both torn red beds in Tyr and Volcano 1, and the southern barrel stack |
 | [2026-11-27](2026-11-27-ravager-mine-worktables-and-forge.md) | Five Mines 3 worktables, the Inquisitor’s safe, Promere’s Hammer, the soup kettle and four statues |

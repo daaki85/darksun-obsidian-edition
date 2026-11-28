@@ -48,6 +48,14 @@ The gold box marks the Mines 1 storeroom in the first two maps. In the enlarged 
 
 ![Mines 1, Forest and Volcano 1 rooms before and after with Shattered Lands references](loose-furniture.png)
 
+### Mines 1 and Under Tyr in DOSBox
+
+After the original furniture pass, three rows of floor showed through the pair of barrels in the northern room. The upper barrel now sits seven game pixels lower, restoring its overlap with the lid beneath it. The other placement of that barrel is in a group of four by the sickroom and still fits at its original position.
+
+The figure redraw already put Sicky on a 37 × 39 cot. Six neighboring empty cots still measured 37 × 54. Shortening their picture from the pillow down to the original foot line brings the four in Mines 1 and the two Under Tyr into proportion with the patients. The separate two-piece red bed retains its joined blanket.
+
+[Mines 1 whole maps](mines1-revised-whole-maps.png) · [Original, previous and revised furniture](mines1-barrels-and-cots.png) · [Under Tyr map and rooms](under-tyr-cots-and-storage.png) · [Placement checks](mines1-under-tyr-placements.csv) · [Playtest](../../playtest/logs/2026-11-28-ravager-mines1-and-under-tyr.md)
+
 The three round Volcano 2 floor displays (3527–3529) keep their depth against the paving.
 
 ## Furniture assembled from separate objects
@@ -337,7 +345,7 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Nine regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128) and Silt Sea Giants (12). Eleven regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Eleven regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Pyramid (25), the Yuan-ti tunnels (11), El’s Temple (9), Mines 1 (23), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128), Silt Sea Giants (12) and Under Tyr (26). Nine regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -347,7 +355,7 @@ The scan covered all 20 shipped region files. Nine regions have in-game coverage
 | 034 Pyramid | 152 | 0 | 23 | All 25 inventoried placements checked in DOSBox. The teleportation cabinet opens on first use and takes the party to the Garden on the second |
 | 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
 | 037 Temple | 62 | 0 | 6 | All nine listed placements checked in DOSBox, including the six braziers, both occupied furnishings and their vacated states, and the coiled fixture beside the prisoner |
-| 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
+| 038 Mines 1 | 108 | 0 | 12 | All 23 placements checked in DOSBox. The northern barrels touch again. Four empty cots now match Sicky’s figure redraw |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
 | 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
@@ -359,7 +367,7 @@ The scan covered all 20 shipped region files. Nine regions have in-game coverage
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |
 | 043 Crypt | 175 | 0 | 11 | Check barracks furniture, the key beneath Jumah’s table and Kovar’s shackles in play |
 | 044 Cosmos | 86 | 0 | 0 | Check the elemental gates and artifact placement on the ritual statues in play |
-| 045 Under Tyr | 135 | 0 | 15 | Check loose stools and crates beside the patient cots in-game |
+| 045 Under Tyr | 135 | 0 | 15 | All 26 placements checked in DOSBox, including both empty cots, all four occupied beds and the storage piles |
 | 0FF Limbo | 690 | 0 | 0 | Mosaic busts traced to play. Trace other fixtures and actors including Snaggle |
 
 The [picture inventory](inventory.csv) records all eight furniture passes, the redrawn pieces examined and candidates for subsequent passes. It includes all placements found for each listed picture and catalogue package names where applicable. Candidate families are provisional. Compare all orientations and raised or stacked objects as a set before accepting a change. An area is complete when its furniture has a recorded visual decision and the affected rooms and scripted states pass the in-game check. The project is still open against that standard.
