@@ -503,3 +503,17 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
   inventory) or 70,57 / 120,57 (USE).
 
 The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.
+
+## The own party's hands and Effects lines (2026-11-28, logs/2026-11-28-ravager-own-party-hands.md)
+
+- **The starting gear's routine (6EF49h) is an if/else chain** on the sheet's class flags (+10h of the 42h record in
+  that routine's read): a thri-kreen (race 8) first, then fighter 20h, druid 10h, gladiator 40h, ranger 200h, cleric
+  0Fh, thief 400h, psionicist 100h, preserver 80h, else entries 7-8. A multiclass gets one class's set only.
+- **The sequel's own party's gear at START GAME**: only Terrannus starts with a shield in the right hand (slot 3);
+  `ravitems.py 0..3` in Tyr, before any pass, shows it. Shattered Lands' own party (`carried.py NAME` after START GAME)
+  has every weapon in the right hand.
+- **The Effects screen in the ambush**: the top-left icon (22,17) opens USE for the member whose turn it is (a clicked
+  portrait: ONLY ACTIVE CHAR CAN CAST); EFFECTS 120,171; Computer Control on that screen's lower small icons 46,53 /
+  98,53 / 46,110 / 98,110 ("COMPUTER CONTROL IS ON" in the bar).
+- **A fresh container** (2026-11-28) had nasm and Xvfb but no dosbox, xdotool or innoextract: `apt-get install dosbox
+  xdotool innoextract imagemagick poppler-utils`, then `setup_game.sh` and `setup_ravager.sh` (a few minutes).

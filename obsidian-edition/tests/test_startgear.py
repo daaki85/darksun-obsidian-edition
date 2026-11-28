@@ -86,6 +86,32 @@ class FillTests(FinishNewTests):
         self.assertIn("starts with more gear", out[0])
         self.assertEqual(startgear.fill(self.gd), [])  # (once)
 
+    def place(self, gd, member, item, slot):  # (pickpocket.place: the harness has no lists, the slot byte only)
+        self.mem[self.ITEMS + item * game.ITEM_SIZE + game.ITEM_SLOT] = slot
+        return True
+
+    def test_the_shield_leaves_the_weapon_hand(self):
+        """weapon_hand (2026-11-28: Wake of the Ravager's Terrannus started with his shield in the right hand, his
+        long sword in the left): the two change hands; a shield alone in the right goes to the left; a weapon
+        alone in the left to the right; a weapon in the right is left as it is."""
+        SHIELD, SWORD = 4, weaponchoice.PLAIN[KIND("long sword")][0]
+        self.mem[self.type_at(SHIELD)] = restrict.SHIELD
+        right, left = game.WEAPON_HANDS
+        with mock.patch("dsloader.pickpocket.place", self.place), \
+                mock.patch("dsloader.pickpocket.free_cell", lambda *a: 30):
+            for given, want in ((((SHIELD, right), (SWORD, left)), [(SHIELD, left), (SWORD, right)]),
+                                (((SHIELD, right),), [(SHIELD, left)]),
+                                (((SWORD, left),), [(SWORD, right)]),
+                                (((SWORD, right), (SHIELD, left)), [(SWORD, right), (SHIELD, left)])):
+                with self.subTest(given=given):
+                    self.items = 0
+                    self.character((9, 0, 0), race=game.HUMAN)
+                    for t, slot in given:
+                        self.give(t, 0x01, slot)
+                    out = startgear.weapon_hand(self.gd, 0)
+                    self.assertEqual([self.item(n) for n in range(self.items)], want)
+                    self.assertEqual(bool(out), given[0][1] != right or given[0][0] == SHIELD)
+
     def test_a_cleric_takes_its_club_in_hand(self):
         self.character((2, 0, 0), race=game.HUMAN)
         self.give(CLUB, 0x11, 20)
