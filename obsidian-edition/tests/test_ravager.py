@@ -34,7 +34,7 @@ class TableTests(unittest.TestCase):
     def test_patches_reuse_sl_bytes_but_their_own(self):
         """A patch named after one of Shattered Lands' has its bytes, at the sequel's offset; only the
         path (the sequel's DS address), rand() (its seed's address), the saving throw's compare (its
-        branch the other way), the AC function's end (rewritten) and Share Strength's loop (its effect
+        branch the other way), the AC function's end (rewritten), the least scores (the sequel's sheet and table) and Share Strength's loop (its effect
         records' fields and live count elsewhere) differ; the sequel's own patches (none of SL's name) count
         as differing."""
         sl = {p.name: p for p in gamepatch.PATCHES}
@@ -42,7 +42,9 @@ class TableTests(unittest.TestCase):
         for p in ravager.PATCHES:
             if p.name not in sl or (p.original, p.replacement) != (sl[p.name].original, sl[p.name].replacement):
                 own.add(p.name)
-        self.assertEqual(own, {"path", "save_signed", "rand", "ac", "power_end_live", "power_end_handle",
+        self.assertEqual(own, {"path", "save_signed", "rand", "ac", "save_natural", "save_sum", "save_nat",
+                               "ammo_cap", "least_scores", "ammo_turn", "ammo_okay_1", "ammo_okay_2", "ammo_okay_3",
+                               *(f"new_okay_{at:x}" for at, _ in ravager.NEW_AS_OKAY), "power_end_live", "power_end_handle",
                                "power_end_owner", "power_end_count",  # (Share Strength's: the sequel's fields)
                                "pic_full", "pic_place", "pic_count", "pic_fail", "arrows_close", "arrows_lit_on", "arrows_lit_off", "stealth", "bless_from_cell", "absorb_no_strength", "absorb_end", "rest_cures_first", "npp_save", "acid_rounds", "acid_burn", "acid_once", "acid_use", "acid_round", "ns_image", "ns_blow", "use", "window", "window_fail", "item_box", "view", "look", "inventory", "spell_cast", "scroll", "tick", "panel_flip", "pointer", "centre", "follow_1", "follow_2", "follow_3", "camera_still", "party_spread", "party_gather", "pace_pass", "pace_draw",
                                "cr_thac0_hp", "cr_thac0_hp2", "cr_thac0_psp", "cr_thac0_con", "flip_wait", "save_page", "save_page_open", "greq_save", "greq_save_2", "hp_best", "helm_ac", "helm_ac_2", "box_ac", "held_hit", "held_damage", "two_weapons", "off_hand", "roll_max_hp",

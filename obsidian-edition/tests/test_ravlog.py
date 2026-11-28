@@ -1136,12 +1136,15 @@ class BlastSaveCreationTests(unittest.TestCase):
         self.assertEqual(out[0], "Character creation, STR 16: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16")
         self.assertIn("DEX 17: best of four 4d4 (12, 11, 10, 9) = 12, +4, +1 ", out[1])
         self.assertEqual(out[-1], "Character creation: the six scores add up to 78")
-        g.mem[creature + game.CREATURE_ABILITIES] = 17  # (the sequel's least for a prime requisite: raised)
+        # (a gladiator: the manual's least STR 13, as the Loader's least_scores has the sequel raise it)
+        g.mem[sheet + game.SHEET_CLASSES] = 4
+        g.mem[self.HDR + 282:self.HDR + 286] = bytes((5, 4, 4, 4))
+        g.mem[creature + game.CREATURE_ABILITIES] = 13
         struct.pack_into("<H", g.mem, self.HDR + 280, 48)
         log._creation_pass(2.0)
         out = log._creation_pass(3.0)
-        self.assertEqual(out[0], "Character creation, STR 17: best of four 4d4 (12, 9, 8, 7) = 12, +4 = 16, "
-                                 "raised to 17 (the classes' least)")
+        self.assertEqual(out[0], "Character creation, STR 13: best of four 4d4 (5, 4, 4, 4) = 5, +4 = 9, "
+                                 "raised to 13 (the Gladiator's minimum)")
 
 
 class StartGearTests(unittest.TestCase):

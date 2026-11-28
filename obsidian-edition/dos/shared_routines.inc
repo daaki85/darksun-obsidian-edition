@@ -1682,3 +1682,21 @@ age_rand:
         mov [cs:age_seed], ax
         ret
 %endmacro
+
+%macro SHARED_save_nat 0
+save_nat:
+        add [bp - 2], al
+        cmp byte [cs:sv_nat], 0
+        je .out
+        mov byte [cs:sv_nat], 0
+        push ax
+        mov al, [bp - 2]
+        cmp al, SAVE_CANT
+        jl .keep                        ; (can't save: a natural 20 doesn't either)
+        cmp al, [bp - 1]
+        jge .keep
+        mov al, [bp - 1]
+        mov [bp - 2], al
+.keep:  pop ax
+.out:   iret
+%endmacro

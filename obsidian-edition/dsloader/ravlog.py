@@ -27,7 +27,7 @@ from typing import Dict, Iterator, List, Optional, Tuple
 
 from . import aging, combatlog, savemend, defilerscrolls, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, locks, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
-    gff, shadows, sizes, spellarrows, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
+    gff, shadows, sizes, spellarrows, squares, stealth, stuckwalk, pickpocket, targeting, textlog, usable, weaponchoice
 
 HDR_SIG = b"DSCLOGR1"
 
@@ -58,6 +58,10 @@ EFFECTS: Dict[str, object] = {
     "REFLECT_SPELL": ravspells.REFLECT, "SPOOK_SPELL": ravspells.SPOOK, "FRIENDS_SPELL": ravspells.FRIENDS,
     "NEW_SPELLS": dict(ravspells.SPELLS), "NEW_SPELL_LEVELS": dict(ravspells.LEVELS),
     "INITIATIVE_EFFECTS": {10: -2, 42: 2, 91: -2},  # Blind, Hasted, Slowed
+    # the attack's speed (628h:5Ch, 85899h: its halves doubled for 4, halved for 1): Paralyzed 69, and 66 and
+    # 56, a speed of their own (0, 5, 6) that changes nothing; then Slowed 91 or Impeded 50 half, before
+    # Hasted 42 or 51 twice; Slowed 52 half (game.SPEED_EFFECTS; DSCLOG2's SPEED_HALVES the same)
+    "SPEED_EFFECTS": (((69, 66, 56), None), ((91, 50), "/2"), ((42, 51), "x2"), ((52,), "/2")),
     "HALVING_EFFECTS": ((77, 0x02), (73, 0x04), (78, 0x80), (38, 0x06)),  # Prot Fire, Cold, Lightning; Fire Shield
     "HIT_EFFECTS": ((9, 1), (22, -1), (91, -4), (106, 1)),  # Blessed, Cursed, Slowed, Weapon Grafted
     # the effects that rule thief skills out or make one certain (game.THIEF_BLOCKED, THIEF_CERTAIN): SL's
@@ -464,12 +468,15 @@ def rav_book(spell: int, price: int) -> bytes:
 def rav_items() -> Dict[object, Dict[str, object]]:
     """The modules' names rebound for looting and selling in the sequel (apply_layout), and for fuller
     starting gear (startgear's items: the sequel's)."""
-    from . import defilerscrolls, icons, itemgate, itemwatch, locks, loot, pickpocket, ring, startgear
+    from . import defilerscrolls, icons, itemgate, itemwatch, locks, loot, pickpocket, ring, startgear, stuckwalk
     words = {"FREE_THINGS": RAV_FREE_THINGS, "THINGS_USED": RAV_THINGS_USED, "FREE_ITEMS": RAV_FREE_ITEMS}
     return {ring: dict(words), itemgate: dict(words),
             # (a lock failed: the map things' object numbers and places, SL's 6694h + 1Ah and 669Dh, 32 bytes
             # apart: ravds' 66AEh -> 67D6h, and RAV_POSITIONS)
             locks: {"THING_OBJECT": RAV_THING_OBJECT, "POSITIONS": RAV_POSITIONS, "THING_SIZE": RAV_POSITION_SIZE},
+            # (a scripted walk a save left standing: the sequel's table of creatures' own scripts, 3F49:08A7h)
+            stuckwalk: {"TABLE_SEG": RAV_WALK_SEG, "TABLE_OFF": RAV_WALK_OFF, "POSITIONS": RAV_POSITIONS,
+                        "POSITION_SIZE": RAV_POSITION_SIZE},
             # (picking pockets: none of Shattered Lands' people or weapons, its type and name numbers the
             # sequel's others)
             pickpocket: {"LIFTABLE_TYPES": (), "LIFTABLE_NAMES": {}, "OWN_POCKETS": (),
@@ -604,6 +611,9 @@ RAV_DEAD_STATUS = (4, 7)  # a creature's status (+14h): dying, dead (SL's 4, 5)
 # Each map object's x, y (16ths of a square), 25h bytes apart (the attack's set-up reads them for the
 # attacker SI and the target DI: 5C8B7h; SL's 669Dh, 32 apart)
 RAV_POSITIONS, RAV_POSITION_SIZE = 0x67C5, 0x25
+# The creatures' own scripts (stuckwalk's table: SL's 3972:08AAh), 13h bytes an object as SL's; the walk's
+# order (15) stored at 1E194h ("mov word es:[bx+8A7h],0Fh", SL's 1B047h)
+RAV_WALK_SEG, RAV_WALK_OFF = 0x3F49, 0x08A7
 # The game's global numbers (SL's game.NUMBERS_PTR 1356h): a far pointer at DS:15F6h to the 200 words a save
 # keeps as SAVE chunk 31 (SL's 30). The journal's head goes in the last two (journal.NUMBERS), as in SL: the
 # sequel's scripts (all 350) use 0-150 (tests/test_journal.py: RavScriptNumbersTests).
@@ -2012,27 +2022,6 @@ class RavDiceLog(dicelog.DiceLog):
         self.guest.allow(want)
         return self._blast.tick(self.game, self.tsr_hdr, now)
 
-    RAV_LEAST_MOST = 17  # (the sequel's least for a score: a class's prime requisite 17, the others 9 to 14)
-    _creation_shown: Optional[List[int]] = None
-
-    def creation_lines(self) -> List[str]:
-        """SL's, with the scores shown noted first for _ability_line."""
-        self._creation_shown = self.game.creation_abilities()
-        return super().creation_lines()
-
-    def _ability_line(self, ability: int, tries: List[int], sheet: bytes, classes: List[int]) -> Tuple[int, str]:
-        """SL's, with the sequel's own least: it keeps the game's rule (each class's prime requisite 17,
-        every other score one number a class, 9 to 14; SL's least_scores, the manual's table, isn't
-        ported), so a score shown above the roll and no more than 17 was raised to it."""
-        value, line = super()._ability_line(ability, tries, sheet, classes)
-        shown = self._creation_shown
-        if shown is not None and value < shown[ability] <= self.RAV_LEAST_MOST and "raised to" not in line:
-            value = shown[ability]
-            steps = line.split(": ", 1)[1]
-            line = f"Character creation, {dicelog.ABILITIES[ability]} {value}: {steps}, raised to {value} " \
-                   f"(the classes' least)"
-        return value, line
-
     def _creation_pass(self, now: float) -> List[str]:
         """SL's creation lines from DSCLOG2's RL_TRY (its header's +280, +282: each try's 4d4): once the
         die has been still CREATION_HP_WAIT, each ability's best of four 4d4, +4, the race's adjustment."""
@@ -2444,6 +2433,16 @@ class RavDiceLog(dicelog.DiceLog):
         finally:
             itemgate.release(gd)
 
+    def _walkers_pass(self) -> List[str]:
+        """Shattered Lands' stuck walkers (DiceLog._watches' stuckwalk): a person a saved walk left standing for
+        good set walking again, the sequel's table (rav_items) writable while it runs."""
+        gd = self.game
+        if gd is None:
+            return []
+        base = (gd.load_seg + stuckwalk.TABLE_SEG) * 16 + stuckwalk.TABLE_OFF
+        with self._writable([(base, stuckwalk.PEOPLE * stuckwalk.ENTRY)]):
+            return self._step(lambda: [stuckwalk.stopped_line(n) for n in self.walkers.check(gd)])
+
     def _psp_ability_changes(self, now: float) -> List[str]:
         """Shattered Lands' PSP and ability score lines (psp_changes, ability_changes: always read, to keep
         up), said unless a game is loading (its records half-filled), as SL's _changes."""
@@ -2609,6 +2608,7 @@ RavDiceLog.PASS = (
     _own("own_party", lambda log, now, loading: log._party_pass(), dicelog.EFFECTS),  # (its weapon specs and features)
     _take("loading"),
     _own("item_watches", lambda log, now, loading: log._item_watches_pass(), dicelog.LOADED),  # (defilers' scrolls)
+    _own("walkers", lambda log, now, loading: log._walkers_pass(), dicelog.LOADED),  # (stuckwalk: a saved walk)
     _take("mend_saves"),  # (a loaded party's saves as the game's routine puts them: savemend)
     _take("itemwatch"),  # (an item gone from the party with nothing ordinary to show for it: the item report)
     _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)

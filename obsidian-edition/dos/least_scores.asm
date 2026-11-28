@@ -5,6 +5,14 @@
 ; one prime requisite to 17 and every other score to one number a class (its table at 338h:180h,
 ; which the change of class still reads). The two "mov dx,338h" stay where the game has them
 ; (+1Eh, +42h): the overlay manager fixes up their segment as it loads the code.
+%ifndef SHEET_PTR                ; (Wake of the Ravager's copy sets these: rav_least_scores.asm)
+%define SHEET_PTR 0x119C        ; the creation sheet's far pointer
+%define CLASS_AT 0x21           ; its classes
+%define GAME_SEG 0x338          ; the game's table's segment, fixed up by the overlay manager
+%define FIX_1 0x1E              ; where the game has its two "mov dx,GAME_SEG"
+%define FIX_2 0x42
+%define SIZE 0x68               ; the game's routine's length
+%endif
 bits 16
         push bp
         mov bp, sp
@@ -17,11 +25,11 @@ bits 16
 .here:  pop si                  ; (where the code runs)
 .next:  dec bp
         js .done
-        les bx, [0x119C]
+        les bx, [SHEET_PTR]
         add bx, bp
-        times 0x1E - ($ - $$) nop
-        mov dx, 0x338           ; (the game's, kept: its segment is fixed up as the overlay loads)
-        mov al, [es:bx+0x21]    ; the class, 1-8
+        times FIX_1 - ($ - $$) nop
+        mov dx, GAME_SEG          ; (the game's, kept: its segment is fixed up as the overlay loads)
+        mov al, [es:bx+CLASS_AT] ; the class, 1-8
         cbw
         imul bx, ax, 3
         mov eax, [cs:bx+si+table-3-.here]
@@ -36,8 +44,8 @@ bits 16
         pop si
         pop bp
         retf
-        times 0x42 - ($ - $$) nop
-        mov dx, 0x338           ; (the game's second, kept; never run)
+        times FIX_2 - ($ - $$) nop
+        mov dx, GAME_SEG          ; (the game's second, kept; never run)
 table:                          ; classes 1-8, three bytes each: six nibbles (STR first), the least (0 none)
 %include "least_scores_table.inc"
-        times 0x68 - ($ - $$) nop
+        times SIZE - ($ - $$) nop

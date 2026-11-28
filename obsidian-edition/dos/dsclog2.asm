@@ -5095,6 +5095,11 @@ site_table:
         dw poison_hit                       ; 214 SITE_POISON_HIT (5D20Dh: a weapon hit's "does it cast": a Poisoner's poison)
         dw arrow_plus                       ; 215 SITE_ARROW_PLUS (5D456h: the ammunition's plus kept: a Spellarcher's spell arrows')
         dw page_open                        ; 216 SITE_PAGE_OPEN (7D691h: the save or load window drawn as it opens: its page's label)
+        dw ammo_cap                         ; 217 SITE_AMMO_CAP (5D031h: a shot's attacks cut to the arrows left: the round's kept)
+        dw ammo_turn                        ; 218 SITE_AMMO_TURN (5D32Ch: the attacks spent: a party member's turn kept with shots due)
+        dw ammo_okay                        ; 219 SITE_AMMO_OKAY (5CA92h, 5CAF7h, 5CB64h: the attack command's target Okay: fallen for it)
+        dw save_sum                         ; 220 SITE_SAVE_SUM (66E86h: a save's d20 and modifiers added: kept in its byte)
+        dw save_nat                         ; 221 SITE_SAVE_NAT (66EA3h: a natural 20 saves unless the save can't be made)
         times 230 - ($ - site_table) / 2 dw site_none
         dw camera_walk                      ; 230 SITE_CAMERA_WALK (200B7h: a fight's figure stepped: the view kept while it is on screen)
         dw party_load                       ; 231 SITE_PARTY_LOAD (70DA6h: a game loaded with the party in one figure: spread out)
@@ -8731,12 +8736,14 @@ thief_adnd:
         push bx
         push cx
         push si
+        push fs                 ; (THIEF_TABLE and DEX_TABLE: the tail's)
+        call tail_fs
         cmp si, THIEF_LEVELS
         jbe .level
         mov si, THIEF_LEVELS
 .level: imul ax, bx, THIEF_LEVELS
         add si, ax
-        movzx ax, byte [cs:thief_table + si - 1]
+        movzx ax, byte [fs:thief_table + si - 1]
         cmp bx, 5
         jae .out
         cmp cx, 9
@@ -8747,12 +8754,14 @@ thief_adnd:
         mov cx, 22
 .high:  imul cx, cx, 5
         add bx, cx
-        movsx cx, byte [cs:dex_table + bx - 9 * 5]
+        movsx cx, byte [fs:dex_table + bx - 9 * 5]
         add ax, cx
-.out:   pop si
+.out:   pop fs
+        pop si
         pop cx
         pop bx
         ret
+section tail                    ; (the tables in the tail: room in the segment, 2026-11-28)
 ; AD&D's average thief skills, levels 1-17, a row per skill (game.AD_D_THIEF: the owner's table, 2026-11-25,
 ; the same as SL's to 13th; flat past 17th)
 thief_table:
@@ -8778,6 +8787,7 @@ dex_table:
         db 20, 25, 12, 20, 17
         db 25, 27, 15, 25, 20
         db 27, 30, 17, 30, 22
+section image
 ; STAB_FIRST (SL's, called from MISSILE_REAR: SI the attacker, DS the game's): with the rule, only a party
 ; member's first attack of a round is a backstab, as in AD&D. The game's own test (5D10Ch) lets two through
 ; and the round's count STAB_TIMES reads ([BP-16h] in the hit routine) leaves the off-hand swing out (two
@@ -11737,8 +11747,9 @@ die_sizes_end:
 ; pushes the damage bonus, the dice's sides and their count, then the attacks a round (halves) it reads
 ; for the line's routine (7B1D9h): those three are under the site's return frame (+6 count, +8 sides, +0Ah
 ; bonus from SP at entry). The kits' as the attack has them: KIT_MELEE's damage and a kit's expertise
-; (DAM_KIT_MELEE, DAM_EXPERT). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
-; own, 628h:5Ch, not SL's effects).
+; (DAM_KIT_MELEE, DAM_EXPERT), and last Hasted and Slowed as the attack has them (FRAME_SPEED, SPEED_HALVES:
+; the sequel's speed routine's effects). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS,
+; not ported).
 ; DAM_LINE (site 70 at 7B19Eh, "mov al,es:[bx+24h]", SL's 72A77h): the melee branch, ES:BX the sheet; AL
 ; the attacks a round (the game's "mov ah,0" follows).
 dam_line:
@@ -11772,6 +11783,7 @@ dam_line:
         push ax
         movzx ax, al
         call dam_hand
+        call frame_speed        ; (Hasted twice, Slowed half: the game's attack's last step)
         mov [cs:dam_halves], al
         pop ax
         mov al, [cs:dam_halves]
@@ -11823,6 +11835,55 @@ dam_hand:
 .out:   pop es
         pop bx
         ret
+; FRAME_SPEED (SL's): AX the attacks a round (halves) for the creature the line routine's [BP-6] points at
+; (its record, far; 0 for none) as SPEED_HALVES gives them. DS the game's; others kept.
+frame_speed:
+        cmp dword [bp - 6], 0
+        je .ret
+        push bx
+        push dx
+        push ax
+        mov ax, [bp - 6]
+        sub ax, [CREATURES_PTR]
+        xor dx, dx
+        mov bx, CREATURE_SIZE
+        div bx
+        mov dx, ax              ; the creature (a party member's combatant number is its own)
+        pop ax
+        call speed_halves
+        pop dx
+        pop bx
+.ret:   ret
+; SPEED_HALVES: AX the attacks a round (halves) of thing DX as the attack has them after all the rest
+; (5CF93h: the speed routine 628h:5Ch, 85899h, its 4 doubling them, its 1 halving them), the first of
+; SPEED_TABLE's effects it has deciding: Paralyzed (69) and the effects 66 and 56 give speeds that change
+; nothing, then Slowed (91) or Impeded (50) half, Hasted (42, 51) twice, the other Slowed (52) half (ravlog's
+; SPEED_EFFECTS). DS the game's; others kept.
+speed_halves:
+        push bx
+        push cx
+        push si
+        mov bx, ax
+        mov si, speed_table
+.next:  mov cx, [cs:si]         ; CL the effect, CH what it does: 0 nothing, 1 half, 2 twice
+        add si, 2
+        cmp cl, 0xFF
+        je .out
+        mov ax, dx
+        call has_effect
+        jne .next
+        cmp ch, 1
+        jb .out
+        ja .twice
+        shr bx, 1
+        jmp short .out
+.twice: shl bx, 1
+.out:   mov ax, bx
+        pop si
+        pop cx
+        pop bx
+        ret
+speed_table db 69, 0, 66, 0, 56, 0, 91, 1, 50, 1, 42, 2, 51, 2, 52, 1, 0xFF, 0
 dam_halves db 0
 dam_count  dw 0                 ; (the DAM lines made so, for a look in play)
 ; DAM_KIT_MELEE: AX what the kits of sheet ES:BX add to damage with item type SI on a DAM line, as the
@@ -11864,7 +11925,7 @@ missile_line:
         mov al, 2
 .ret:   iret
 .held:  test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
+        jz .speed
         push bp
         mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
         push bx
@@ -11892,6 +11953,8 @@ missile_line:
         pop dx
         pop bx
         pop bp
+.speed: movzx ax, al
+        call frame_speed        ; (Hasted twice, Slowed half, whatever the rules: the attack's last step)
         iret
 ; VIEW_DAM (site 72 at 6CAC9h, "mov [bp-0Eh],dx", SL's 64EB6h PROBE_VIEW_DAM): View Character's line, DX the
 ; damage bonus it stores; its [BP-6] the attacks a round (halves, the sheet's +24h), [BP-2] the dice's
@@ -11959,6 +12022,13 @@ view_dam:
         call next_die
         mov [bp - 4], ax
 .done:  call view_material      ; (a weak material's damage, as the game's attack and the inventory's line have it)
+        mov ax, ds              ; (Hasted twice, Slowed half, as the attack: whatever the rules, a missile
+        add ax, USE_WHO_SEG     ;  weapon too)
+        mov es, ax
+        mov dx, [es:USE_WHO_OFF]
+        mov ax, [bp - 6]
+        call speed_halves
+        mov [bp - 6], ax
         inc word [cs:dam_count]
 .out:   pop es
         popa
@@ -26620,6 +26690,96 @@ ef_stats times 4 db 0, EC_NO_AC, EC_NO_AC, EC_NO_AC   ; (EF_STATS: the Loader's,
 section tailz
 ec_text times 48 db 0                   ; (EF_CHARGES' line: the name, then " (255 charges)" at most)
 section image
+
+; THE QUIVER'S LAST ARROW (always on: SL's AMMO_CAP, AMMO_TURN and AMMO_OKAY, a fix of the game's own; the
+; sequel's weapon attack routine, 5CF??h, is SL's 5883Ah with the round's attacks in [BP-0Ah], SL's [BP-8]).
+; The routine cuts a shot's attacks to the arrows (or stones) left, "Out of ammo" with none, and once its
+; attacks are made marks the attacker's attacks for the round spent (selector 308h +184h 63h at 5D339h, "cmp
+; ax,[bp-0Ah] / jl" at 5D32Ch), which ends the turn: so a party member whose quiver ran dry lost the turn with
+; shots still due, and could ready no more arrows for them.
+; - AMMO_CAP (site 217): "mov ax,[bp-8] / mov [bp-0Ah],ax" (5D031h; 6 bytes: the cut, [BP-8] the arrows),
+;   the round's attacks before it kept (AMMO_REAL), then cut as before, so no shot is made without an arrow.
+; - AMMO_TURN (site 218): "cmp ax,[bp-0Ah]" (5D32Ch; 3 bytes; the "jl" after it kept), the attacks made
+;   against the round's: for a party member (the attacker, [BP+0Eh], 0-3) whose shots were cut, against the
+;   round's attacks before the cut, so the turn stays its own while attacks are left (AMMO_OUT that member);
+;   for the others, and every attack not cut, against [BP-0Ah] as the game has it.
+; - AMMO_OKAY (site 219): "cmp byte es:[bx+14h],1" (5CA92h, 5CAF7h, 5CB64h; 5 bytes each, their jumps NEW
+;   AS OKAY's jbe/ja), the attack command's (SL's 58019h) tests of its target still Okay after the attacks:
+;   Okay, the command ends the turn. For the AMMO_OUT member (the command's attacker, [BP-0Eh]) the target
+;   answers as fallen, so the turn goes on as after a kill (arrows readied from the pack, the shots left
+;   made, or a walk). The target itself is as it was. Others: the game's compare.
+; Each keeps every register; AMMO_TURN's and AMMO_OKAY's flags are their compare's (RETF 2).
+ammo_cap:
+        push word [bp - 0x0A]
+        pop word [cs:ammo_real]
+        mov ax, [bp - 8]
+        mov [bp - 0x0A], ax
+        iret
+ammo_turn:
+        push bx
+        mov bx, -1
+        xchg bx, [cs:ammo_real]         ; (one shot's: never the next attack's)
+        mov word [cs:ammo_out], -1
+        cmp bx, -1
+        je .plain
+        cmp word [bp + 0x0E], 3
+        ja .plain                       ; (not a party member: the game's way)
+        cmp ax, bx
+        jge .cmp                        ; (the round spent)
+        push word [bp + 0x0E]
+        pop word [cs:ammo_out]          ; (cut, with attacks left: AMMO_OKAY's)
+        jmp short .cmp
+.plain: mov bx, [bp - 0x0A]
+.cmp:   cmp ax, bx
+        pop bx
+        retf 2
+ammo_okay:
+        push ax
+        mov ax, [bp - 0x0E]
+        cmp ax, [cs:ammo_out]
+        jne .game
+        mov al, 2                       ; (fallen, to the tests: above Okay)
+        cmp al, 1
+        pop ax
+        retf 2
+.game:  pop ax
+        cmp byte [es:bx + 0x14], 1
+        retf 2
+ammo_real dw -1                         ; (AMMO_CAP's: the round's attacks before the cut; -1 none)
+ammo_out  dw -1                         ; (AMMO_TURN's: the party member whose shots were cut, attacks left)
+
+; A NATURAL 20 AND "CAN'T SAVE" (always on: SL's SAVE_SUM, gamepatch "save_natural"): the saving throw (the
+; sequel's 66D??h, SL's 79A71h, the same code) took a natural 20 as saved before it added the modifiers
+; (66E4Ah: its "jnz" made "jmp", so it goes on with them), so a creature that can't save (the modifiers'
+; -100: Chaos's, Cloudkill's, Scare's below 6th level, Color Spray's) saved on a 20.
+; - SAVE_SUM (site 220): "mov dl,[bp-2] / add dl,al / mov [bp-2],dl" (66E86h; 8 bytes: [BP-2] the d20, AL
+;   the modifiers): the sum, kept between -SAVE_MOST and SAVE_MOST so that it stays in its byte with the
+;   bonus that follows (66EA3h: -8 to +7), DL it as the game's; SV_NAT whether the d20 was a natural 20.
+; - SAVE_NAT (site 221): that bonus's "add [bp-2],al" (66EA3h; 3 bytes): after it, a natural 20 makes the
+;   total at least the number needed ([BP-1]), unless the total is under SAVE_CANT (the -100's). Then the
+;   dice log's PROBE_SAVE (the size rule's 101 there) and the signed compare (save_signed).
+SAVE_MOST equ 110
+SAVE_CANT equ -50
+save_sum:
+        push ax
+        cbw
+        mov dx, ax
+        movsx ax, byte [bp - 2]
+        cmp ax, 20                      ; (never doubled: no_double)
+        sete [cs:sv_nat]
+        add ax, dx
+        cmp ax, SAVE_MOST
+        jle .low
+        mov ax, SAVE_MOST
+.low:   cmp ax, -SAVE_MOST
+        jge .set
+        mov ax, -SAVE_MOST
+.set:   mov [bp - 2], al
+        mov dl, al
+        pop ax
+        iret
+        SHARED_save_nat
+sv_nat  db 0
 
 resident_end:
 align 16
