@@ -50,3 +50,34 @@ The figures stand where they did in the control run (`RAV_SKIP=class_outfits`), 
 shadows at their feet.
 
 ![The ambush again, with the Lab match](img/2026-11-27-ravager-outfits-fight-lab.png)
+
+## Later: the party column's small figures (branch `claude/ravager-small-figures`)
+
+The sequel's inventory draws each member's small figure with routine 6F7EAh. It works like Shattered Lands'
+6797Ah: `mov ax,[es:bx+10h] / add ax,23h` names the figure's preloaded picture, and the loader at 7B827h reads it.
+Two changes make it show the outfit:
+
+- DSCLOG2's SMALL_FIG (site 254) names BMP 7000h + the figure * 256 + a bit per class group (1-8, as the
+  inventory's class pictures: a human's one class), from the member's sheet; for the creature being made, from
+  the creation sheet.
+- INV_LOAD reads that picture from the Loader's OBJEX2.GFF, where `ravdress.small_chunks` keeps frame 0 of the
+  figure's walking picture in that outfit: 290 pictures, one per figure and class combination with an outfit,
+  made at the copy. Where there is none, the stock preloaded picture.
+
+`ravload.sh ravager-after-ambush`, then I: the column shows each member's outfit (right in the picture below;
+left the stock figures), with or without the dice log (the same pixels): Ar'Anda's elf Preserver/Psionicist/Thief
+outfit, Terrannus's cream Priest robe and Gerakis's Gladiator outfit. Thy'rokh's figure is unchanged.
+
+On the creation screen (`ravcreation.sh`), the small figure wears the class outfit when the screen opens and after
+a race's or a portrait's click, when the game draws it again, and after a class's click, when KP_CLASS draws it
+(CR_SMALL_DRAW: the backdrop put back with 0C8h:3B30h, then 5D0h:2Ah, as the race's click does).
+
+The first try at that redraw quit the game with "Math Err" after Fighter off and Thief on, from KP_CLASS and from
+CR_HP alike; the control without it did not. The cause was the moment between the two clicks, with no class: the
+key had no class bit, and no picture has that key in the GFF. SMALL_KEY now gives the stock preloaded picture
+then. Fighter off, Thief on, a class on and off, then Psionicist: each click redraws the figure (the stock one with
+no class), and the game runs on.
+
+![The creation screen after Fighter off and Thief on: the small figure hooded](img/2026-11-27-ravager-creation-thief-small.png)
+
+![The party column: plain, then dressed](img/2026-11-27-ravager-small-figures.png)
