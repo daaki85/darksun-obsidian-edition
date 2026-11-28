@@ -240,6 +240,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-furniture.md) | Ravager furniture in Tyr, Notaku’s stall and the northern chairs |
 | [2026-11-27](2026-11-27-ravager-grouped-furniture.md) | Forest dining sets, Alliance vase and Mines 3 throne, DOS region reads and built map comparisons |
 | [2026-11-27](2026-11-27-ravager-furniture-review.md) | #265 furniture in game against stock (Alliance HQ, Forest, Mines 3): the torn beds split in two, not merged; looking at any spot after a jump |
+| [2026-11-28](2026-11-28-ravager-merchants-691.md) | Tyr's redrawn shopkeepers (picture 691) staged at the pottery stall against stock; how to see a picture only Limbo objects use |
 | [2026-11-27](2026-11-27-ravager-furniture-joins.md) | Four repaired red beds, the Alliance barrels and the vase on its stacked crate, in DOSBox |
 | [2026-11-27](2026-11-27-ravager-throne-and-workshop.md) | Tantris leaves his throne, six temple braziers, and Ikibod’s workbench in Mosaic |
 | [2026-11-27](2026-11-27-ravager-mosaic-museum.md) | Mosaic museum in DOSBox, including both portable busts, Khildril, Fletch’s movable bookcase and Biblid |
