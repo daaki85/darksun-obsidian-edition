@@ -234,6 +234,7 @@ map position. Nothing is built for it yet.
   (2026-11-18).
 - Wake of the Ravager, Forest (01h): The Hero Flask holds water from the Pool of Heroism. Using one dose on Cleave revives him. The two western plants offer acorns and grapes. [Forest playtest](logs/2026-11-27-ravager-forest-plants-and-sickbeds.md) The northern tables carry jugs and cups. Their presence did not establish a refill action. [Forest dining rooms](logs/2026-11-27-ravager-forest-dining.md)
 - Wake of the Ravager, Silt Sea Giants (41h). Velden’s workshop has blue troughs beside him and the anvil. Their use as drinking water was untested. [Workshop visit](logs/2026-11-28-ravager-silt-sea-giants.md)
+- Wake of the Ravager, Volcano Core (3Fh). The orange channels at the spires are lava. No drinking-water source was identified on these visits. [Volcano Core playtest](logs/2026-11-28-ravager-volcano-core-spires.md)
 - Wake of the Ravager, Forest (01h): the Roost test jump and overhead-map check did not establish a water source (2026-11-27).
 - Wake of the Ravager, Veiled Alliance HQ (33h), Forest dining room and Mines 3 throne room: no water seen in the rooms looked at (2026-11-27, logs/2026-11-27-ravager-furniture-review.md).
 - Wake of the Ravager, El’s Temple throne aisle and Ikibod’s workroom in Mosaic. No water source identified in these two rooms during the [furniture check](logs/2026-11-27-ravager-throne-and-workshop.md).

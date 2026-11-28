@@ -132,6 +132,13 @@ On the Mines 2 map, twelve similar fixtures (2510–2521) each have three stored
 
 ![Original and redrawn miners, a mine fixture, the lava spires, and both whole maps](mines2-volcano3-review.png)
 
+### Volcano Core spires in DOSBox
+
+Keep the three recurring spires at their original heights. The central ridge is easier to follow where the dark tips overlap the orange lava. A private DOSBox trial applied the furniture scale to all 128 placements. The 60-, 63- and 54-pixel shapes became 40, 42 and 36 pixels tall. The eastern row gained more space between tips but lost much of its outline at map scale. In the Shattered Lands Lava Rift, tall rock arches and low outcrops also mark different parts of the channel.
+
+[Whole maps beside the Lava Rift](volcano-core-spires-whole-maps.png) · [Current height and shorter trial in DOSBox](volcano-core-spires-live.png) · [All 128 placements](volcano-core-placement-check.csv) · [Playtest](../../playtest/logs/2026-11-28-ravager-volcano-core-spires.md)
+
+
 ## Ruined Alliance headquarters and the Yuan-ti tunnels
 
 The seventh pass changes 14 pictures at 24 placements. Seventeen placements are in the Veiled Alliance headquarters, five in the Yuan-ti tunnels and two in Mines 3. Across all seven passes, 138 pictures have been revised at 381 placements in 15 regions. The whole maps mark the torn teal bed and the two-piece weapon display. The right column shows upper castle beds and a Gedron table at the same map scale.
@@ -324,7 +331,7 @@ Both Ravager close-up columns use the mod’s figure redraws. All five furnishin
 
 ## Region work queue
 
-The scan covered all 20 shipped region files. Seven regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48), Volcano 2 (57) and Silt Sea Giants (12). Thirteen regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Eight regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48), Volcano 2 (57), Volcano 3 (128) and Silt Sea Giants (12). Twelve regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
@@ -341,7 +348,7 @@ The scan covered all 20 shipped region files. Seven regions have in-game coverag
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
 | 03D Volcano 2 | 143 | 15 | 23 | All 57 listed placements checked in play, including 15 front-facing shelves, five side-facing counters, six silver furnishings and the repaired barrel stack |
 | 03E Volcano 1 | 133 | 6 | 19 | All 48 listed placements checked in play, including the redrawn beds, six front-facing shelves, four set tables, three side-facing counters and 13 silver furnishings |
-| 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
+| 03F Volcano 3 | 95 | 0 | 0 | All 128 listed spires checked in DOSBox. Keep the original terrain heights. The seven destructible rocks use separate pictures |
 | 041 Giants | 216 | 0 | 11 | All 12 inventoried placements checked in DOSBox. Generoe’s three rocking poses played in his house. The stored empty chair was staged |
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |
 | 043 Crypt | 175 | 0 | 11 | Check barracks furniture, the key beneath Jumah’s table and Kovar’s shackles in play |

@@ -254,6 +254,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-forest-plants-and-sickbeds.md) | Forest cup tables, both harvest prompts, Cleave’s cure and the empty bed shared with Snaggle |
 | [2026-11-28](2026-11-28-ravager-temple-prison-room.md) | Original and modded coiled fixture at the same camera in the El’s Temple prison room |
 | [2026-11-28](2026-11-28-ravager-silt-sea-giants.md) | All twelve Silt Sea Giants furnishings, Generoe rocking at home and the village giant’s standing artwork in two native rooms |
+| [2026-11-28](2026-11-28-ravager-volcano-core-spires.md) | All 128 Volcano Core spires, the shorter DOSBox trial and the separate collapsible rocks |
 | [2026-11-27](2026-11-27-ravager-volcano-furniture.md) | Both Volcano levels’ furniture and 21 shelves, both torn red beds in Tyr and Volcano 1, and the southern barrel stack |
 | [2026-11-27](2026-11-27-ravager-mine-worktables-and-forge.md) | Five Mines 3 worktables, the Inquisitor’s safe, Promere’s Hammer, the soup kettle and four statues |
 | [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |
