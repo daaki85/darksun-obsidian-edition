@@ -59,6 +59,16 @@ class LabelTests(unittest.TestCase):
         self.assertIsNone(quiver.left_label(gd, 7))  # (a monster)
         self.assertIsNone(quiver.left_label(FakeGd({10: CHATKCHA}), 2))  # (thrown: not "Out of arrows")
 
+    def test_a_name_in_the_singular(self):
+        """Wake of the Ravager's arrows are named "Arrow": the label says "Arrows" all the same."""
+        class Sequel(FakeGd):
+            def item_label(self, rec, typ):
+                return "Arrow"
+        gd = Sequel({10: BOW, 18: stack(weaponchoice.AMMO_SLOT, 24)})
+        self.assertEqual(quiver.left_label(gd, 2), "Arrows: 24 left")
+        gd = Sequel({10: BOW, 18: stack(weaponchoice.AMMO_SLOT, 0)})
+        self.assertEqual(quiver.left_label(gd, 2), "Out of arrows")
+
 
 if __name__ == "__main__":
     unittest.main()

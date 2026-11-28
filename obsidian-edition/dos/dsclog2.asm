@@ -11738,7 +11738,7 @@ die_sizes_end:
 ; for the line's routine (7B1D9h): those three are under the site's return frame (+6 count, +8 sides, +0Ah
 ; bonus from SP at entry). The kits' as the attack has them: KIT_MELEE's damage and a kit's expertise
 ; (DAM_KIT_MELEE, DAM_EXPERT). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
-; own, 628h:5Ch, not SL's effects), a weak material's damage on View Character (VIEW_MATERIAL).
+; own, 628h:5Ch, not SL's effects).
 ; DAM_LINE (site 70 at 7B19Eh, "mov al,es:[bx+24h]", SL's 72A77h): the melee branch, ES:BX the sheet; AL
 ; the attacks a round (the game's "mov ah,0" follows).
 dam_line:
@@ -11958,11 +11958,48 @@ view_dam:
         mov ax, [bp - 4]
         call next_die
         mov [bp - 4], ax
-.done:  inc word [cs:dam_count]
+.done:  call view_material      ; (a weak material's damage, as the game's attack and the inventory's line have it)
+        inc word [cs:dam_count]
 .out:   pop es
         popa
         iret
 view_sheet dd 0
+
+; VIEW_MATERIAL (SL's, in PROBE_VIEW_DAM): the damage bonus [BP-0Eh] less a weak material's, as the game's
+; attack and the inventory's line have it and View Character's didn't (one more than both: an Obsidian
+; Dagger's 1D4+4 beside the inventory's 1D4+3, 2026-11-28): a weapon with no plus (ITEM_PLUS; a power
+; alone doesn't spare it) whose type isn't marked 80h (a club's, a staff's) nor 40h (no material) does 2
+; less in wood and 1 less in bone, stone or obsidian (TYPE_KIND's low nibble). The item [BP-0Ah]. DS the
+; game's; all kept.
+view_material:
+        push ax
+        push bx
+        push es
+        mov ax, [bp - 0x0A]
+        cmp ax, NO_ITEM
+        jae .out
+        imul ax, ax, ITEM_SIZE
+        les bx, [ITEMS_PTR]
+        add bx, ax
+        cmp byte [es:bx + ITEM_PLUS], 0
+        jne .out                ; (a plus: none)
+        imul ax, [es:bx + ITEM_TYPE], TYPE_SIZE
+        les bx, [ITEM_TYPES_PTR]
+        add bx, ax
+        mov al, [es:bx + TYPE_KIND]
+        test al, 0x80 | 0x40
+        jnz .out                ; (a club's, a staff's; 40h: no material)
+        and al, 0x0F
+        cmp al, 3
+        ja .out                 ; (metal, leather)
+        dec word [bp - 0x0E]
+        or al, al
+        jnz .out
+        dec word [bp - 0x0E]    ; (wood: 2)
+.out:   pop es
+        pop bx
+        pop ax
+        ret
 
 ; ---- The Effects screen's lines: DSCLOG's PROBE_EF_ROWS and PROBE_EF_CLICK ----
 ; EF_ROWS (site 73 at 8AFA9h, "pop di / pop si / leave", SL's 7F13Eh): the end of the Effects screen's
@@ -24307,9 +24344,14 @@ hd_tens dw 0                            ; (thieves' 10th-level dice, for a look 
 ; but no more than the table's third byte (4D0h:6Ch + group x 15 + save x 3), AD&D's best save and not the
 ; most a save improves: a warrior stays at 11/11/11/13/11 from 10th level (SL's 877EBh the same); and
 ; psionicists are thieves. SAVE_BASE (site 116, "save_table"): "mov al,es:[bx+6Ch]" (955DFh; 5 bytes)
-; before "cbw / sub ax,[bp-2]". The sheets: SHEETS_PTR, SHEET_SIZE, classes +1Bh, levels +1Eh.
+; before "cbw / sub ax,[bp-2]". The sheets: SHEETS_PTR, SHEET_SIZE, classes +1Bh, levels +1Eh. The bands
+; are the tail's (SAVE_BASE reads them through TAIL_SEG: in the segment they read the tail's bytes at the
+; segment's offsets, and every save a level up or the creation screen worked out was nonsense, a new 7th-level
+; fighter's 81/2/235/0/208, 2026-11-28).
         SAVE_BASE_CODE SHEETS_PTR, SHEET_SIZE, 0x1B, 0x1E
+section tail
         SAVE_BANDS_DATA
+section image
 ; ---- WEAPON PICKS: DSCLOG's CR_WEAPONS, LV_CHECK and PROBE_PK_* on the sequel's creation screen ----
 ; With weapon specialization (RULE_SPECIALIZE), a new character that is a fighter, gladiator or ranger (or a
 ; Battle Mage, Crusader, Mind Warrior or Swashbuckler: LV_DUE) picks its weapon specs after DONE, as in

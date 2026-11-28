@@ -52,7 +52,8 @@ class LevelCapTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + 0xFFF0, bytes((0xF4,)))
         mu.mem_write(TSR * 16 + self.sym["rules"], struct.pack("<H", rules))
         mu.mem_write(TSR * 16 + self.sym["rules_hi"], struct.pack("<H", rules_hi))
-        mu.mem_write(TSR * 16 + self.sym["tail_seg"], struct.pack("<H", TSR))  # (KEEP's: the helper's own)
+        tail = TSR + self.sym["TAIL_PARAS"]  # (the tail, where SAVE_BASE reads its bands: TAIL_SEG as installed)
+        mu.mem_write(TSR * 16 + self.sym["tail_seg"], struct.pack("<H", tail))
         return mu
 
     def call(self, mu, site, frame=b"", **regs):

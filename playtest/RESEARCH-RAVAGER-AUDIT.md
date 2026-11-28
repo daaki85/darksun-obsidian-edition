@@ -478,4 +478,20 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
 - **What is left**: a Battle Dancer's first swing in the round she starts dancing falls back to "in bonuses" (the
   game's THAC0 lacks the dance's +1 the log already counts).
 
+## The play checks, saves and the creation screen by hand (2026-11-28, logs/2026-11-28-ravager-play-checks.md)
+
+- **The save routine** (954D2h, sheet +31h-35h the five numbers needed) runs on the creation screen too (the
+  die, a click on CON) and at every level up; its site SAVE_BASE (116, 955DFh) reads DSCLOG2's bands. **Anything
+  DSCLOG2 reaches through TAIL_SEG (or TAIL_FS) must be in `section tail` or `tailz`**: its bands sat in the
+  segment after the tail moved out (2026-11-27), and every save came out as the tail's bytes (81/2/235/0/208).
+  The stock game (`ravager narrow` on a copy, a plain `ravstart.sh`) is the control for any number a sheet holds.
+- **The creation screen by hand** (game coordinates, ravclick.py): the die 145,92; CON 40,154; DONE 270,182;
+  after DONE a psionicist's powers window (the first icon greyed: 138,59 five times); the roster's slots
+  70,56 and 121,56 (right-click: NEW or EDIT at 110,57 for the first, NEW 158,57 for the second); its exit
+  267,170; START GAME on the title 158,74. Without the dice log attached the screen has no AGE or SUM (the
+  rules are its header's): `ravcreation.py 1` attaches it and sets them.
+- **The inventory's bottom icons** (game y 188): 170 View Character, 197 the inventory, 218 USE; on USE and
+  EFFECTS the same row, EFFECTS at 120,171; the portraits there 22,25 / 22,71 / 22,117 / 22,165 (the
+  inventory) or 70,57 / 120,57 (USE).
+
 The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) indexes the 18-figure review build, its approved knight profiles, the animated comparisons, and the open Soulshard gait revision.
