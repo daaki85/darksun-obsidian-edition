@@ -189,10 +189,12 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
 - **The Loader's own lines need the dice log**: the inventory's AGE, the Grove Warden's AC and a
   specialist's damage are written by it, so a program with no `ravdice.py` attached shows no AGE, AC 0
   and the plain damage. Compare screens only with the dice log on both.
-- **What the program's dice log lacks**: every line told apart by the caller's address (each attack's
-  roll, "X's turn", initiative, the fight's summary, the level up's hit-point roll). The program's lifted
-  calls push a sentinel return address (the program's docs/DESIGN.md). Saves, hit points, XP, "gains a
-  level" and "is now a 6th level" are there.
+- **The program's dice log** (since darksun-recompiled's dice_return_sites, logs/2026-11-28-recompiled-dice-log.md)
+  has DOSBox's lines: initiative, turns, each attack's roll, damage, a level up's hit points, the fight's
+  summary. Before it, every line told apart by the caller's address was missing. It still misses what was
+  said before it attached (it attaches after the load), and notes "upper memory had no room for the game's
+  overlay buffer" where DOSBox does not. **The program's window, like DOSBox's, takes clicks only when
+  focused**: `xdotool windowfocus` it before `ravclick.py`, or a level up's CHOOSE A SPELL ignores the click.
 - **Computer Control from `fightcc`-style clicks** took on the program each time. In DOSBox, after the
   first click had taken the mouse, it missed members, and their turns waited. Check each member's box
   (its click shows COMPUTER CONTROL IS ON or OFF), or let `ravfight.py fight` take the waiting turns.
