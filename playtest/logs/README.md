@@ -259,6 +259,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-human-inventory.md) | All eight human inventory outfits on both figures in DOSBox |
 | [2026-11-27](2026-11-27-ravager-cutscene-mouse.md) | Wake of the Ravager's mouse as Shattered Lands': the arrow and a click's skip in its films and narrated opening, the pointer's speed, middle-button scrolling, and the message box closing on a click or key |
 | [2026-11-27](2026-11-27-ravager-log-clicks.md) | Wake of the Ravager's combat log panel: clicks on it walked the party and were often missed; now taken from the mouse events, L and clicks gated by the panel on the map |
+| [2026-11-27](2026-11-27-ravager-view-and-pace.md) | Wake of the Ravager: the view in fights still while a walker is on screen, the whole party spread after a load and fight (6 still gathers), steady pace counting (DSCLOG2 sites 230-234); the other QoL controls checked |
 
 ## files/
 

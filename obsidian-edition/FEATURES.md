@@ -1003,7 +1003,7 @@ What each speed asks of the computer: [suggested system
 requirements](README.md#suggested-system-requirements). How it works, with the measurements:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#game-speed).
 
-**In Wake of the Ravager:** yes, the speeds; steady pace not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes, the speeds and steady pace.
 
 ## Picture and music
 
@@ -1493,7 +1493,7 @@ game has it.
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-view-in-fights).
 
-**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes.
 
 ### The pointer in scenes, and where it starts
 
@@ -1523,7 +1523,7 @@ until the next fight or load.
 **Always on** (no switch). How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#the-whole-party-in-view).
 
-**In Wake of the Ravager:** not yet ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes.
 
 ### Spells on the Effects screen
 

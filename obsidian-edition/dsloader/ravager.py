@@ -950,6 +950,18 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("follow_1", 0x1E3EC, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
     Patch("follow_2", 0x20193, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
     Patch("follow_3", 0x2143E, bytes.fromhex("83c408"), gamepatch._interrupt(VEC_FOLLOW, 3)),
+    # The view in fights (SL's camera_still: DSCLOG2's CAMERA_WALK, site 230): in the routine stepping a
+    # fight's figure (1FD6Bh, SL's 0AC0:C7B3), "mov bx,[426Dh]" before the view's own moves after it, which
+    # are left out while the figure is on the screen. The whole party in view (SL's party_spread and
+    # party_gather: PARTY_LOAD 231, PARTY_GATHER 232): the store "mov byte [13FAh],0" where a load finds
+    # the party in one figure, and in the routine gathering it (a fight's end, the 6 key). Steady pace
+    # (SL's pace_pass and pace_draw: PACE_PASS 233, PACE_DRAW 234): the map frame's two far calls' offsets,
+    # their relocated segments left in place for the helper to read.
+    Patch("camera_still", 0x200B7, bytes.fromhex("8b1e6d42"), _site(230, 4)),
+    Patch("party_spread", 0x70DA6, bytes.fromhex("c606fa1300"), _site(231, 5)),
+    Patch("party_gather", 0x6A823, bytes.fromhex("c606fa1300"), _site(232, 5)),
+    Patch("pace_pass", 0x21AB6, bytes.fromhex("9ab92b"), _site(233, 3)),
+    Patch("pace_draw", 0x21AFA, bytes.fromhex("9a7814"), _site(234, 3)),
     # Shattered Lands' shadows cast by the walls, drawn into the floor (DSCLOG2's WALL SHADOWS): the
     # two floor routines' starts, "push bp / mov bp,sp / sub sp,N" (SL's 2700Eh and 27162h, the same
     # frames), DSCLOG2's sites 40 and 41 (SITE_FLOOR_ALL, SITE_FLOOR_RECT), their way back its FLOOR_POST.
@@ -2166,13 +2178,16 @@ def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
     (gamepatch.EFFECTS_KEPT), the new items (Shattered Lands' switch, "new_items": ravgear's), the new
-    spells ("new_spells": ravspells') and Shattered Lands' screens and icons (the Options tab's box, ravui.SETTING)."""
+    spells ("new_spells": ravspells'), Shattered Lands' screens and icons (the Options tab's box, ravui.SETTING) and
+    steady pace (gamepatch.STEADY_PACE, "steady_pace")."""
     on = settings.get("spells_manual", True) is not False
     kept = settings.get("effects_kept", True) is not False  # (spells kept on the Effects screen)
     items = settings.get("new_items", True) is not False
     spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
     screens = settings.get(ravui.SETTING, True) is not False  # (Shattered Lands' screens and icons: ravui)
+    pace = settings.get("steady_pace", True) is not False  # (steady pace, Shattered Lands' switch)
     return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+        | (frozenset() if pace else frozenset(gamepatch.STEADY_PACE)) \
         | (frozenset() if screens else {ravui.SKIP}) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
         | (frozenset() if spells else {ravspells.SKIP})

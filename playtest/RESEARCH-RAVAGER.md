@@ -410,3 +410,11 @@ DSCLOG2 that the timer fills with the interrupted CS:IP (its frame's return addr
 taken in the mouse driver's event handler (DSCLOG2's MOUSE_EVENT, PANEL_EVENT), as SL's is: in the main
 loop's pointer call it is seen only while the button is down, and the game's handler walks the party to it
 anyway. Click the panel's header at game y 126 (docked), not window y / 2.
+
+**The view, the party and the pace in the sequel** (2026-11-27, logs/2026-11-27-ravager-view-and-pace.md): the view's
+place is DS:1408h/140Ah and whose turn DS:426Dh; a creature's feet on the map are its map record's +0Ah, +0Ch
+(DS:67BBh + 25h a creature): log the three every 50 ms to see whether the view follows a walker. A turn's start
+scrolls the view to that creature in steps of 32 (21341h): not drift. Steady pace's counters `pace_ran`,
+`pace_lost`, `pace_skipped` are in DSCLOG2's segment (INT F5h's vector's), offsets from `nasm -l`. **Restart
+`ravdice.py` after every `ravload.sh`**: it dies with the DOSBox it was attached to, and without it Tab does
+nothing (a `ravfight.py tabfight` then never attacks and the party loses).
