@@ -410,6 +410,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **The game's people** wearing and wielding their gear as they come on the map.
 - **The Journal tab's open quests**: the sequel's quests show once finished; what opens each (its "given"
   flag) is read for three only, and 62 of its scripts' own awards are not in the table yet
-  ([DEVELOPMENT-SCREENS.md](DEVELOPMENT-SCREENS.md#the-quests)).
+  (the developers' notes on the quests say what is left).
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).
