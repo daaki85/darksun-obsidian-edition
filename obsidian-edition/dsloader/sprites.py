@@ -33,9 +33,10 @@ import collections
 import struct
 from typing import Callable, Dict, List, Optional, Tuple
 
-from . import art, classoutfits, figures, game, greyhair, halfelf, spritegear as sg, spriteparts as sp
+from . import art, classoutfits, figures, game, gff, greyhair, halfelf, spritegear as sg, spriteparts as sp
 from .game import GameData
 
+BMP = "BMP "  # (the pictures' chunk type, in the copy's index: gff.CopyIndex)
 SPRITE_BASE = 2450  # (pairs: object 300's walking picture 2450, its combat one 2451, ...)
 PARTY_OBJECTS = range(300, 314)
 SPARES = range(314, 314 + game.PARTY_SIZE)  # (each party place's spare pair: 314 + the member)
@@ -506,9 +507,7 @@ class Dresser:
                 self.items = collections.ChainMap(own, self.pics.chunks)
             except (OSError, GffError, ValueError, struct.error):
                 pass
-        self.places: Dict[int, Tuple[int, int, int]] = {}  # picture: (index entry, offset, length)
-        self.rooms: Dict[int, int] = {}  # picture: the bytes free from its offset in the copy (gff.rooms)
-        self._stamp: Optional[Tuple[int, int]] = None  # the copy as the Loader last saw it
+        self.copy = gff.CopyIndex(copy_file) if copy_file else None  # (its pictures' places and room)
         self.shown: Dict[int, tuple] = {}  # object: the outfit its pictures in the copy show
         self.request_redraw: Optional[Callable[[], None]] = None  # has the view drawn again (DSCLOG)
         self._redraw_at: Optional[float] = None  # (once pictures loaded anew are in)
@@ -534,66 +533,27 @@ class Dresser:
     def _check_copy(self) -> bool:
         """The copy's index read (again, if the Loader has written it anew since: then what it
         shows is plain). Whether there is a copy to dress."""
-        import os
-        from .gff import GffError, index_places, rooms
-        if not self.copy_file:
+        if self.copy is None:
             return False
-        try:
-            st = os.stat(self.copy_file)
-        except OSError:
-            return False
-        stamp = (st.st_mtime_ns, st.st_size)
-        if stamp != self._stamp:
-            try:
-                with open(self.copy_file, "rb") as f:
-                    data = f.read()
-                self.places = index_places(data, "BMP ")
-                self.rooms = rooms(data, "BMP ")
-            except (OSError, GffError):
-                return False
-            self._stamp = stamp
+        ok, data = self.copy.refresh()
+        if data is not None:
             self.shown = {}
-        return True
+        return ok
+
+    def _room(self, picture: int) -> int:
+        """The bytes the copy has for PICTURE in place (gff.rooms)."""
+        return self.copy.rooms.get((BMP, picture), 0)
 
     def _write(self, pictures: Dict[int, bytes]) -> bool:
         """PICTURES ({number: chunk}) into the copy, each where its plain one is, its length in the
         file's index. False (nothing written) if one has no place or no room there: the room the
-        copy has after it (ROOMS), whatever Pictures reckons (the copy may have been written with
-        the other LOOKS, the switch changed and the Loader connected again since)."""
-        import os
-        for picture, chunk in pictures.items():
-            place = self.places.get(picture)
-            if place is None or len(chunk) > self.rooms.get(picture, 0):
-                return False
-        try:
-            with open(self.copy_file, "r+b") as f:
-                for picture, chunk in pictures.items():
-                    entry, offset, length = self.places[picture]
-                    f.seek(offset)
-                    f.write(chunk)
-                    f.seek(entry + 4)
-                    f.write(struct.pack("<I", len(chunk)))
-                    self.places[picture] = (entry, offset, len(chunk))
-            st = os.stat(self.copy_file)
-            self._stamp = (st.st_mtime_ns, st.st_size)
-        except OSError:
-            return False  # (tried again at the next update)
-        return True
+        copy has after it, whatever Pictures reckons (the copy may have been written with the other
+        LOOKS, the switch changed and the Loader connected again since)."""
+        return self.copy.write({(BMP, p): chunk for p, chunk in pictures.items()})
 
     def _same_in_copy(self, pictures: Dict[int, bytes]) -> bool:
         """Whether the copy already holds each of PICTURES ({number: chunk}) as it is."""
-        try:
-            with open(self.copy_file, "rb") as f:
-                for picture, chunk in pictures.items():
-                    place = self.places.get(picture)
-                    if place is None or place[2] != len(chunk):
-                        return False
-                    f.seek(place[1])
-                    if f.read(len(chunk)) != chunk:
-                        return False
-        except (OSError, TypeError):
-            return False
-        return bool(pictures)
+        return self.copy.holds({(BMP, p): chunk for p, chunk in pictures.items()})
 
     def _unload(self, pictures) -> None:
         """PICTURES taken out of the game's table of those it has loaded: it loads them anew."""
@@ -800,7 +760,7 @@ class Dresser:
                     pictures = {}
                     for combat, picture in zip((False, True), picture_ids(obj)):
                         # (the room the copy has, which Pictures' reckoning may overstate: _write)
-                        room = min(self.pics.room(obj, combat), self.rooms.get(picture, 0))
+                        room = min(self.pics.room(obj, combat), self._room(picture))
                         chunk = self.pics.build(obj, combat, outfit[0], outfit[1], model, figure, stage, role)
                         if len(chunk) > room:  # (more than there is room for: plain)
                             chunk = self.pics.build(obj, combat, {}, (), model, figure, stage, role)
@@ -818,7 +778,7 @@ class Dresser:
                 # (a new slot for any the store has no cell for: room for it? On the first dressing
                 # too: after a reconnect it took up to 8 new slots each time, unchecked)
                 left = [p for p in pictures if p not in self._in_store(pictures, dry=True)]
-                if left and not self._room_for(sum(self.rooms.get(p, 0) for p in left), len(left)):
+                if left and not self._room_for(sum(self._room(p) for p in left), len(left)):
                     continue  # (no room to load it anew: left as it is, tried again: STORE_SIZE)
                 if not self._write(pictures):
                     continue

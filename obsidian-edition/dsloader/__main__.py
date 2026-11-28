@@ -156,7 +156,7 @@ def cmd_save(args) -> None:
     from . import namedsaves
     layout = Layout.load(args.layout)
     if namedsaves.is_wotr_save(args.file):  # (Wake of the Ravager's: its records' sizes and places)
-        mem = _sequel_party(args.file, layout)
+        mem, layout = _sequel_party(args.file, layout)
     else:
         mem = load_party(args.file, layout)
     slots = [layout.decode_slot(i, mem.read) for i in range(layout.count)]
@@ -172,18 +172,18 @@ def cmd_save(args) -> None:
 
 
 def _sequel_party(path: str, sl_layout: Layout):
-    """A Wake of the Ravager save's party, read as cmd_save reads Shattered Lands': the sequel's layout
-    (ravlog.apply_layout, and the window's party layout made from Shattered Lands', ravlog.window_layout),
-    its sheets made the Loader's 48h first if the game wrote them 42h (ravager.resized_chunks). SL_LAYOUT
-    is made the sequel's in place."""
+    """A Wake of the Ravager save's party and the layout to read it with, as cmd_save reads Shattered Lands':
+    the sequel's layout (ravlog.apply_layout, and the window's party layout made from Shattered Lands'
+    SL_LAYOUT, ravlog.window_layout), its sheets made the Loader's 48h first if the game wrote them 42h
+    (ravager.resized_chunks)."""
     from . import gff, ravager, ravlog
     from .savefile import party_from_chunks
     ravlog.apply_layout()
-    sl_layout.__init__(ravlog.window_layout(sl_layout.raw), sl_layout.path)
+    layout = Layout(ravlog.window_layout(sl_layout.raw), sl_layout.path)
     with open(path, "rb") as f:
         chunks = gff.read_gff(f.read())
     chunks.update(ravager.resized_chunks(chunks, ravager.SHEET_SIZE))
-    return party_from_chunks(chunks, sl_layout, path)
+    return party_from_chunks(chunks, layout, path), layout
 
 
 def cmd_checks(args) -> None:

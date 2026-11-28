@@ -719,6 +719,12 @@ class ReadOnlyGuest:
             return view[start:start + size]
         return self.guest.read(addr, size)
 
+    def allow(self, ranges) -> None:
+        """RANGES ((address, size), ...) writable from now on (those not already)."""
+        for r in ranges:
+            if r not in self.writable:
+                self.writable = self.writable + [r]
+
     def write(self, addr: int, data: bytes) -> None:
         if any(start <= addr and addr + len(data) <= start + size for start, size in self.writable):
             if self.item_gate is not None and self.item_gate.covers(addr, len(data)):
@@ -1501,9 +1507,7 @@ class RavDiceLog(dicelog.DiceLog):
         (+170, +270) made writable for them; the rest of SL's writes (the spell save's table, the
         stealth gear's word) dropped."""
         if self.tsr_hdr is not None:
-            for r in ((self.tsr_hdr + dicelog.TSR_RULES, 2), (self.tsr_hdr + dicelog.TSR_RULES_HI, 2)):
-                if r not in self.guest.writable:
-                    self.guest.writable = self.guest.writable + [r]
+            self.guest.allow(((self.tsr_hdr + dicelog.TSR_RULES, 2), (self.tsr_hdr + dicelog.TSR_RULES_HI, 2)))
         super().set_rules(rules & ravager.RULES_PORTED)
 
     def _set_stealth(self, hidden: bool, member: int = 0) -> None:
@@ -1513,8 +1517,7 @@ class RavDiceLog(dicelog.DiceLog):
         if self.tsr_hdr is None:
             return
         word = (self.tsr_hdr + stealth.TSR_STEALTH, 2)
-        if word not in self.guest.writable:
-            self.guest.writable = self.guest.writable + [word]
+        self.guest.allow([word])
         self.guest.write(word[0], struct.pack("<H", 1 << member if hidden else 0))
 
     def _slots_table(self) -> Optional[int]:
@@ -1524,8 +1527,7 @@ class RavDiceLog(dicelog.DiceLog):
         if at is None:  # (a helper before the spell slots: none)
             return None
         table = (at, game.PARTY_SIZE * dicelog.SLOTS_SIZE)
-        if table not in self.guest.writable:
-            self.guest.writable = [table] + self.guest.writable
+        self.guest.allow([table])
         return table[0]
 
     def _label_slots(self) -> Optional[int]:
@@ -1537,8 +1539,7 @@ class RavDiceLog(dicelog.DiceLog):
         if not seg or not off:
             return None
         slots = (seg * 16 + off, labels.SLOTS * labels.SIZE)
-        if slots not in self.guest.writable:
-            self.guest.writable = self.guest.writable + [slots]
+        self.guest.allow([slots])
         return slots[0]
 
     def _large_bits(self) -> Optional[int]:
@@ -1551,8 +1552,7 @@ class RavDiceLog(dicelog.DiceLog):
         if not seg or not off:
             return None
         bits = (seg * 16 + off, sizes.LARGE_BYTES)
-        if bits not in self.guest.writable:
-            self.guest.writable = self.guest.writable + [bits]
+        self.guest.allow([bits])
         return bits[0]
 
     def _panel_ranges(self) -> bool:
@@ -1568,9 +1568,7 @@ class RavDiceLog(dicelog.DiceLog):
         want = [(seg * 16 + off, combatlog.PANEL_W * PANEL_H_MOST),
                 (self.tsr_hdr + dicelog.TSR_STATS_STAMP, 2),
                 (self.tsr_hdr + combatlog.TSR_PANEL_ON, combatlog.TSR_KEYS + 2 - combatlog.TSR_PANEL_ON)]
-        for r in want:
-            if r not in self.guest.writable:
-                self.guest.writable = self.guest.writable + [r]
+        self.guest.allow(want)
         return True
 
     def _panel_pass(self, now: float) -> None:
@@ -1593,10 +1591,8 @@ class RavDiceLog(dicelog.DiceLog):
             return None
         base = self.tsr_hdr - struct.unpack("<H", self.guest.read(self.tsr_hdr + dicelog.TSR_HDR_OFF, 2))[0]
         full_at = self._tail_at(dicelog.TSR_LOOK_FULL_OFF)  # (LOOK_FULL: the tail's)
-        for r in ((self.tsr_hdr + dicelog.TSR_LOOK_SEQ, dicelog.TSR_LOOK_ON + 2 - dicelog.TSR_LOOK_SEQ),
-                  (base + off, dicelog.LOOK_SIZE)) + (((full_at, dicelog.LOOK_FULL_SIZE),) if full_at else ()):
-            if r not in self.guest.writable:
-                self.guest.writable = self.guest.writable + [r]
+        self.guest.allow(((self.tsr_hdr + dicelog.TSR_LOOK_SEQ, dicelog.TSR_LOOK_ON + 2 - dicelog.TSR_LOOK_SEQ),
+                          (base + off, dicelog.LOOK_SIZE)) + (((full_at, dicelog.LOOK_FULL_SIZE),) if full_at else ()))
         return base + off
 
     def set_monster_info(self, on: bool) -> None:
@@ -1647,8 +1643,7 @@ class RavDiceLog(dicelog.DiceLog):
         for them (+350 to +355, as DSCLOG's: its KITS) made writable while the kits are on."""
         if self.tsr_hdr is not None and self.game is not None and self.game.rules & game.RULE_KITS:
             kit_bytes = (self.tsr_hdr + dicelog.TSR_KIT_OUTDOORS, KIT_HEADER_BYTES)
-            if kit_bytes not in self.guest.writable:
-                self.guest.writable = self.guest.writable + [kit_bytes]
+            self.guest.allow([kit_bytes])
         super()._kit_tick(now)
 
     def _target_ranges(self) -> Optional[int]:
@@ -1663,10 +1658,8 @@ class RavDiceLog(dicelog.DiceLog):
         far, = struct.unpack("<H", self.guest.read(self.tsr_hdr + rings.TSR_FAR_SEG, 2))
         if not red_off or not far:
             return None
-        for r in ((self.tsr_hdr + rings.TSR_RINGS_ON, targeting.TSR_ATTACK + 2 - rings.TSR_RINGS_ON),
-                  (self.tsr_hdr + targeting.TSR_PAN, 4), (far * 16 + red_off, 256)):
-            if r not in self.guest.writable:
-                self.guest.writable = self.guest.writable + [r]
+        self.guest.allow(((self.tsr_hdr + rings.TSR_RINGS_ON, targeting.TSR_ATTACK + 2 - rings.TSR_RINGS_ON),
+                          (self.tsr_hdr + targeting.TSR_PAN, 4), (far * 16 + red_off, 256)))
         return far * 16 + red_off
 
     def _target_pass(self, now: float) -> List[str]:
@@ -1902,9 +1895,7 @@ class RavDiceLog(dicelog.DiceLog):
         off, = struct.unpack("<H", self.guest.read(self.tsr_hdr + QUICK_LAYOUT.save_off, 2))
         if not off:
             return False
-        for r in self.quicksave.ranges(self.game, self.tsr_hdr):
-            if r not in self.guest.writable:
-                self.guest.writable = self.guest.writable + [r]
+        self.guest.allow(self.quicksave.ranges(self.game, self.tsr_hdr))
         return True
 
     def _quick_pass(self, loading: bool, now: float) -> List[str]:
@@ -2018,7 +2009,7 @@ class RavDiceLog(dicelog.DiceLog):
         for c in range(game.PARTY_SIZE):
             at = table + c * game.CREATURE_SIZE
             want += [(at, 2), (at + game.CREATURE_STATUS, 1)]
-        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        self.guest.allow(want)
         return self._blast.tick(self.game, self.tsr_hdr, now)
 
     RAV_LEAST_MOST = 17  # (the sequel's least for a score: a class's prime requisite 17, the others 9 to 14)
@@ -2103,7 +2094,7 @@ class RavDiceLog(dicelog.DiceLog):
             return []
         hdr = self.tsr_hdr
         want = [(hdr + dicelog.TSR_GEAR_DUE, 2), (hdr + dicelog.TSR_LOADER_BEAT, 2), (hdr + dicelog.TSR_GEAR_WHO, 1)]
-        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        self.guest.allow(want)
         self.guest.write(hdr + dicelog.TSR_LOADER_BEAT, self.guest.read(dicelog.BIOS_TIMER, 2))
         if not self.guest.read(hdr + dicelog.TSR_GEAR_DUE, 1)[0]:
             return []
@@ -2157,7 +2148,7 @@ class RavDiceLog(dicelog.DiceLog):
             return []  # (a helper before PICK POCKETS)
         base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
         want = [(hdr + PP_ON, PP_TEXT_OFF - PP_ON), (base + text_off, dicelog.PICK_SIZE)]
-        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        self.guest.allow(want)
         if self.guest.read(hdr + PP_ON, 2) != struct.pack("<H", dicelog.PICK_BUTTON):
             self.guest.write(hdr + PP_ON, struct.pack("<H", dicelog.PICK_BUTTON))
         seq = self.guest.read(hdr + PP_SEQ, 2)
@@ -2178,7 +2169,7 @@ class RavDiceLog(dicelog.DiceLog):
                     elif kind == 2:
                         creatures = game.table_pointer(self.guest, self.game.ds, game.CREATURES_PTR)
                         lists = (creatures + index * game.CREATURE_SIZE + game.CREATURE_ITEM_LISTS[0], 6)
-                        self.guest.writable = self.guest.writable + [lists]  # (the person's lists, emptied)
+                        self.guest.allow([lists])  # (the person's lists, emptied)
                         result = pickpocket.attempt(self.game, self.picked, who=index, thief=thief & 0xFF)
                     if result is None:
                         result = pickpocket.Attempt("There are no pockets to pick there.", [])
@@ -2232,7 +2223,7 @@ class RavDiceLog(dicelog.DiceLog):
             return []  # (a helper before PICK POCKETS, or before SPELL ARROWS: its HDR_LEN short of them)
         base = hdr - struct.unpack("<H", self.guest.read(hdr + dicelog.TSR_HDR_OFF, 2))[0]
         want = [(hdr + AR_ON, 2), (hdr + AR_REPLY, 2), (base + text_off, dicelog.PICK_SIZE)]
-        self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+        self.guest.allow(want)
         on = struct.pack("<H", int(self.spell_arrows and self._arrows_ready()))
         if self.guest.read(hdr + AR_ON, 2) != on:
             self.guest.write(hdr + AR_ON, on)
@@ -2245,7 +2236,7 @@ class RavDiceLog(dicelog.DiceLog):
             member, row = struct.unpack("<HH", self.guest.read(hdr + AR_WHO, 4))
             with self._items_writable():
                 if 0 <= member < game.PARTY_SIZE:
-                    self.guest.writable = self.guest.writable + [ravarrows.slots_range(self.game, member)]
+                    self.guest.allow([ravarrows.slots_range(self.game, member)])
                 itemgate.hold(self.game)  # (held, DOSBox paused, before anything is moved)
                 try:
                     if self.guest.read(hdr + AR_REPLY, 2) == seq:
@@ -2307,7 +2298,7 @@ class RavDiceLog(dicelog.DiceLog):
                 for c in due:
                     at = creatures + c * game.CREATURE_SIZE
                     want = [(at + game.CREATURE_ITEM_LISTS[0], 6), (at + shopstock.CREATURE_MARK, 1)]
-                    self.guest.writable = self.guest.writable + [r for r in want if r not in self.guest.writable]
+                    self.guest.allow(want)
 
                     def mark(creature: int, at: int = at) -> None:
                         self.guest.write(at + shopstock.CREATURE_MARK, bytes((shopstock.MARKED,)))
@@ -2362,7 +2353,7 @@ class RavDiceLog(dicelog.DiceLog):
                 index = struct.unpack_from("<H", self.game.creature(c), game.CREATURE_SHEET_INDEX)[0]
                 sheet = sheets + index * game.SHEET_SIZE
                 ranges += [(sheet + game.SHEET_ABILITIES, 6), (sheet + game.SHEET_AGE, 1), (sheet + game.SPEC_SLOTS, 3)]
-        self.guest.writable = self.guest.writable + [r for r in ranges if r not in self.guest.writable]
+        self.guest.allow(ranges)
 
     def _party_pass(self) -> List[str]:
         """The sequel's own party made ready (defaultparty.rav_ready: their weapon specs, Terrannus's

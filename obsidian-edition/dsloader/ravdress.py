@@ -24,7 +24,6 @@ The small figures (the inventory's party column, the creation screen's) are made
 (`small_chunks`): frame 0 of each figure's walking picture in each class outfit, at the inventory pictures' keys
 (inventoryart.picture_id's, from SMALL_BASE), which DSCLOG2's SMALL_FIG names for the creature's classes."""
 
-import os
 import struct
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -236,34 +235,23 @@ class RavDresser:
 
     def __init__(self, gd, sources: Sources, copy_file: str):
         self.gd, self.sources, self.copy_file = gd, sources, copy_file
-        self.places: Dict[Tuple[str, int], Tuple[int, int, int]] = {}
-        self.rooms: Dict[Tuple[str, int], int] = {}
+        self.copy = gff.CopyIndex(copy_file, ("BMP ", "CBMP"))  # (the party pictures' places and room)
         self.objects: Dict[int, int] = {}  # party object: its picture
-        self._stamp: Optional[Tuple[int, int]] = None
         self.shown: Dict[int, Optional[str]] = {}  # object: the role its pictures in the copy show
         self._built: Dict[Tuple[int, Optional[str]], Tuple[bytes, bytes]] = {}
 
     def _check_copy(self) -> bool:
-        from .gff import GffError, index_places, rooms
-        try:
-            st = os.stat(self.copy_file)
-        except OSError:
-            return False
-        stamp = (st.st_mtime_ns, st.st_size)
-        if stamp != self._stamp:
+        """The copy's index read (again, if the Loader has written it anew since: then it shows the plain
+        pictures, and its party objects are read again). Whether there is a copy to dress."""
+        ok, data = self.copy.refresh()
+        if data is not None:
             try:
-                with open(self.copy_file, "rb") as f:
-                    data = f.read()
-                self.places, self.rooms = {}, {}
-                for kind in ("BMP ", "CBMP"):
-                    self.places.update({(kind, n): p for n, p in index_places(data, kind).items()})
-                    self.rooms.update({(kind, n): r for n, r in rooms(data, kind).items()})
                 self.objects = party_pictures(gff.read_gff(data))
-            except (OSError, GffError, struct.error):
+            except (gff.GffError, struct.error):
+                self.copy.forget()
                 return False
-            self._stamp = stamp
             self.shown = {}
-        return True
+        return ok
 
     def wanted(self) -> Dict[int, Optional[str]]:
         """{party object: the class outfit it is drawn in}: the first member with each figure's."""
@@ -277,25 +265,6 @@ class RavDresser:
                 continue
             out[obj] = self.sources.role(obj, self.gd.sheet(member))
         return out
-
-    def _write(self, chunks: Dict[Tuple[str, int], bytes]) -> bool:
-        for key, chunk in chunks.items():
-            if key not in self.places or len(chunk) > self.rooms.get(key, 0):
-                return False
-        try:
-            with open(self.copy_file, "r+b") as f:
-                for key, chunk in chunks.items():
-                    entry, offset, _ = self.places[key]
-                    f.seek(offset)
-                    f.write(chunk)
-                    f.seek(entry + 4)
-                    f.write(struct.pack("<I", len(chunk)))
-                    self.places[key] = (entry, offset, len(chunk))
-            st = os.stat(self.copy_file)
-            self._stamp = (st.st_mtime_ns, st.st_size)
-        except OSError:
-            return False
-        return True
 
     def _reload(self, picture: int) -> None:
         """PICTURE taken out of the game's cache and every map thing drawn with it given no slot: the game
@@ -331,7 +300,10 @@ class RavDresser:
             if built is None:
                 built = self._built[(obj, role)] = self.sources.pictures(obj, role)
             chunks = {("BMP ", picture): built[0], ("CBMP", picture): built[1]}
-            if not self._write(chunks):
+            if obj not in self.shown and self.copy.holds(chunks):
+                self.shown[obj] = role  # (dressed so before a reconnect: the game has them, nothing to load
+                continue  #  anew, so a reconnect takes no new cache slots: Shattered Lands' _same_in_copy)
+            if not self.copy.write(chunks):
                 continue
             self.shown[obj] = role
             self._reload(picture)

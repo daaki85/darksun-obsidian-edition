@@ -270,7 +270,7 @@ class SpriteTests(unittest.TestCase):
             f.write(icons.with_chunks(data, new, sprites.new_room(chunks, new)))
         dresser = sprites.Dresser.__new__(sprites.Dresser)
         dresser.gd, dresser.pics = FakeGame(figures=list(figures)), sprites.Pictures(chunks)
-        dresser.copy_file, dresser.places, dresser._stamp = path, {}, None
+        dresser.copy_file, dresser.copy = path, gff.CopyIndex(path)
         dresser.shown, dresser.request_redraw, dresser._redraw_at = {}, None, None
         dresser.items = chunks
         dresser.store, dresser._built, dresser.reused = sprites.Store(dresser.gd), {}, 0
@@ -417,7 +417,7 @@ class SpriteTests(unittest.TestCase):
             def reconnected():
                 new = sprites.Dresser.__new__(sprites.Dresser)
                 new.gd, new.pics, new.items = gd, dresser.pics, dresser.items
-                new.copy_file, new.places, new._stamp = path, {}, None
+                new.copy_file, new.copy = path, gff.CopyIndex(path)
                 new.shown, new.request_redraw, new._redraw_at = {}, None, None
                 new.store, new._built, new.reused = sprites.Store(gd), {}, 0
                 return new

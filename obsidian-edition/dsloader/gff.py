@@ -14,7 +14,7 @@ import os
 import struct
 import tempfile
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 Chunks = Dict[Tuple[str, int], bytes]
 
@@ -146,6 +146,83 @@ def rooms(data: bytes, ctype: str) -> Dict[int, int]:
         after = next((s for s in starts if s > off), len(data))
         out[cid] = after - off
     return out
+
+
+class CopyIndex:
+    """A copy of a game file the Loader writes chunks into in place while the game runs (the class outfits'
+    pictures: sprites.Dresser in SEGOBJEX's copy, ravdress.RavDresser in OBJEX2.GFF): for each chunk of KINDS,
+    keyed (kind, id), its place (index_places: where its length is said, offset, length) and its room (rooms),
+    read again whenever the file has changed since it was last read or written here."""
+
+    def __init__(self, path: str, kinds=("BMP ",)):
+        self.path, self.kinds = path, tuple(kinds)
+        self.places: Dict[Tuple[str, int], Tuple[int, int, int]] = {}
+        self.rooms: Dict[Tuple[str, int], int] = {}
+        self._stamp: Optional[Tuple[int, int]] = None  # (the file as last read or written here)
+
+    def _now(self) -> Tuple[int, int]:
+        st = os.stat(self.path)
+        return st.st_mtime_ns, st.st_size
+
+    def refresh(self) -> Tuple[bool, Optional[bytes]]:
+        """(whether there is a copy to write in, the file's bytes if it was read again: then what any chunk
+        in it shows is what the Loader wrote it as, not what was written here)."""
+        try:
+            stamp = self._now()
+        except OSError:
+            return False, None
+        if stamp == self._stamp:
+            return True, None
+        try:
+            with open(self.path, "rb") as f:
+                data = f.read()
+            places, rooms_ = {}, {}
+            for kind in self.kinds:
+                places.update({(kind, n): p for n, p in index_places(data, kind).items()})
+                rooms_.update({(kind, n): r for n, r in rooms(data, kind).items()})
+        except (OSError, GffError, struct.error):
+            return False, None
+        self.places, self.rooms, self._stamp = places, rooms_, stamp
+        return True, data
+
+    def forget(self) -> None:
+        """The file read again at the next refresh (what was read of it made no sense to the caller)."""
+        self._stamp = None
+
+    def write(self, chunks: Dict[Tuple[str, int], bytes]) -> bool:
+        """CHUNKS ({(kind, id): bytes}) each where its old one is, its length in the file's index; False
+        (nothing written) if one has no place, or no room there (ROOMS: the room the copy itself has, whatever
+        the caller reckons)."""
+        if any(key not in self.places or len(chunk) > self.rooms.get(key, 0) for key, chunk in chunks.items()):
+            return False
+        try:
+            with open(self.path, "r+b") as f:
+                for key, chunk in chunks.items():
+                    entry, offset, _ = self.places[key]
+                    f.seek(offset)
+                    f.write(chunk)
+                    f.seek(entry + 4)
+                    f.write(struct.pack("<I", len(chunk)))
+                    self.places[key] = (entry, offset, len(chunk))
+            self._stamp = self._now()
+        except OSError:
+            return False  # (tried again at the next update)
+        return True
+
+    def holds(self, chunks: Dict[Tuple[str, int], bytes]) -> bool:
+        """Whether the copy already holds each of CHUNKS as it is (and there are some)."""
+        try:
+            with open(self.path, "rb") as f:
+                for key, chunk in chunks.items():
+                    place = self.places.get(key)
+                    if place is None or place[2] != len(chunk):
+                        return False
+                    f.seek(place[1])
+                    if f.read(len(chunk)) != chunk:
+                        return False
+        except OSError:
+            return False
+        return bool(chunks)
 
 
 REPLACE_TRIES, REPLACE_WAIT = 5, 0.05

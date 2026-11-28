@@ -1444,7 +1444,7 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
     from Shattered Lands' in SL_DIR, their texts) unless ravspells.SKIP is in SKIP; last, Shattered Lands'
     interface pictures and icons (ravui: from SL_DIR, the regions' palettes from GAME_DIR, the sequel's folder)
     where the copy still has the game's own, unless ravui.SKIP is in SKIP."""
-    from . import icons, kitpages
+    from . import art, icons, inventoryart, kitpages, rollstore, spellgrid, weaponpages, wotrart
     out, done = spell_fixed(data, skip)
     if SLAY_TEXT not in skip:  # (Slay Living's description: SL's spelltexts fix, GAME-BUGS.md)
         try:
@@ -1454,106 +1454,57 @@ def resources_fixed(data: bytes, skip=frozenset(), objects: Optional[bytes] = No
         if said == SLAY_TEXT_OLD:  # (only the GOG release's own words put right)
             out = icons.with_chunks(out, {("SPIN", RAV_SLAY_LIVING + 1): slay_text()})
             done.append(SLAY_TEXT)
-    if SPELL_GRID not in skip:  # (CHOOSE A SPELL's icons six to a row: SL's spellgrid, the same window)
-        from . import spellgrid
+
+    def pick_icon(chunks):  # (a thief's purse, made from the earth Turn Undead's icon)
+        earth = wotrart.decode_plnr(chunks[("ICON", icons.TURN_EARTH_ICON)])
+        return {("ICON", icons.PICK_ICON): art.plnr_frames([icons.rav_pick_icon(earth)])}
+
+    def portraits(chunks):
+        source = game_dir and _find_file(game_dir, SCRIPT_FILE)
+        scripts = None
+        if source:
+            with open(source, "rb") as f:
+                scripts = gff.read_gff(f.read())
+        inside = None if ravui.SKIP in skip else ravportraits.emblem(sl_dir, game_dir, gff.read_gff(data))
+        return ravportraits.resource_chunks(chunks, scripts, inside)
+
+    plain = (KeyError, ValueError, IndexError, struct.error, gff.GffError)
+    # Each: (its name, as SKIP and the names applied have it; what it adds, from the copy's chunks so far; the
+    # errors that mean a file not as the GOG release's, which leave it out). In this order: each sees the chunks
+    # of those before it, and ravui last, so the mod's own chunks above stay.
+    makers = (
+        # (CHOOSE A SPELL's icons six to a row: SL's spellgrid, the same window)
+        (SPELL_GRID, spellgrid.chunks, plain),
+        (ravspells.SKIP, lambda c: ravspells.chunks(c, sl_dir), plain),
+        # (DSCLOG2's WEAPON PICKS opens it: sites 120-125; no psionicists' window to make it from: none)
+        (WEAPON_WINDOW, lambda c: weaponpages.rav_chunks(c, gff.read_gff(objects)) if objects else {}, plain),
+        # (a RESOURCE.GFF without the panel's windows: no kit pages, KITS never shown)
+        (KIT_PAGES, kitpages.rav_chunks, (KeyError, ValueError, IndexError, StopIteration, struct.error)),
+        # (STORE and RECALL: DSCLOG2's RS_CLICK, site 83; no such buttons to copy: the screen as the game has it)
+        (ROLL_BUTTONS, rollstore.rav_chunks, (KeyError, ValueError, IndexError, struct.error)),
+        # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS, site 240)
+        (ravarrows.SKIP, lambda c: ravarrows.resource_chunks(c, sl_dir), plain),
+        # (the Tarrasque, its cinematic and the drakes redrawn: ravfigures)
+        (ravfigures.SKIP, ravfigures.resource_chunks, (ravfigures.FigureError, gff.GffError, struct.error)),
+        # (a thief's purse on the USE screen: DSCLOG2's PICK POCKETS, sites 180-186; no earth Turn Undead: no icon)
+        (PICK_BUTTON_ICON, pick_icon, (KeyError, ValueError, IndexError, struct.error)),
+        # (DSCLOG2's INV_FIGURE and INV_LOAD read them: sites 251, 252; no SL folder: the sequel's own figures)
+        (INVENTORY_ART, lambda c: inventoryart.rav_chunks(c, sl_dir, game_dir), (OSError,) + plain),
+        # (the talk window and empty frame at Shattered Lands' size: ravportraits)
+        (ravportraits.SKIP, portraits, (OSError, gff.GffError, struct.error)),
+        # (Shattered Lands' interface)
+        (ravui.SKIP, lambda c: ravui.chunks(c, sl_dir, game_dir, gff.read_gff(data)), (gff.GffError,)),
+    )
+    for name, make, errors in makers:
+        if name in skip:
+            continue
         try:
-            added = spellgrid.chunks(gff.read_gff(out))
-        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
-            added = {}
+            added = make(gff.read_gff(out))
+        except errors:
+            continue
         if added:
             out = icons.with_chunks(out, added)
-            done.append(SPELL_GRID)
-    if ravspells.SKIP not in skip:
-        try:
-            added = ravspells.chunks(gff.read_gff(out), sl_dir)
-        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
-            added = {}  # (records not as the GOG release's: no new spells)
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(ravspells.SKIP)
-    if WEAPON_WINDOW not in skip and objects:  # (DSCLOG2's WEAPON PICKS opens it: sites 120-125)
-        from . import weaponpages
-        try:
-            added = weaponpages.rav_chunks(gff.read_gff(out), gff.read_gff(objects))
-        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
-            added = {}  # (no psionicists' window to make it from: none, the picks never asked)
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(WEAPON_WINDOW)
-    if KIT_PAGES not in skip:
-        try:
-            added = kitpages.rav_chunks(gff.read_gff(out))
-        except (KeyError, ValueError, IndexError, StopIteration, struct.error):
-            added = {}  # (a RESOURCE.GFF without the panel's windows: no kit pages, KITS never shown)
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(KIT_PAGES)
-    if ROLL_BUTTONS not in skip:  # (STORE and RECALL: DSCLOG2's RS_CLICK, site 83)
-        from . import rollstore
-        try:
-            added = rollstore.rav_chunks(gff.read_gff(out))
-        except (KeyError, ValueError, IndexError, struct.error):
-            added = {}  # (no such buttons to copy: the screen as the game has it)
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(ROLL_BUTTONS)
-    if ravarrows.SKIP not in skip:  # (a Spellarcher's arrows buttons: DSCLOG2's SPELL ARROWS, site 240)
-        try:
-            added = ravarrows.resource_chunks(gff.read_gff(out), sl_dir)
-        except (KeyError, ValueError, IndexError, struct.error, gff.GffError):
-            added = {}
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(ravarrows.SKIP)
-    if ravfigures.SKIP not in skip:  # (the Tarrasque, its cinematic and the drakes redrawn: ravfigures)
-        try:
-            added = ravfigures.resource_chunks(gff.read_gff(out))
-        except (ravfigures.FigureError, gff.GffError, struct.error):
-            added = {}
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(ravfigures.SKIP)
-    if PICK_BUTTON_ICON not in skip:  # (a thief's purse on the USE screen: DSCLOG2's PICK POCKETS, sites 180-186)
-        from . import art, wotrart
-        try:
-            earth = wotrart.decode_plnr(gff.read_gff(out)[("ICON", icons.TURN_EARTH_ICON)])
-            added = {("ICON", icons.PICK_ICON): art.plnr_frames([icons.rav_pick_icon(earth)])}
-        except (KeyError, ValueError, IndexError, struct.error):
-            added = {}  # (no earth Turn Undead to make it from: the button without its icon)
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(PICK_BUTTON_ICON)
-    if INVENTORY_ART not in skip:  # (DSCLOG2's INV_FIGURE and INV_LOAD read them: sites 251, 252)
-        from . import inventoryart
-        try:
-            added = inventoryart.rav_chunks(gff.read_gff(out), sl_dir, game_dir)
-        except (OSError, KeyError, ValueError, IndexError, struct.error, gff.GffError):
-            added = {}  # (no Shattered Lands folder to dress them from: the sequel's own figures)
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(INVENTORY_ART)
-    if ravportraits.SKIP not in skip:  # (the talk window and empty frame at Shattered Lands' size: ravportraits)
-        try:
-            source = game_dir and _find_file(game_dir, SCRIPT_FILE)
-            scripts = None
-            if source:
-                with open(source, "rb") as f:
-                    scripts = gff.read_gff(f.read())
-            inside = None if ravui.SKIP in skip else ravportraits.emblem(sl_dir, game_dir, gff.read_gff(data))
-            added = ravportraits.resource_chunks(gff.read_gff(out), scripts, inside)
-        except (OSError, gff.GffError, struct.error):
-            added = {}
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(ravportraits.SKIP)
-    if ravui.SKIP not in skip:  # (Shattered Lands' interface: last, so the mod's own chunks above stay)
-        try:
-            added = ravui.chunks(gff.read_gff(out), sl_dir, game_dir, gff.read_gff(data))
-        except gff.GffError:
-            added = {}
-        if added:
-            out = icons.with_chunks(out, added)
-            done.append(ravui.SKIP)
+            done.append(name)
     return out, done
 
 
