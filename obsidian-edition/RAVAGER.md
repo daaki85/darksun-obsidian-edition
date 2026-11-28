@@ -256,9 +256,11 @@ bigger character sheets) as it goes in (a game already running lists it from its
   offered and the one chosen (`You chose: Who are you?`), the speaker named once a talk shows whose
   face it is (`Caravan Master`; or name it with **Name speaker...**, kept apart from Shattered Lands'
   faces), and each message box in the journal and in the dice log (`Message: YOU ALREADY KNOW THIS
-  SPELL`). The sequel's journal is one of its own from the Loader's start: it doesn't follow the
-  sequel's saves as Shattered Lands' does (a game loaded there goes on in the same journal). The Spells
-  and Memory tools tabs read the sequel's spells and records.
+  SPELL`). The journal follows the sequel's saves as Shattered Lands' does: its place is kept in the
+  last two of the game's global numbers (the sequel's are at DS:15F6h, saved as SAVE chunk 31), so a game
+  loaded shows its own journal. The Journal tab's quests are Shattered Lands' alone (below). The Spells
+  and Memory tools tabs read the sequel's spells and records. The **Freeze report** reads the sequel too:
+  DSCLOG2 notes where the game was as its timer strikes.
 - **[Spells on the Effects screen](FEATURES.md#spells-on-the-effects-screen)**: a click on a spell's icon leaves it on in the sequel too.
 - **[Squares in reach](FEATURES.md#squares-in-reach), [F10](FEATURES.md#f10-takes-a-whole-move-back) and
   [Alt](FEATURES.md#showing-what-can-be-used-alt)** work in the sequel's fights too. On a party member's turn
@@ -403,5 +405,7 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **The DAM lines** leave out a thri-kreen's chatkcha throws, Hasted and Slowed, and a weak material's damage on
   View Character.
 - **The game's people** wearing and wielding their gear as they come on the map.
+- **The Journal tab's quests**: its table is Shattered Lands' story; the sequel's quests would need a table
+  of its own from its scripts' flags and numbers (93 of its scripts don't decode with the Loader's reader yet).
 - **The game's bugs** the mod mends in Shattered Lands but not yet in the sequel:
   [GAME-BUGS.md](GAME-BUGS.md#shattered-lands-fixes-in-the-sequel).

@@ -211,8 +211,11 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
   "Portrait 18" after CLOSE: no name learned (logs/2026-11-25-ravager-loot-tabs-join.md; the tabs log's talk,
   through the Look box, learned "Caravan Master"). The Loader's window there: `python3.12 -m dsloader view --pid`
   on Xvfb `:56` 1440x900 (tabs at y 132: Dice log 660, Dialogue 752, Journal 841, Spells 911, Memory tools 1013). The sequel's
-  global numbers' pointer (SL's DS:1356h) isn't found by `ravds.py --fuzzy`, and 93 of its scripts don't decode
-  with SL's decoder (those that do use numbers up to 150): the journal can't keep its head in a save there yet.
+  global numbers' pointer (SL's DS:1356h) is DS:15F6h (2026-11-28: the 200 words of SAVE chunk 31, SL's 30, found
+  in memory after a load, and the one far pointer in DS to them; DS:15F2h points 70h bytes before them, as SL's
+  flags' 1352h). 93 of its scripts don't decode with SL's decoder (those that do use numbers up to 150; the bytes
+  87h C6h, number 198, come as often in the 93 as in the rest, where they never are): the journal keeps its head
+  in numbers 198 and 199 there too.
 - **The sequel's message box** (560h:2Ah at 59A0Bh; its stub's entry 5DBh in the overlay at file 59430h):
   opens window 2905h (5B0h:48h, kept at 300h:7), writes the text, waits `[26B7h]` x 100 ms with the game's
   delay (0:12FAh, Borland's, on the PIT) and closes it. It was never seen: the windows are drawn only as a

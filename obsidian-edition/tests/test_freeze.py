@@ -86,6 +86,24 @@ class FreezeTests(unittest.TestCase):
         self.assertIn("load segment 01A2 (from its memory block", text)
         self.assertIn("game 0980:70AB", text)
 
+    def test_the_sequel(self):
+        """Wake of the Ravager's DSCLOG2 (its signature, SEQUEL_SIG): the sequel's DS, its program's header,
+        its helper's name, its DOS block (DSUNLOG2) and its header found by its own signature."""
+        from dsloader import ravager
+        self.assertEqual(freeze.SEQUEL_DGROUP, ravager.DGROUP)
+        ds = ravager.DGROUP + 0x1A2
+        mem, hdr = memory([(0x1A2 + 0x3A00, 0x2C)] * 8)
+        mem[hdr:hdr + 8] = freeze.SEQUEL_SIG
+        read = lambda a, n: bytes(mem[a:a + n])
+        text = freeze.report_text(read, hdr, ds, "now", "9.9", {}, "", "", None)
+        self.assertIn("Wake of the Ravager", text)
+        self.assertIn("DSCLOG2's segment C000; the game's load segment 01A2", text)
+        self.assertIn("game 3A00:002C (DSUN.EXE 3F22Ch, unless an overlay)", text)
+        self.assertIn("DSCLOG2's header", text)
+        self.assertEqual(freeze.place(TSR_SEG, 0x10, TSR_SEG, 0x1A2, sequel=True), "DSCLOG2 +0010")
+        mem[0x191 * 16 + 8:0x191 * 16 + 16] = b"DSUNLOG2"
+        self.assertEqual((freeze.find_header(bytes(mem)), freeze.load_from_block(bytes(mem))), (hdr, 0x1A2))
+
     def test_header_to_the_overlay_buffer(self):
         """The header in the report reaches the overlay buffer's segments and UMB_NEED (+368 to +373)."""
         mem, hdr = memory([(0x2000, 0x10)])

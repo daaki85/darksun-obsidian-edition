@@ -627,6 +627,11 @@ notes and the map's main loop for a second, and zips that with the memory below
 CS:1B2h is no longer "Test" (its check for memory written over), so notes all
 at 33A5:04D9h to 04DBh (load-segment relative) point there.
 
+In Wake of the Ravager DSCLOG2 does the same at the sequel's timer handler (3DA2Ch, site `VEC_TICK`, the
+same header fields; there the timer strikes about 1,000 times a second, so the notes are the last half
+second). The report knows DSCLOG2 by its header's signature (`DSCLOGR1`) and reads the sequel's DS
+(`ravager.DGROUP`), its program's header (5200h) and its memory block (`DSUNLOG2`).
+
 ### The item watch
 
 The item watch (`itemwatch.py`) reads the party's item lists once a second, and has to see past

@@ -256,7 +256,11 @@ kit_dance  times 4 db 0         ; +351 each party member's Battle Dancer's dance
 kit_wild   db 0                 ; +355 Wild Fighting, the Loader's (wild.py): bit N party member N fights
                                 ;      wild (3 worse to hit, AC 3 worse), bit N + 4 its check passed too
                                 ;      (1 more attack a round in melee, 3 more damage)
-        times 1814 - ($ - hdr) db 0 ; (DSCLOG's fields +356 to +1813: none of them here yet, zero)
+tick_off   dw ticks             ; +356 offset of TICKS in the tail (TAIL_SEG), as DSCLOG's: where the game was
+                                ;      as its timer struck (PROBE_TICK), TICK_SLOTS records of TICK_SIZE bytes
+tick_seq   dw 0                 ; +358 records taken, counted: the newest in slot (TICK_SEQ - 1) mod TICK_SLOTS
+                                ;      (the Loader's freeze report, freeze.py)
+        times 1814 - ($ - hdr) db 0 ; (DSCLOG's fields +360 to +1813: none of them here yet, zero)
 blast_hp   times 4 dw 0         ; +1814 the hit points Psionic Blast took from each party member this fight
                                 ;      (BLAST_LOSS), for the Loader to give back and clear as the fight
                                 ;      ends (psiblast.py); while one is owed, BLAST_KO knocks out
@@ -17997,20 +18001,57 @@ cp_addr:                                ; DI: pixel CX, DX's (in mode X its plan
 
 ; PROBE_TICK: INT VEC_TICK replaces "inc word cs:[0004h]" (5 bytes: INT + 3 NOPs; 3DA2Ch, SL's
 ; 3925Ch), the first instruction of the game's timer handler. Does that, and every other strike puts
-; the labels again. Interrupts stay off.
+; the labels again; every TICK_EVERY-th notes where the game was (the timer's own frame, just above this
+; interrupt's: IP, CS, flags, SS, SP, BP, DS, ES) in TICKS, as DSCLOG's, for the Loader's freeze report.
+; Interrupts stay off.
+TICK_EVERY equ 32
+TICK_SLOTS equ 16
+TICK_SIZE  equ 16
+        times -(TICK_SIZE != 16) db 0   ; (a negative count: the "shl bx,4" below takes a slot as 16 bytes)
 probe_tick:
         push bp
-        mov bp, sp
+        mov bp, sp                      ; BP+2 this interrupt's frame (in the handler), BP+8 the timer's
         push ds
+        push ax
+        push bx
         mov ds, [bp + 4]                ; the handler's CS
         inc word [4]                    ; the replaced instruction
-        pop ds
-        pop bp
         inc word [cs:tick_count]
         test byte [cs:tick_count], 1
-        jnz .out
+        jnz .seen
         call label_stamp
-.out:   iret
+.seen:  test byte [cs:tick_count], TICK_EVERY - 1
+        jnz .out
+        cmp word [cs:tail_seg], 0
+        je .out                         ; (the tail not set yet)
+        mov bx, [cs:tick_seq]
+        and bx, TICK_SLOTS - 1
+        shl bx, 4                       ; (TICK_SIZE)
+        add bx, ticks
+        mov ds, [cs:tail_seg]           ; (TICKS: the tail's)
+        mov ax, [bp + 8]
+        mov [bx], ax                    ; +0 IP
+        mov ax, [bp + 10]
+        mov [bx + 2], ax                ; +2 CS
+        mov ax, [bp + 12]
+        mov [bx + 4], ax                ; +4 flags
+        mov [bx + 6], ss                ; +6 SS
+        lea ax, [bp + 14]
+        mov [bx + 8], ax                ; +8 SP
+        mov ax, [bp]
+        mov [bx + 10], ax               ; +10 BP
+        mov ax, [bp - 2]
+        mov [bx + 12], ax               ; +12 DS
+        mov [bx + 14], es               ; +14 ES
+        inc word [cs:tick_seq]
+.out:   pop bx
+        pop ax
+        pop ds
+        pop bp
+        iret
+section tailz
+ticks      times TICK_SLOTS * TICK_SIZE db 0 ; (PROBE_TICK's, the Loader's to read: the header's +356)
+section image
 
 ; ON_MAP: ZF set if the game is on the map (SCREEN_IS 1); registers kept
         SHARED_on_map
