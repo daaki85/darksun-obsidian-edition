@@ -1633,7 +1633,7 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
 # buffer of 10,000; one of 10,000 ends in "BAD GPL EXIT", as in Shattered Lands).
 #   vouchers_*: the two ore voucher cashiers (GPL 143 at C54h, 144 at AE7h) work in 16-bit numbers: the
 #   total, vouchers times 100, goes negative past 327 vouchers, and the city's share is worked out from
-#   it, so 460 vouchers paid -9,768 (as players found): the money went down. Now a sale takes at most 327
+#   it, so 460 vouchers paid -7,818 (seen in play, 2026-11-28): the money went down. Now a sale takes at most 327
 #   (those the cashier counts: the take of every voucher, 32767, at D5Ah and C84h, takes that many), so
 #   the total, the share and the pay are the game's own sums and right; the rest stay for another sale.
 SEQUEL_LONGEST = 9985
