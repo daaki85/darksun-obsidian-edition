@@ -23952,7 +23952,7 @@ r_cast    db 0
 ; most SC_RUNS), filled in turn (the oldest given up). A figure whose picture is out of memory
 ; casts its frame's kept shadow, or another frame's of the same picture.
 SC_SLOT  equ 208
-SC_RUNS  equ 64
+SC_RUNS  equ 64                 ; (a power of two: SC_PUT goes round them by AND)
 SC_SLOTS equ 80
 SC_PARAS equ SC_SLOTS * SC_SLOT / 16
 sc_seg   dw 0
@@ -24051,13 +24051,14 @@ sc_start:
 ; SC_PUT: the run SHADOW_OF is casting (AX rows up from the feet, R_X, R_N) kept; registers kept
 sc_put: cmp word [cs:sc_rec], 0xFFFF
         je .ret
-        cmp byte [cs:sc_n], SC_RUNS
-        jae .ret
-        push es
+        cmp byte [cs:sc_n], 0xFF        ; (past SC_RUNS, round again over the first: the runs nearest the
+        je .ret                         ;   feet kept, the top of a big figure's shadow given up, not
+        push es                         ;   its foot, which left it floating)
         push di
         push bx
         mov es, [cs:sc_seg]
         movzx di, byte [cs:sc_n]
+        and di, SC_RUNS - 1
         imul di, di, 3
         add di, [cs:sc_rec]
         mov [es:di + 8], al
@@ -24080,7 +24081,10 @@ sc_end: cmp word [cs:sc_rec], 0xFFFF
         mov es, [cs:sc_seg]
         mov di, [cs:sc_rec]
         mov al, [cs:sc_n]
-        mov [es:di + 7], al
+        cmp al, SC_RUNS
+        jbe .count
+        mov al, SC_RUNS
+.count: mov [es:di + 7], al
         mov word [cs:sc_rec], 0xFFFF
         pop ax
         pop di

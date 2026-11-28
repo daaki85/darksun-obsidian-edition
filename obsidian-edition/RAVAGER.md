@@ -322,9 +322,9 @@ bigger character sheets) as it goes in (a game already running lists it from its
   ![The no-speaker frame: Shattered Lands' and the sequel's now](docs/ravager-no-speaker.png)
   ![The shop's right-hand panel: Shattered Lands', the sequel's with a first pattern, the sequel's now](docs/ravager-shop-panel.png)
 - **[Shadows](FEATURES.md#shadows)** under the figures in the sequel too: every living creature on the map (the
-  party, the people, the monsters; not the dead) casts its see-through shadow on the floor, laid long
-  toward the lower right, beside the shadows the Loader's copy gives the sequel's walls (it draws none of
-  its own).
+  party, the people, the monsters, the drakes and the Tarrasque too; not the dead) casts its see-through
+  shadow on the floor from its feet, laid long toward the lower right, beside the shadows the Loader's copy
+  gives the sequel's walls (it draws none of its own).
 - **[Dust](FEATURES.md#dust)** in the sequel too: whoever walks over dirt or sand raises little puffs behind them
   (Tyr's squares and yards; its grey cobbles and the dark floors indoors take none).
 - **[Magic items' icons](FEATURES.md#magic-items-icons)** shine in the sequel's shops too (they stood still on a

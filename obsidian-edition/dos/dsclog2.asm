@@ -19662,8 +19662,10 @@ ws_flush:
 FS_ROWS     equ 64              ; rows of a figure, up from its feet, that cast a shadow (SL's SHADOW_ROWS)
 FS_RIGHT    equ 72              ; how far right a shadow reaches past its figure (SL's SHADOW_RIGHT) ...
 FS_DOWN     equ 44              ; ... and down (SL's SHADOW_DOWN)
-FS_MOST     equ 128             ; (the widest and tallest a figure may be, for the test of whether its
-                                ;   shadow can be where the floor was drawn: SL's FIGURE_MOST)
+FS_MOST     equ 255             ; (the widest and tallest a figure that casts one may be: a kept frame's
+                                ;   width and bottom row are bytes; 128 till 2026-11-28, when the
+                                ;   Tarrasque's widest frames, 134 to 153, cast none, its shadow coming and
+                                ;   going as it moved)
 FS_LIST     equ 0x67B7          ; DS: the draw list, far ...
 FS_COUNT    equ 0x264E          ; ... its entries
 FS_THINGS_SEG equ 0x3F49        ; (less the load segment) the things table's segment ...
@@ -19773,15 +19775,24 @@ fig_pass:
 .done:  call vga_restore
 .ret:   ret
 
-; FIG_ALIVE: CF set if thing BX is a living creature (FIGURE SHADOWS, above). DS the game's; keeps all.
+; FIG_ALIVE: CF set if thing BX is a living creature (FIGURE SHADOWS, above), or a part of one: the map
+; thing's word +23h the thing it is part of (FFFFh none; the Tarrasque's front half, thing 252 in its fight,
+; +23h 41 its back half, the creature; +21h on the creature names the part), which casts its own shadow
+; (2026-11-28: the front half cast none, the back half's lay under the body, the beast standing on no
+; shadow). DS the game's; keeps all.
 fig_alive:
         push ax
         push si
         push es
+        imul si, bx, THING_SIZE
+        mov ax, [si + MAP_THINGS + 0x23]
+        cmp ax, MAP_COUNT - 1
+        jbe .whose
+        mov ax, bx
+.whose: imul si, ax, 3
         mov ax, ds
         sub ax, DGROUP - FS_THINGS_SEG
         mov es, ax
-        imul si, bx, 3
         cmp byte [es:si + FS_THINGS], 2
         jne .no
         mov ax, [es:si + FS_THINGS + 1]
@@ -19890,8 +19901,8 @@ fig_of:
         dec ax
         js .no
         mov [cs:fg_bottom], ax
-        cmp byte [es:si + 4], 0xFF      ; (none, or planar: FFh "PLNR" / "PLAN")
-        je .no
+        cmp byte [es:si + 4], 0xFF      ; (none, or planar: FFh "PLNR" / "PLAN": the shadow kept as the
+        je .kept                        ;   game drew it, PLANAR FIGURES)
         call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
         cmp ax, [cs:fg_bottom]
         jae .feet
@@ -20137,9 +20148,19 @@ fig_record:
         dec ax
         js .ret
         mov [cs:fk_bottom], al
+        mov byte [cs:fk_planar], 0
         cmp byte [es:si + 4], 0xFF      ; (none, or planar)
+        jne .runs
+        cmp dword [es:si + 5], 'PLNR'   ; (a planar figure, the drakes' and the Tarrasque's: PL_FEET)
+        jne .ret
+        inc byte [cs:fk_planar]
+        mov ax, pl_feet_far
+        call pl_call
+        cmp ax, 0xFFFF
         je .ret
-        call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
+        mov [cs:fk_bottom], al
+        jmp .feet
+.runs:  call feet_row                   ; (the feet on its lowest drawn row: FEET_ROW)
         cmp al, [cs:fk_bottom]
         jae .feet
         mov [cs:fk_bottom], al
@@ -20162,7 +20183,12 @@ fig_record:
         mov [fs:di + 6], al
         xor cx, cx                      ; CX: the runs kept
         lea bx, [di + 8]
-        add si, 4
+        cmp byte [cs:fk_planar], 0
+        je .rows
+        mov ax, pl_runs_far             ; (a planar frame's: PL_RUNS)
+        call pl_call
+        jmp .whole
+.rows:  add si, 4
 .row:   mov al, [es:si]                 ; a row: its number (FFh: none left), then its runs
         inc si
         cmp al, 0xFF
@@ -20175,15 +20201,17 @@ fig_record:
         jg .skip
         test dl, 1
         jnz .skip
-.run:   cmp cx, SC_RUNS
-        jae .past
-        mov [fs:bx], dl
-        mov al, [es:si]
-        mov [fs:bx + 1], al
+.run:   mov [fs:bx], dl                 ; (past SC_RUNS, round again over the first: the runs nearest
+        mov al, [es:si]                 ;   the feet kept, the top of a big figure's shadow given up,
+        mov [fs:bx + 1], al             ;   not its foot, which left it floating)
         mov al, [es:si + 2]
         mov [fs:bx + 2], al
         add bx, 3
         inc cx
+        lea ax, [di + 8 + 3 * SC_RUNS]
+        cmp bx, ax
+        jb .past
+        lea bx, [di + 8]
 .past:  test byte [es:si + 1], 0x80        ; (past the run: its data's bytes)
         pushf
         movzx ax, byte [es:si + 3]
@@ -20199,12 +20227,254 @@ fig_record:
         test al, 0x80
         jz .skip
         jmp .row
-.whole: mov [fs:di + 7], cl
+.whole: cmp cx, SC_RUNS
+        jbe .count
+        mov cx, SC_RUNS
+.count: mov [fs:di + 7], cl
         inc word [cs:fig_kept]
 .ret:   ret
 fk_frame  db 0
 fk_w      db 0
 fk_bottom db 0
+fk_planar db 0
+
+; PL_CALL: the tail's routine AX run (PLANAR FIGURES, in the tail): GS this segment there, as DSCLOG's
+; TAIL_CALL. AX as it leaves it.
+pl_call:
+        push gs
+        push cs
+        pop gs
+        push cs
+        push word .back
+        push word [cs:tail_seg]
+        push ax
+        retf
+.back:  pop gs
+        ret
+
+section tail
+; PLANAR FIGURES: the sequel's biggest creatures (the drakes, the Tarrasque: RESOURCE.GFF's 11001-11007) are
+; drawn from planar pictures (FFh "PLNR" after the frame's width and height: the bits a code takes, then a
+; colour for each code, then the codes, packed from each byte's top bit: a code not 0 a pixel of its colour;
+; 0 then a count: not 0, the last pixel again count + 2 times; 0, a clear one; wotrart.decode_plnr), which
+; cast no shadow before 2026-11-28, the drakes seeming to fly over the ground while all else stood on it. Such
+; a frame's shadow is kept as it is drawn (FIG_KEEP), as a picture of runs is: PL_FEET finds its feet (the
+; lowest row with a pixel not clear), PL_RUNS its rows' runs of pixels from there up, every other row, into
+; the slot. A pixel is clear if its colour is 0. The frame is unpacked twice, once per frame kept. The work
+; is in the tail (the segment has no room), run through PL_CALL: GS the segment, the tail's own variables CS.
+
+; PL_FEET_FAR, PL_RUNS_FAR: PL_FEET's and PL_RUNS's way in from the segment (PL_CALL).
+pl_feet_far:
+        call pl_feet
+        retf
+pl_runs_far:
+        call pl_runs
+        retf
+
+; PL_START: the codes of planar frame ES:SI read from the first (PL_CODE). AX, CX not kept.
+pl_start:
+        mov cl, [es:si + 9]
+        mov [cs:pl_bits], cl
+        mov ax, 1
+        shl ax, cl
+        dec ax
+        mov [cs:pl_mask], ax
+        lea ax, [si + 10]
+        mov [cs:pl_cols], ax
+        add ax, [cs:pl_mask]
+        inc ax
+        mov [cs:pl_ptr], ax
+        mov word [cs:pl_acc], 0
+        mov byte [cs:pl_n], 0
+        mov byte [cs:pl_last], 0
+        ret
+
+; PL_CODE: AX the next code. CX, DX not kept.
+pl_code:
+        mov cl, [cs:pl_n]
+        cmp cl, [cs:pl_bits]
+        jae .take
+        mov ax, [cs:pl_acc]
+        shl ax, 8
+        mov dx, si
+        mov si, [cs:pl_ptr]
+        mov al, [es:si]
+        mov si, dx
+        inc word [cs:pl_ptr]
+        mov [cs:pl_acc], ax
+        add byte [cs:pl_n], 8
+        jmp pl_code
+.take:  sub cl, [cs:pl_bits]
+        mov [cs:pl_n], cl
+        mov ax, [cs:pl_acc]
+        shr ax, cl
+        and ax, [cs:pl_mask]
+        ret
+
+; PL_SEG: the next pixels, CX of them alike, AL 1 if they are drawn (not clear), else 0. DX not kept.
+pl_seg: call pl_code
+        or ax, ax
+        jz .esc
+        mov [cs:pl_last], al
+        mov cx, 1
+        jmp .drawn
+.esc:   call pl_code
+        or ax, ax
+        jz .clear
+        add ax, 2
+        mov cx, ax
+        mov al, [cs:pl_last]
+.drawn: or al, al
+        jz .ret
+        push bx
+        movzx bx, al
+        add bx, [cs:pl_cols]
+        cmp byte [es:bx], 0
+        pop bx
+        setne al
+.ret:   ret
+.clear: mov byte [cs:pl_last], 0
+        mov cx, 1
+        xor al, al
+        ret
+
+; PL_FEET: AX the lowest row planar frame ES:SI draws a pixel on (FFFFh: none). Keeps all but AX.
+pl_feet:
+        push bx
+        push cx
+        push dx
+        push di
+        call pl_start
+        mov ax, [es:si]
+        mul word [es:si + 2]
+        mov [cs:pl_total], ax           ; (its pixels: at most 255 x 255)
+        xor bx, bx                      ; BX: the pixels unpacked
+        mov di, 0xFFFF                  ; DI: the last drawn one, plus 1
+.seg:   cmp bx, [cs:pl_total]
+        jae .done
+        call pl_seg
+        add bx, cx
+        cmp bx, [cs:pl_total]
+        jbe .in
+        mov bx, [cs:pl_total]
+.in:    or al, al
+        jz .seg
+        mov di, bx
+        jmp .seg
+.done:  mov ax, 0xFFFF
+        cmp di, 0xFFFF
+        je .out
+        lea ax, [di - 1]
+        xor dx, dx
+        div word [es:si]                ; (its row)
+.out:   pop di
+        pop dx
+        pop cx
+        pop bx
+        ret
+
+; PL_RUNS: (FIG_RECORD's: ES:SI the planar frame, FK_BOTTOM its feet, FS:DI the slot, FS:BX where its runs go,
+; CX 0) the runs of its rows that cast a shadow kept, as FIG_RECORD keeps a picture of runs' (round again past
+; SC_RUNS); CX how many. Keeps SI, DI.
+pl_runs:
+        push si
+        call pl_start
+        mov [cs:pl_out], bx
+        mov word [cs:pl_count], 0
+        xor ax, ax
+        mov [cs:pl_x], ax
+        mov [cs:pl_y], ax
+        mov byte [cs:pl_in], 0
+        call pl_row
+.seg:   call pl_seg
+        mov [cs:pl_op], al
+.part:  jcxz .seg
+        mov ax, [es:si]                 ; M: as many as are left of the row
+        sub ax, [cs:pl_x]
+        cmp ax, cx
+        jbe .m
+        mov ax, cx
+.m:     sub cx, ax
+        mov dx, ax
+        cmp byte [cs:pl_op], 0
+        je .clear
+        cmp byte [cs:pl_up], 0xFF
+        je .on
+        cmp byte [cs:pl_in], 0
+        jne .on
+        mov ax, [cs:pl_x]
+        mov [cs:pl_rx], ax
+        mov byte [cs:pl_in], 1
+        jmp .on
+.clear: call pl_emit
+.on:    add [cs:pl_x], dx
+        mov ax, [cs:pl_x]
+        cmp ax, [es:si]
+        jb .part
+        call pl_emit                    ; (the row's end)
+        mov word [cs:pl_x], 0
+        inc word [cs:pl_y]
+        movzx ax, byte [gs:fk_bottom]
+        cmp [cs:pl_y], ax
+        ja .done
+        call pl_row
+        jmp .part
+.done:  mov bx, [cs:pl_out]
+        mov cx, [cs:pl_count]
+        pop si
+        ret
+
+; PL_ROW: PL_UP how far row PL_Y is up from the feet if it casts a shadow (every other row, FS_ROWS of
+; them), else FFh. AX not kept.
+pl_row: mov byte [cs:pl_up], 0xFF
+        movzx ax, byte [gs:fk_bottom]
+        sub ax, [cs:pl_y]
+        jl .ret
+        cmp ax, FS_ROWS
+        jg .ret
+        test al, 1
+        jnz .ret
+        mov [cs:pl_up], al
+.ret:   ret
+
+; PL_EMIT: the run from PL_RX to PL_X kept in the slot (FS:DI), if one was going. AX, BX not kept.
+pl_emit:
+        cmp byte [cs:pl_in], 0
+        je .ret
+        mov byte [cs:pl_in], 0
+        mov bx, [cs:pl_out]
+        mov al, [cs:pl_up]
+        mov [fs:bx], al
+        mov ax, [cs:pl_rx]
+        mov [fs:bx + 1], al
+        neg al
+        add al, [cs:pl_x]
+        mov [fs:bx + 2], al
+        add bx, 3
+        lea ax, [di + 8 + 3 * SC_RUNS]
+        cmp bx, ax
+        jb .in
+        lea bx, [di + 8]
+.in:    mov [cs:pl_out], bx
+        inc word [cs:pl_count]
+.ret:   ret
+pl_bits  db 0
+pl_n     db 0
+pl_last  db 0
+pl_op    db 0
+pl_in    db 0
+pl_up    db 0
+pl_mask  dw 0
+pl_cols  dw 0
+pl_ptr   dw 0
+pl_acc   dw 0
+pl_total dw 0
+pl_x     dw 0
+pl_y     dw 0
+pl_rx    dw 0
+pl_out   dw 0
+pl_count dw 0
+section image
 
 ; FEET_ROW: AX the lowest row frame ES:SI (width, height, then its rows of runs) draws anything on, its last
 ; (FFFFh: none): the figure's feet, which FIG_OF and FIG_RECORD take when higher than the frame's bottom edge
