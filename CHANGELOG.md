@@ -59,6 +59,16 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager, the game's own script bugs** (branch `claude/ravager-script-bugs`). A sweep of
+all 350 of the sequel's scripts ([the report](reports/ravager-script-bugs-2026-11-28.md)) found, and the Loader's copy
+now mends, each in place at the same length: the sleeping giant Ptar's pocket could be picked again and again (a key
+and 2,000 XP each time, and he still had the key: what asks whether it is gone read a flag nothing sets); the ore
+voucher cashiers paid a negative sum past 327 vouchers, so cashing them in took money away; four developers' DEBUG
+messages printed in play (a creature seeing the party, Surrakina's talk, Kalak's pyramid); Ptar called a druid or a
+cleric "warrior" and not a fighter; his "I let Magnolia go!" missed one of the two ways she is freed; one of a camp's
+peons had no look text. **Dev:** `ravager.SCRIPT_FIXES` takes a region's master script too (`("MAS ", 52)`); tests
+that every fixed script decodes, keeps its length and jumps onto commands.
+
 **Fixed: saving throws, both games** (branch `claude/ravager-saves-on-load`): a loaded party's saves
 are worked out again as the game would at a level up (`savemend.py`, the dice log's `mend_saves`), so a
 sequel party made while its saves were nonsense (81/2/235/0/208), or one from before the Handbook's

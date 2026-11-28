@@ -267,6 +267,10 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | **Saving throws** past the table | Held at the table's last row: a warrior at 11/11/11/13/11 from 10th level, and no save better than 8 | The Player's Handbook's saves by class group and level ([the level cap](RAVAGER.md)) |
 | Twelve of the sequel's **magic items' icons** (Dragonsbane, the Toothed Club, the Chatchka +1, the Gloves +3, three magic armours, the Boots, the Amulet, the Ioun Stone, the Necklace and the Rod) | Never shone, as its other magic items do | Shine as the others ([magic items' icons](FEATURES.md#magic-items-icons)) |
 | **The inn's room** in Tyr | Never rested: Reyhan's ring's script deleted the ring on the last paid night before the rest could run, so a night paid gave no rest | The night rests; the spent ring goes at the next look |
+| **Ptar's key** (Humbleton) | Picking the sleeping giant's pocket could be done again and again: a key to Magnolia's chains and 2,000 XP each time, and he still had the key when killed or asked for it | Once: after it his pockets are empty, his body has no second key, and he says he can't find it |
+| **Ore vouchers** (the mines' cashiers) | Past 327 vouchers the sum went negative, so cashing them in took money away (460 vouchers: -9,768) | Each voucher's pay worked out on its own: right up to 655 vouchers at once (the grand total they name still goes wrong past 327) |
+| **DEBUG messages** on screen | "DEBUG : got to here!", "DEBUG: sur_main" and two more of the developers' messages printed in play | Not printed |
+| Ptar's **"warrior"** and **"I let Magnolia go!"**, a camp **peon's look** | A druid or cleric was called a warrior and a fighter wasn't; the taunt missed one of the two ways she is freed; one peon had no look text | As meant ([the report](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/ravager-script-bugs-2026-11-28.md)) |
 
 ## Saved games
 

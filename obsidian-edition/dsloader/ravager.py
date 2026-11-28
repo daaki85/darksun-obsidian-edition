@@ -1569,7 +1569,9 @@ def write_resources(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional
     return _write_copy(game_dir, RESOURCE_FILE, dest, lambda d, s: resources_fixed(d, s, objects, sl_dir, game_dir), skip)
 
 
-# The game's script slips: {name: (GPL chunk, offset, original, replacement)}.
+# The game's script slips: {name: (GPL chunk, offset, original, replacement)}; a chunk of another type
+# (a region's master script) is named as a pair, ("MAS ", 52). Each keeps its script's length (the
+# sequel's script buffer is the game's 10,000 bytes, its largest script 9,985).
 #   inn_rest: Reyhan's inn in Tyr. GPL 140 rents a fire ring (object kind -1317) for so many nights;
 #   Tyr's master script gives the ring a look trigger, GPL 142 at 1478, which runs before the
 #   program's own look (whose ring branch rests the party 8 hours, rest(0, 8, 7FFEh) at 6951Ch: the
@@ -1590,7 +1592,58 @@ SCRIPT_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
     "no_manual_check": (331, 1, bytes.fromhex(
         "2a4f00629205a9a32a0c3a7920c38b7f5e883cefea831f2c38f5eccbcd077d3d3420db873e9c787620c9a79e3d187967cbcd06141c37f7cbcb375d880180"),
         bytes.fromhex("1600008e001600ff8720160007871d15") + b"\x61" * 46),
+    # Found by a sweep of every script (reports/ravager-script-bugs-2026-11-28.md), each checked with the
+    # walkthrough where it says what was meant:
+    #   ptar_key_*: the sleeping giant Ptar (Humbleton, GPL 47) can have his pocket picked for the key to
+    #   Magnolia's chains and 2,000 XP; the pick sets flag 131 (the Journal's "key taken"), but what asks
+    #   whether the key is gone reads flag 82, which nothing sets: the giant's menu (47 at 374h), his body's
+    #   key (29 at 352h) and his "I no find key" when asked for it (46 at 215h). So the pocket could be
+    #   picked again and again, a key and 2,000 XP each time, and he still had the key. They read 131 now.
+    "ptar_key_menu": (47, 0x374, bytes.fromhex("18e28d52"), bytes.fromhex("18e28d83")),
+    "ptar_key_body": (29, 0x352, bytes.fromhex("188d52"), bytes.fromhex("188d83")),
+    "ptar_key_talk": (46, 0x215, bytes.fromhex("18e28d52"), bytes.fromhex("18e28d83")),
+    #   ptar_warrior: Ptar's "I will not kill you for saying this, warrior" (46 at 1114h) tested the class
+    #   bits against 606 (25Eh: ranger, gladiator, druid and three clerics), a slip for 608 (260h: fighter,
+    #   gladiator, ranger, the game's warriors as at GPL 11's E97h), so a fighter wasn't called one.
+    "ptar_warrior": (46, 0x111D, bytes.fromhex("025e"), bytes.fromhex("0260")),
+    #   ptar_let_go: Ptar's talk offers "I let Magnolia go!" when global number 41 is 10 or 10 (46 at 4Ch);
+    #   GPL 40 sets 10 or 11 as she is freed (at 46Fh, 477h, by whether he saw it), so the second is 11.
+    "ptar_let_go": (46, 0x59, bytes.fromhex("8f0a"), bytes.fromhex("8f0b")),
+    #   peon_look: a camp's peons each get the look handler of their kind's script (GPL 45 at C3Ch: the
+    #   leaders' kinds -137, -131, -135, -133, the peons' -138, -132, -136, -134); the last peon's (CDBh)
+    #   went to -133, its leader, so peon -134 said nothing when looked at.
+    "peon_look": (45, 0xCE0, bytes.fromhex("910085"), bytes.fromhex("910086")),
+    #   vouchers_*: the two ore voucher cashiers (GPL 143, 144) work in 16-bit numbers: the total, vouchers
+    #   times 100, goes negative past 327 vouchers, and the city's share is worked out from it, so 460
+    #   vouchers paid -9,768 (as players found): the money went down. Now the share and the pay are each
+    #   the vouchers times their rate (144: 50 and 50, or 70 and 30 with flag 377; 143: 60 and 40), right
+    #   up to 655 vouchers (the grand total said still wraps past 327). Same lengths: some numbers in their
+    #   longer forms (90h a word, 8Bh a dword).
+    "vouchers_144": (144, 0xAE7, bytes.fromhex(
+        "168200d38f64820218cd0179d78f003e0b0616e28202d48f0ae1d38f0582013f0b1616e28202d48f0ae1d38f07820167"
+        "168202d282018203"), bytes.fromhex(
+        "168200d38f64820218cd0179d78f003e0b0b168200d39000328201168200d39000328203"
+        "3f0b1e168200d38f468201168200d38f1e820367")),
+    "vouchers_143": (143, 0xC54, bytes.fromhex("168200d38f64820116e28201d48f0ae1d38f068202168201d282028203"),
+                     bytes.fromhex("168200d39000648201168200d38b0000003c8202168200d39000288203")),
+    #   debug_*: developers' messages the game prints: "DEBUG : got to here!" and "DEBUG : here we are now!"
+    #   as a creature of GPL 81's sees the party (GPL 25 at Dh, 35h), "DEBUG: sur_main" in Surrakina's talk
+    #   (254 at 9Fh), "DEBUG: Killer is defiled." in Kalak's pyramid (MAS 52 at A8h). Each print is jumped
+    #   over (the jump and fill of inn_rest).
+    "debug_sight": (25, 0xD, bytes.fromhex("4f0062920589161558e81d20cfbfa20e9bd068cbcb2a1060"),
+                    bytes.fromhex("640025") + b"\x61" * 21),
+    "debug_sight_2": (25, 0x35, bytes.fromhex("4f0062920589161558e81d20d19796541df2a0c3cb2a0ddbfba106"),
+                      bytes.fromhex("640050") + b"\x61" * 24),
+    "debug_surrakina": (254, 0x9F, bytes.fromhex("4f0062920589161558ee9073ebcafedc3a772006"),
+                        bytes.fromhex("6400b3") + b"\x61" * 17),
+    "debug_pyramid": (("MAS ", 52), 0xA8, bytes.fromhex("4f0062920589161558ee904bd3b3665e4834f341932e6d3b32e45c0c"),
+                      bytes.fromhex("6400c4") + b"\x61" * 25),
 }
+
+
+def script_key(chunk) -> Tuple[str, int]:
+    """A SCRIPT_FIXES chunk as its GFF key: a number is a GPL script's."""
+    return chunk if isinstance(chunk, tuple) else ("GPL ", chunk)
 
 
 def script_fixed(data: bytes, skip=frozenset(), palette=None) -> Tuple[bytes, List[str]]:
@@ -1598,12 +1651,13 @@ def script_fixed(data: bytes, skip=frozenset(), palette=None) -> Tuple[bytes, Li
     applied; anything not as a fix expects raises (a GPLDATA.GFF this module doesn't know). The talk
     portraits made Shattered Lands' size too (ravportraits, PALETTE the sequel's interface colours to make
     them smaller in) unless ravportraits.SKIP is in SKIP."""
-    places = gff.index_places(data, "GPL ")
+    places = {kind: gff.index_places(data, kind) for kind in {script_key(f[0])[0] for f in SCRIPT_FIXES.values()}}
     out, done = bytearray(data), []
     for name, (chunk, offset, original, replacement) in SCRIPT_FIXES.items():
-        if chunk not in places or places[chunk][2] < offset + len(original):
+        kind, number = script_key(chunk)
+        if number not in places[kind] or places[kind][number][2] < offset + len(original):
             raise RavagerError(f"{SCRIPT_FILE} has no script {chunk}: not the GOG release's")
-        at = places[chunk][1] + offset
+        at = places[kind][number][1] + offset
         if bytes(out[at:at + len(original)]) != original:
             raise RavagerError(f"{SCRIPT_FILE}'s script {chunk} is not as the fix {name} expects")
         if name not in skip:

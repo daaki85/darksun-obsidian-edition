@@ -561,16 +561,16 @@ class GameFileTests(unittest.TestCase):
             own = gff.read_gff(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
             fixed = {}
             for chunk, offset, original, replacement in ravager.SCRIPT_FIXES.values():
-                script = bytearray(fixed.get(chunk, own[("GPL ", chunk)]))
+                key = ravager.script_key(chunk)
+                script = bytearray(fixed.get(key, own[key]))
                 self.assertEqual(bytes(script[offset:offset + len(original)]), original)
                 script[offset:offset + len(original)] = replacement
-                fixed[chunk] = bytes(script)
+                fixed[key] = bytes(script)
             faces = {k for k in own if k[0] == "PORT"}  # (made smaller: ravportraits)
             self.assertEqual(set(gpl), set(own))
-            self.assertEqual({k for k in own if own[k] != gpl[k] and k[0] != "GFFI"},
-                             {("GPL ", c) for c in fixed} | faces)
-            for c, script in fixed.items():
-                self.assertEqual(gpl[("GPL ", c)], script)
+            self.assertEqual({k for k in own if own[k] != gpl[k] and k[0] != "GFFI"}, set(fixed) | faces)
+            for key, script in fixed.items():
+                self.assertEqual(gpl[key], script)
             self.assertTrue(all(struct.unpack_from("<HH", gpl[k], struct.unpack_from("<I", gpl[k], 6)[0])
                                 == (ravportraits.WIDTH, ravportraits.HEIGHT) for k in faces))
             objs = gff.read_gff(open(os.path.join(d, ravager.OBJECTS_COPY), "rb").read())
@@ -648,6 +648,45 @@ class GameFileTests(unittest.TestCase):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
         same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES) | {ravportraits.SKIP})
         self.assertEqual((same, done), (data, []))
+
+    def test_script_fixes_decode(self):
+        """Every fixed script still decodes whole and keeps its length (the sequel's script buffer is the
+        game's), each fix's replacement as long as what it replaces, and every jump in it lands on a command."""
+        from dsloader import gpl
+        data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+        fixed, _ = ravager.script_fixed(data)
+        own, _ = gpl.load_scripts(data)
+        scripts, types = gpl.load_scripts(fixed)
+        for name, (chunk, offset, original, replacement) in ravager.SCRIPT_FIXES.items():
+            with self.subTest(name):
+                key = ravager.script_key(chunk)
+                self.assertEqual(len(original), len(replacement))
+                self.assertEqual(len(scripts[key]), len(own[key]))
+                ops = gpl.decode(scripts[key], types)
+                starts = {o.at for o in ops}
+                for o in gpl.walk(ops):
+                    if o.code in (0x3E, 0x3F, 0x64) and o.args[0][0] == "n":
+                        self.assertIn(o.args[0][1], starts, f"{o.code:02X}h at {o.at:X}h")
+
+    def test_ptar_key_is_taken_once(self):
+        """What asks whether Ptar's key is gone reads the flag his picked pocket sets (131), and nothing
+        reads 82 (never set) any more."""
+        from dsloader import gpl
+        fixed, _ = ravager.script_fixed(open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read())
+        scripts, types = gpl.load_scripts(fixed)
+        def flags(x):
+            if isinstance(x, gpl.Op):
+                yield from flags(x.args)
+            elif isinstance(x, tuple) and len(x) == 3 and x[0] == "var" and x[1] == 0x8D:
+                yield x[2]
+            elif isinstance(x, (list, tuple)):
+                for y in x:
+                    yield from flags(y)
+            elif isinstance(x, dict):
+                for y in x.values():
+                    yield from flags(y)
+        read = {n: {f for f in flags(gpl.decode(scripts[("GPL ", n)], types))} for n in (29, 46, 47)}
+        self.assertTrue(all(131 in f and 82 not in f for f in read.values()), read)
 
     def test_manual_check_decodes(self):
         """The copy's GPL 331 still decodes whole, and starts with the right answer's settings."""
