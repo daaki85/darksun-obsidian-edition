@@ -104,7 +104,7 @@ for a game begun before the rule.
 Each one's features of their own are listed on the Effects screen's panel, under the kits and weapon specs, as
 Shattered Lands' Cilla's are. And whatever the rules, Terrannus, whom the sequel starts with his shield in the
 right hand (the weapon hand, the one the attacks a round count for) and his long sword in the left, has them
-swapped as the new game starts.
+swapped when a game is begun or loaded (a game saved before this fix is mended too).
 
 ## Saves in the sequel
 

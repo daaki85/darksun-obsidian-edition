@@ -326,19 +326,15 @@ def rav_ready(gd: GameData, rules: int) -> List[str]:
 
 
 def rav_hands_due(gd: GameData) -> List[int]:
-    """The sequel's own party's members (rav_who) not yet made ready (no OWN_BIT: rav_ready marks them) whose
-    shield is in the weapon hand: the game starts Terrannus with his Shield +1 in the right hand, his Longsword +1
-    in the left, one swing a round (2026-11-28). Shattered Lands' own party starts with the weapons in the right
-    hand already."""
-    from . import kits
+    """The sequel's own party's members (rav_who) whose shield is in the weapon hand: the game starts Terrannus
+    with his Shield +1 in the right hand, his Longsword +1 in the left, one swing a round (2026-11-28). Looked at
+    once each time a game is loaded or begun (RavDiceLog's _party_pass), so a game saved before is mended too.
+    Shattered Lands' own party starts with the weapons in the right hand already."""
     types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
     right = game.WEAPON_HANDS[0]
     out = []
     for member in range(game.PARTY_SIZE):
         if not rav_who(gd, member):
-            continue
-        byte = gd.sheet(member)[kitpages.KIT_BYTE]
-        if byte != kits.KIT_OPEN and byte & kits.OWN_BIT:
             continue
         for _, item, _ in gd._worn(member):
             kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]

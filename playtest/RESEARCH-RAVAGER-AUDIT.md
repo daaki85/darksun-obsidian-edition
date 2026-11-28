@@ -515,5 +515,8 @@ The [Ravager figure project handoff](logs/2026-11-22-ravager-figure-project.md) 
 - **The Effects screen in the ambush**: the top-left icon (22,17) opens USE for the member whose turn it is (a clicked
   portrait: ONLY ACTIVE CHAR CAN CAST); EFFECTS 120,171; Computer Control on that screen's lower small icons 46,53 /
   98,53 / 46,110 / 98,110 ("COMPUTER CONTROL IS ON" in the bar).
+  A portrait click on the Effects screen shows that member's panel (70,57 / 120,57 / 70,115 / 120,115), in a fight
+  too.
+- **`ravdice.py | head -N`** ends the dice log at the Nth line (SIGPIPE): a pass waiting out LOAD_SETTLE never runs.
 - **A fresh container** (2026-11-28) had nasm and Xvfb but no dosbox, xdotool or innoextract: `apt-get install dosbox
   xdotool innoextract imagemagick poppler-utils`, then `setup_game.sh` and `setup_ravager.sh` (a few minutes).
