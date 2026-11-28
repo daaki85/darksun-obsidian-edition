@@ -243,6 +243,17 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-furniture-joins.md) | Four repaired red beds, the Alliance barrels and the vase on its stacked crate, in DOSBox |
 | [2026-11-27](2026-11-27-ravager-throne-and-workshop.md) | Tantris leaves his throne, six temple braziers, and Ikibod’s workbench in Mosaic |
 | [2026-11-27](2026-11-27-ravager-mosaic-museum.md) | Mosaic museum in DOSBox, including both portable busts, Khildril, Fletch’s movable bookcase and Biblid |
+| [2026-11-27](2026-11-27-ravager-basin-and-chests.md) | Pavis leaves his writing basin in El’s Temple, and the working chest in Mines 3 shares its artwork with the Pyramid |
+| [2026-11-27](2026-11-27-ravager-mines-diners-and-elderbrain.md) | Mines 3 diners eating and slumping over five bowls, Elderbrain tank breaking and both scripted rewards |
+| [2026-11-27](2026-11-27-ravager-racks-and-polearms.md) | The miner’s release and empty rack, two weapon tables, Yuan-ti vessels and four upright polearm stands |
+| [2026-11-27](2026-11-27-ravager-mine-and-tunnel-shelves.md) | All eleven Mines 3 and Yuan-ti shelf placements, the six-orb shelf, reagent choices and the redrawn tunnel storeroom |
+| [2026-11-27](2026-11-27-ravager-mine-kitchen-and-chests.md) | Mines 3 kitchen crates, the armor and chef’s chests, five chairs and the stone table |
+| [2026-11-27](2026-11-27-ravager-silver-furniture.md) | All 31 silver furnishings and side-facing counters in both Volcano levels and Alliance layouts |
+| [2026-11-27](2026-11-27-ravager-forest-dining.md) | All eight Forest dining tables, the restored place settings and three rear seats checked in DOSBox |
+| [2026-11-27](2026-11-27-ravager-forest-plants-and-sickbeds.md) | Forest cup tables, both harvest prompts, Cleave’s cure and the empty bed shared with Snaggle |
+| [2026-11-28](2026-11-28-ravager-temple-prison-room.md) | Original and modded coiled fixture at the same camera in the El’s Temple prison room |
+| [2026-11-27](2026-11-27-ravager-volcano-furniture.md) | Both Volcano levels’ furniture and 21 shelves, both torn red beds in Tyr and Volcano 1, and the southern barrel stack |
+| [2026-11-27](2026-11-27-ravager-mine-worktables-and-forge.md) | Five Mines 3 worktables, the Inquisitor’s safe, Promere’s Hammer, the soup kettle and four statues |
 | [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |
 | [2026-11-27](2026-11-27-docs-pictures-retake.md) | Kalzith's talk and body pictures with the outfits; which pictures the outfits change; the sequel's items read for ITEMS.md |
 | [2026-11-27](2026-11-27-docs-review-pictures.md) | Fogbolt's picture retaken with the outfits (a grab loop catches the bolt); which pictures still show the party before its outfits |
@@ -268,6 +279,7 @@ schedules and diffs a log made or used.
 | [2026-11-28](2026-11-28-ravager-journal-freeze.md) | Wake of the Ravager: its global numbers found (DS:15F6h, SAVE 31) for the journal's place in a save; DSCLOG2's notes for the freeze report |
 | [2026-11-28](2026-11-28-ravager-quests.md) | Wake of the Ravager: its flags found (DS:15F2h, SAVE 30), the Journal tab's quests read by the Loader, all 350 of its scripts read |
 | [2026-11-28](2026-11-28-ravager-play-checks.md) | Wake of the Ravager: the quality-of-life port played by hand (T, Shift+T, Alt, item box, Effects click, load window, Characters tab, S, EDIT's age); new characters' and level-ups' saves, View Character's DAM and the arrows label fixed; two more quests open |
+| [2026-11-28](2026-11-28-ravager-hand-checks.md) | Wake of the Ravager: the last quality-of-life rows played (shop shine, tabs, named saves, look box, F10, miss labels, dust, creation screen's THAC0, SUM, STORE/RECALL and KITS); saves worked out again at a load |
 
 ## files/
 

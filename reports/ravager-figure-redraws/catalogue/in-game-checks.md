@@ -20,6 +20,10 @@ A second pass deliberately routed every melee facing to the forward attack in a 
 
 The scale review accepted regular Air 2538 and Fire 2540 at their native Shattered Lands size, about one and a half times human height. Unassigned axe wielder 3130 retains its approved Ravager scale.
 
+## Mines 3 dining and Elderbrain encounters
+
+Five red bowls disappeared behind the redrawn diners while eating. Moving them eight game pixels forward restored their visibility in play. The Elderbrain still showed stock artwork until the tank redraw was applied to the two encounter composites in RESOURCE.GFF. Both fixes were checked through the native scripted rewards. [DOSBox captures and staged conditions](../../../playtest/logs/2026-11-27-ravager-mines-diners-and-elderbrain.md)
+
 ## Earlier playtests
 
 2026-11-24 (Claude). Build: `approved.json` through darksun-recompiled's `import_catalogue.py` (PR #8).

@@ -7,56 +7,64 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 523,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:8 033:3 038:2 045:1
 524,Head of two-piece red bed,Joined to 525 before scaling. All four beds verified in DOSBox,,032:1 033:2 038:1
 525,Foot of two-piece red bed,Joined to 524 before scaling. All four beds verified in DOSBox,,032:1 033:2 038:1
-532,Barrels and crates,"Open barrel at (677,1269) moved 7 px to meet its support",,001:1 033:4 038:1 03D:2 045:1
-533,Barrels and crates,Two Alliance barrels moved 7 and 2 px to restore their joins,,001:6 032:1 033:4 038:3 03D:2 03E:1 045:3
+530,Torn red bed / pillow and blanket,Joined to 531 for a continuous blanket. Both beds verified in Volcano 1 and Tyr,,032:1 03E:1
+531,Torn red bed / blanket and feet,Joined to 530 before scaling at both placements,,032:1 03E:1
+532,Barrels and crates,Open Alliance barrel moved 7 px. Remains at its own floor line at the base of the Volcano 2 stack,,001:1 033:4 038:1 03D:2 045:1
+533,Barrels and crates,Two Alliance barrels moved 7 and 2 px. Volcano 2 rear barrel moved 8 px onto its partner,,001:6 032:1 033:4 038:3 03D:2 03E:1 045:3
 541,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
 543,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
 544,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:4 03E:1
 545,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03E:1
 546,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
-567,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
-568,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
-569,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
-570,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
-571,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
-572,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:3
-573,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
-574,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:1
-575,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:6
-576,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
-577,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
-578,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
-579,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
-580,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:4
-581,"Tables, desks and benches",Lowered and reviewed with Forest dining sets,,001:2
+547,Turquoise bed,Single-piece figure redraw reviewed beside the other Volcano 1 beds and in the Tyr bedroom,,032:3 033:2 03E:1
+567,"Tables, desks and benches",Full-size settings on lowered wood. All Forest placements checked in DOSBox,,001:2
+568,"Tables, desks and benches",Full-size settings on lowered wood. All Forest placements checked in DOSBox,,001:1
+569,"Tables, desks and benches",Full-size settings on lowered wood. All Forest placements checked in DOSBox,,001:2
+570,"Tables, desks and benches",Full-size settings on lowered wood. All Forest placements checked in DOSBox,,001:2
+571,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:1
+572,"Tables, desks and benches",Full-size settings on lowered wood. All Forest placements checked in DOSBox,,001:3
+573,"Tables, desks and benches",Full-size settings on lowered wood. All Forest placements checked in DOSBox,,001:4
+574,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:1
+575,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:6
+576,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:2
+577,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:2
+578,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:2
+579,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:4
+580,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:4
+581,"Tables, desks and benches",Lowered and checked in all Forest dining groups in DOSBox,,001:2
 626,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
-628,"Tables, counters and benches",Lowered and placements reviewed,,001:1 033:2
-629,"Tables, counters and benches",Lowered and placements reviewed,,001:1
-630,"Tables, counters and benches",Lowered and placements reviewed,,001:1
-631,Two-state storage or fixture,Both stock states lowered,,001:1
+628,Cup table,Full-size vessels on shorter legs. All three Forest and Alliance placements checked in DOSBox,,001:1 033:2
+629,Acorn plant,Preserve the fruit on its lowered support. Acorn harvest prompt checked in DOSBox,,001:1
+630,Grape plant,Preserve the fruit on its lowered support. Grape harvest prompt checked in DOSBox,,001:1
+631,Forest foot chest,Closed state and staged raised lid checked at their native offsets. No registered Use found,,001:1
 632,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 633,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
 634,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:2
 635,"Chairs, beds and small furnishings",Lowered and placements reviewed,,001:1
-649,"Occupied beds, beds and basins",Reviewed at current scale,649-cleave-sickbed.zip,001:1
+649,Occupied bed,Cleave’s catalogue pose and his scripted transition to the empty bed checked in DOSBox,649-cleave-sickbed.zip,001:1
 703,"Counters, stalls and attendants",Moved in play beside Fletch to uncover the book. Retain current scale,,032:1 03C:1
-785,Temple fixture beside the prisoner,Retain the coiled figure and its red contents at their current size,,037:1
-787,Occupied and empty basins,Reviewed the approved draws and scripted poses beside the lowered Temple braziers,scenery-and-miner.zip,037:1
+785,Temple fixture beside the prisoner,All 623 visible pixels match stock in DOSBox at the original floor position,,037:1
+787,Pavis at his writing basin,Occupied and vacated poses checked in DOSBox. Paper and rim keep their floor anchor,scenery-and-miner.zip,037:1
 788,Tantris seated in his throne,Occupied poses retained. The live transition uses 789 for the vacated throne,alternate-pose-continuity.zip,037:1
 789,Empty throne for Tantris,Lowered and aligned in play with 788 on the temple floor. GPL 256 brings it from Limbo,,0FF:1
 917,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,033:2 038:1
 1014,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1015,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
 1016,Clay storage jar and lid,Lowered together and reviewed at all three Cloud placements,,042:1
-1032,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1033,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1034,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1035,Elderbrain tank and platform,Retain approved sequence pictures. Frames decoded. Check destruction in play,3511-elderbrain.zip,
-1115,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,03A:1
-1116,"Seats, loom and restraints",Reviewed at current scale,1115-captive-and-rack.zip,0FF:1
-1137,Freestanding shelves,Lowered and placements reviewed,,03A:1
-1140,Freestanding shelves,Lowered and placements reviewed,,03A:1
+1032,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1033,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1034,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1035,Elderbrain tank and platform,Approved parts supply the redraw for live RESOURCE pictures 11008 and 11016. Destruction verified,3511-elderbrain.zip,
+1112,Mines 3 loot chest,Both poses lowered to match the identical Pyramid chest drawing,,03A:1
+1113,Plate armor chest,Lowered both states. The party takes plate armor and the lid stays raised in play,,03A:1
+1115,"Seats, loom and restraints",Occupied and empty rack verified through the miner’s release,1115-captive-and-rack.zip,03A:1
+1116,"Seats, loom and restraints",Occupied and empty rack verified through the miner’s release,1115-captive-and-rack.zip,0FF:1
+1135,Kitchen crates,Lowered all three boxes. Each opens through its item card in DOSBox,,03A:3
+1136,Chef’s locked chest,Lowered both pictures. Key and scroll verified in play. Raised drawing checked in a staged visit,,03A:1
+1137,Freestanding shelves,Chemical choices and smash response checked in Mines 3 in DOSBox,,03A:1
+1138,Floor safe,"Kept all three poses. Verified the Inquisitor’s key, extended clamps, detached lid and empty-safe response in DOSBox",,03A:1
+1140,Freestanding shelves,Loaded boards lowered eight pixels in total with all six orbs intact. Mind Flayer interaction checked in play,,03A:1
 1160,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,033:1
 1161,"Counters, stalls and attendants",Reviewed at current scale,scenery-and-miner.zip,033:1
 1170,Freestanding shelves,Lowered and placements reviewed,,033:3
@@ -64,8 +72,9 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 1172,Freestanding shelves,Lowered and placements reviewed,,033:2
 1247,"Seats, loom and restraints",Reviewed at current scale,1247-sultan.zip,03B:1
 1251,Covered wagon and shafts,Retain both pieces and their separate one-pixel states. Check their transition in play,,03B:1
+1321,Set round dining table,Four Volcano 1 tables match 2624. Intact place settings on the lowered bare tabletop,,03E:4
 1334,Freestanding shelves,Lowered and placements reviewed,,03D:1
-1342,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
+1342,"Tables, counters and benches",Shortened the bottom nine rows to retain the jug and cloth on the short counter,,03D:1
 1376,Lava spires,Retain full terrain height along the lava edge,,03F:36
 1377,Lava spires,Retain full terrain height along the lava edge,,03F:45
 1378,Lava spires,Retain full terrain height along the lava edge,,03F:47
@@ -140,23 +149,26 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2520,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
 2521,Three-state mine fixtures,Retain all three stored states. Interaction in play pending,,039:1
 2572,"Seats, loom and restraints",Reviewed at current scale,2572-utella-revised.zip,03B:1
-2573,"Occupied beds, beds and basins",Reviewed at current scale,2573-snaggle-sickbed.zip,0FF:2
-2574,"Occupied beds, beds and basins",Reviewed at current scale,,001:1
+2573,Occupied bed,Snaggle’s catalogue figure retained on shortened frame. Scripted picture staged in the Forest,2573-snaggle-sickbed.zip,0FF:2
+2574,Empty sickbed,Lowered to the occupied bed frame. Checked at the Forest placement and after Cleave’s cure,,001:1
 2585,"Tables, counters and benches",Lowered and placements reviewed,,033:1
 2589,"Tables, counters and benches",Lowered and placements reviewed,,033:2 038:1
 2590,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:9 033:6
 2591,Red chair,Thirteen chair placements reviewed across Tyr and the Alliance,,032:9 033:4
-2624,"Tables, counters and benches",Lowered and placements reviewed,,033:2 03D:1
+2621,Silver table,Lowered to 29 rows. All five tables checked in DOSBox with their seats or surrounding floor.,,03D:3 03E:2
+2622,Silver stool,"Lowered to 20 rows. All twelve checked in DOSBox, including the group of seven.",,03D:2 03E:10
+2623,Rolled silver seat,Lowered to 17 rows. Both placements move toward their particular table to preserve the join.,,03D:1 03E:1
+2624,"Tables, counters and benches",Same stocked drawing as 1321. Intact place settings on the lowered tabletop,,033:2 03D:1
 2625,"Tables, counters and benches",Lowered and placements reviewed,,03D:5 03E:4
 2626,"Tables, counters and benches",Lowered and placements reviewed,,03D:3 03E:5
 2627,"Tables, counters and benches",Lowered and placements reviewed,,03D:5 03E:4
 2628,Freestanding shelves,Lowered and placements reviewed,,03D:4 03E:3
 2629,Freestanding shelves,Lowered and placements reviewed,,03D:4 03E:1
-2630,"Tables, counters and benches",Lowered and placements reviewed,,033:1 03D:1 03E:2
+2630,"Tables, counters and benches",Shortened the bottom 22 rows to retain the jug and cloth on the tall counter,,033:1 03D:1 03E:2
 2631,Freestanding shelves,Lowered and placements reviewed,,032:1 033:2 03D:2 03E:1
-2674,Freestanding shelves,Lowered and placements reviewed,,036:1
-2675,Freestanding shelves,Lowered and placements reviewed,,036:1 03A:1
-2676,Freestanding shelves,Lowered and placements reviewed,,036:1 03A:1
+2674,Freestanding shelves,Yuan-ti placement checked against stock in DOSBox,,036:1
+2675,Freestanding shelves,Both placements checked against stock in Mines 3 and the Yuan-ti tunnels in DOSBox,,036:1 03A:1
+2676,Freestanding shelves,Both placements checked against stock in Mines 3 and the Yuan-ti tunnels in DOSBox,,036:1 03A:1
 2692,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:2
 2693,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
 2694,Thin camp pillows,Keep shallow faces at current depth alongside the occupied cushion,,03B:5
@@ -176,53 +188,59 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 2784,"Occupied beds, beds and basins",Reviewed at current scale,2783-giant-and-bed.zip,042:1
 2785,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
 2786,"Chairs, stools and beds",Lowered and reviewed as an assembled throne,,03A:1
-2789,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
-2790,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:2
-2793,"Tables, counters and benches",Lowered and placements reviewed,,03A:1
-2794,Two-piece weapon display,Lowered together from the common floor line in both palettes,,036:1 03A:1
-2795,Two-piece weapon display,Lowered together from the common floor line in both palettes,,036:1 03A:1
+2789,"Chairs, beds and small furnishings",Lowered. Both front-facing chairs checked in DOSBox,,03A:2
+2790,"Chairs, beds and small furnishings",Lowered. Both side chairs checked in DOSBox including the one beside the red bowl,,03A:2
+2793,"Tables, counters and benches",Lowered. Stone table checked beside the loose blue orb and chairs in DOSBox,,03A:1
+2794,Two-piece weapon display,Both halves joined at their common floor line in both regions in DOSBox,,036:1 03A:1
+2795,Two-piece weapon display,Both halves joined at their common floor line in both regions in DOSBox,,036:1 03A:1
+2796,Upright polearm stand,Lower 43 rows scaled with blade tips intact. All four placements checked in DOSBox,,036:1 03A:2 03D:1
 2824,"Chairs, beds and small furnishings",Lowered and placements reviewed,,032:3
 2825,Two-state storage or fixture,Both stock states lowered,,032:4 033:2
 2840,"Chairs, beds and small furnishings",Lowered and placements reviewed,,033:2
-2979,Freestanding shelves,Lowered and placements reviewed,,033:5 03D:1
-2980,Freestanding shelves,Lowered and placements reviewed,,033:4 03D:1
-2981,Freestanding shelves,Lowered and placements reviewed,,03D:1
-2982,Freestanding shelves,Lowered and placements reviewed,,033:2 03D:1
+2962,Forge throne and skeleton,Retain both poses. Hammer and hand meet the lower picture before and after the release,,03A:1
+2963,Forge throne and skeleton,Retain both poses. Lower picture meets the upper drawing through the hammer release,,03A:1
+2979,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,033:5 03D:1
+2980,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,033:4 03D:1
+2981,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,03D:1
+2982,Freestanding shelves,Removed bare rows between boards and beneath the shelf. All occupied rows retain their original pixels,,033:2 03D:1
 3072,Headquarters beds,Lowered and reviewed in the intact and ruined rooms with their separate pillows,,033:2
 3073,Loose pillow against torn bedding,Both placements lowered 11 pixels to follow the bed,,033:2
 3074,Floor pillow,Reviewed beside damaged beds and retained on the floor,,033:2
 3078,Torn red couch,Lowered and compared with the intact red couch,,033:2
-3172,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
-3173,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
-3174,Yuan-ti jar and bowls,Lowered to 82% to preserve the rims and colored contents,,036:1
-3231,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3172,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
+3173,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
+3174,Yuan-ti jar and bowls,82% height and distinct rim and contents checked in DOSBox,,036:1
+3231,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:5
 3246,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:6
 3247,"Tables, counters and benches",Lowered and placements reviewed,,034:1
 3248,"Tables, counters and benches",Lowered and placements reviewed,,034:2
 3249,"Tables, counters and benches",Lowered and placements reviewed,,034:2
-3250,Two-state storage or fixture,Both stock states lowered,,034:1
-3275,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:2
-3276,"Chairs, beds and small furnishings",Lowered and placements reviewed,,03A:1
-3277,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
-3279,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:4
-3280,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:4
-3287,Mines dining-room assembly,Reviewed at current scale,3231-dining-room.zip,03A:5
+3250,Pyramid chest,Both stored poses share the artwork of Mines 3 picture 1112. Retain the Pyramid drawing offsets,,034:1
+3275,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:2
+3276,"Chairs, beds and small furnishings",Lowered. Smaller chair checked beside the stone table in DOSBox,,03A:1
+3277,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:5
+3279,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:4
+3280,Mines dining-room assembly,Eating and slumped room checked in DOSBox,3231-dining-room.zip,03A:4
+3287,Mines dining-room assembly,Five bowls moved forward eight pixels. Checked in play while eating and after slump,3231-dining-room.zip,03A:5
+3343,Kitchen soup kettle,"Retain the ladle, pot and low glowing burner. Try-the-soup interaction checked in play",,03A:1
 3356,Freestanding shelves,Lowered and placements reviewed,,03E:1
-3364,Barrels and crates,Lowered and placements reviewed,,03A:1
-3414,Freestanding shelves,Lowered and placements reviewed,,03A:2
-3416,Freestanding shelves,Lowered and placements reviewed,,03A:2
+3364,Barrels and crates,Previously lowered. Box of cooking poisons checked with all three neighboring crates in DOSBox,,03A:1
+3414,Freestanding shelves,Both Mines 3 vial shelves checked against stock in DOSBox,,03A:2
+3416,Freestanding shelves,Both Mines 3 shelves checked against stock in DOSBox including the separate vials below the eastern shelf,,03A:2
 3442,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
 3443,"Chairs, stools and beds",Lowered and reviewed against the giant figures and occupied rocking chair,,041:1
+3485,Side-facing counter with stacked goods,"Only the bottom 18 rows take the reduction. All six placements checked, including both mirrored counters.",,033:2 03D:2 03E:2
+3486,Side-facing counter with jug,"The jug keeps its original outline and depth. All six placements checked, including both mirrored counters.",,033:2 03D:3 03E:1
 3503,"Tables, counters and benches",Lowered and placements reviewed,,033:2
 3504,"Tables, counters and benches",Lowered and placements reviewed,,032:2
 3505,"Tables, counters and benches",Lowered and placements reviewed,,033:2 045:1
-3511,"Tank, platform and mine openings",Reviewed at current scale,3511-elderbrain.zip,03A:1
+3511,"Tank, platform and mine openings",Approved still retained. Live tank and destruction verified using RESOURCE 11008 and 11016,3511-elderbrain.zip,03A:1
 3525,"Tables, counters and benches",Lowered and placements reviewed,,03D:1
 3527,"Tables, desks and benches",Retain floor display at current depth,,03D:1
 3528,"Tables, desks and benches",Retain floor display at current depth,,03D:1
 3529,"Tables, desks and benches",Retain floor display at current depth,,03D:1
-3554,Storage jars and sacks,Reviewed at their existing height in the Yuan-ti storeroom,,032:6 033:2 036:1 03D:1 045:1
-3555,Mine storage surroundings,Already revised in the baseline art. Reviewed beside the barrel and sack pile,,032:1 036:1 039:2 03D:1 045:1
+3554,Storage jars and sacks,Earlier redraw checked against stock at the Yuan-ti storeroom in DOSBox,,032:6 033:2 036:1 03D:1 045:1
+3555,Mine storage surroundings,Earlier redraw reviewed beside the mine pile and checked against stock in the Yuan-ti storeroom in DOSBox,,032:1 036:1 039:2 03D:1 045:1
 3558,Barrels with sacks,Lowered to 82% at five placements to keep both lids visible over the wall in Tyr,,032:2 039:1 03D:1 045:1
 3613,Miner with pick,Retain both redrawn frames and pick animation,scenery-and-miner.zip,039:1
 3627,"Chairs, beds and small furnishings",Lowered and placements reviewed,,034:2
@@ -237,6 +255,16 @@ Picture,Family to inspect,Review status,Catalogue package (when listed),Region:p
 3698,"Tables, desks and benches",Lowered and reviewed against the giant figures and occupied rocking chair,,041:3
 3699,Wooden furniture,Lowered and reviewed against the giant figures and occupied rocking chair,,041:2
 3733,Two-state mine fixture,Retain both states. Interaction in play pending,,039:2
+3739,Winged statue on a plinth,Retain scale. Both round plinths seen in DOSBox,,03A:2
+3740,Winged statue,Retain scale. Both statues on the north chamber floor seen in DOSBox,,03A:2
+3766,Two-piece worktable,Lowered the joined surface five pixels. The bottle crossing the front-to-back seam remains whole in DOSBox,,03A:1
+3767,Two-piece worktable,Lowered the joined surface five pixels. The bottle crossing the front-to-back seam remains whole in DOSBox,,03A:1
+3770,Two-piece worktable,Lowered the base five pixels. Both halves and the floor line checked in DOSBox at every placement,,03A:1
+3771,Two-piece worktable,Lowered the base five pixels. Both halves and the floor line checked in DOSBox at every placement,,03A:1
+3772,Two-piece worktable,Lowered the base five pixels. Both halves and the floor line checked in DOSBox at every placement,,03A:2
+3773,Two-piece worktable,Lowered the base five pixels. Both halves and the floor line checked in DOSBox at every placement,,03A:2
+3774,Two-piece worktable,Lowered the base five pixels. Both halves and the floor line checked in DOSBox at every placement,,03A:1
+3775,Two-piece worktable,Lowered the base five pixels. Both halves and the floor line checked in DOSBox at every placement,,03A:1
 3777,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
 3778,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1
 3779,"Occupied beds, beds and basins",Reviewed at current scale,scenery-and-miner.zip,045:1

@@ -2,9 +2,9 @@
 
 ## Project progress
 
-All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. A later playtest found one more picture to lower, the empty throne summoned from Limbo into El’s Temple. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added 20 pictures, including the stocked round table used four times in Volcano 1, three silver furnishings and two side-facing counters. Six cover the empty throne summoned from Limbo into El’s Temple, three different mine chests, the kitchen crates and the upright polearm stand shared by three regions. Another eight form five two-piece worktables in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
-Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All 20 regions still have open in-game checks. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 tank destruction and the Cosmos ritual are also open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
+Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All eleven inventoried Yuan-ti furniture placements have now been seen in DOSBox, including the two storage piles from the figure redraw. The Volcano pass covers all 21 inventoried shelves, the set dining tables and the second torn-bed design, including its other placement in Tyr. The wider all-area review is still open. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
 ## Repairing the split beds and the Alliance storeroom
 
@@ -26,7 +26,7 @@ Pictures 2591 and 2704 in the original defect report belong to the red chair and
 
 ## Freestanding shelves
 
-The first pass lowers 19 freestanding shelves at all 54 of their placements. Each uses the 0.66 vertical scale of the Tyr furniture pass. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
+The first pass lowers 19 freestanding shelves at all 54 of their placements. The first version used the 0.66 vertical scale of the Tyr furniture pass on each shelf. The later Mines 3 orb check and Volcano shop checks protect the contents of five shelves by shortening the spaces between their boards. The shelf contents are part of each picture. Its horizontal scale, floor contact and palette are preserved. The originals came from the player's Ravager files during the package build. The Loader applies the resulting pictures through the existing figure option.
 
 ## What the first pass looks like
 
@@ -42,7 +42,7 @@ Look at the bookcase and potion shelf against the back wall. Their tops come dow
 
 The second pass lowers 61 more pictures at 217 placements in nine regions. It covers barrels, crates, counters, benches, tables, beds and seating. Three interactive fixtures have separate open and closed drawings. Both use the same bottom anchor and the shipped animation timings.
 
-The gold box marks the Mines 1 storeroom in the first two maps. In the enlarged view, compare the height of the wide worktable against the stacked crates behind it. The Forest scene shows a bed, its foot chest and a neighboring gem table. In Volcano 1, compare the proportions of the round tabletop and the stool to its right. All three rows use scene renders from the Loader's built object file.
+The gold box marks the Mines 1 storeroom in the first two maps. In the enlarged view, compare the height of the wide worktable against the stacked crates behind it. The Forest scene shows a bed, its foot chest and a neighboring grape plant. In Volcano 1, compare the proportions of the round tabletop and the stool to its right. All three rows use scene renders from the Loader's built object file.
 
 ![Whole Mines 1 map before and after, next to the Shattered Lands upper castle](mines1-whole-map.png)
 
@@ -59,6 +59,18 @@ The whole Forest is shown at one quarter of game-map resolution. The box marks t
 ![Whole Forest before and after, alongside Gedron in Shattered Lands](forest-whole-map.png)
 
 ![Forest dining room, Alliance crate and Mines throne before and after alongside Shattered Lands furnishings](grouped-furniture.png)
+
+### Forest dining tables in play
+
+Seven main tables and seven small side tables now retain their full-size vessels on the lowered wood. Three rear chairs moved four to six pixels from the earlier squash so their backs remain visible. All eight main tables and 30 associated pieces were checked in the game. A hanging cloth covers the middle of one long bench in both builds. Cleave’s occupied bed uses its catalogue redraw. [Playtest and remaining Forest checks](../../playtest/logs/2026-11-27-ravager-forest-dining.md)
+
+[Whole Forest beside Gedron](forest-dining-whole-maps.png) · [Original, previous and revised rooms beside Shattered Lands](forest-dining-live.png) · [All eight tables in DOSBox](forest-dining-all-eight.png)
+
+### Forest plants and both sickbeds
+
+The two stands previously labelled gem tables hold harvestable acorns and grapes. Both plants and all three cup tables now retain the artwork on top of their shortened wooden supports. Cleave’s bed keeps its height when the Hero Flask revives him. Snaggle’s catalogue painting sits on the same shortened frame in his Forest room. The foot chest has two stored poses. The second pose was staged because we found no Use action at that placement.
+
+[Whole maps](forest-plants-whole-maps.png) · [Before and after beside Shattered Lands](forest-plants-and-cups.png) · [Beds, chest and harvest](forest-beds-and-harvest.png) · [Playtest](../../playtest/logs/2026-11-27-ravager-forest-plants-and-sickbeds.md)
 
 ## Jann, Mosaic and the Silt Sea Giants
 
@@ -144,7 +156,9 @@ In DOSBox, all six lowered braziers stood on the same floor points as their stoc
 
 ![Tantris seated and the vacated throne in stock Ravager, the previous PR and the repaired build](el-temple-throne-transition.png)
 
-The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. Their destruction sequence remains on the Mines 3 playtest list.
+The green coils and red center beside the prisoner occupy the same floor space in the original game and the mod. All 623 visible pixels match in the two DOSBox captures. [Prison room beside the Shattered Lands brazier hall](el-temple-prisoner-fixture.png) · [Playtest](../../playtest/logs/2026-11-28-ravager-temple-prison-room.md)
+
+The inventory also records three earlier figure and scenery reviews more precisely. Each of the six previously flagged stall pieces is visible in the assembled Notaku stall. The Jann wagon body and shafts each have a drawn state and a one-pixel state. The four Elderbrain tank pictures contain 98 frames between them and have no direct region placements. The later Mines 3 playtest identified the separate composite pictures used during destruction.
 
 ## Earlier figure work
 
@@ -161,7 +175,7 @@ The figures and their furniture can share one picture. Other scenes use a separa
 | Pavis and Tantris | The bodies remain distinct above the lowered rims. Pavis's empty basin keeps its low profile. Keep the existing poses. |
 | Sultan, Fletch, Utella, Generoe and Melantha | The cushion, seats, loom and giant's bed belong with the figures. Melantha's set has its own approved 82% bed scale. Preserve those individual decisions when comparing neighboring furniture. |
 | Notaku's stall | The live Tyr view shows a strip of teal shop floor between Notaku and the joined front halves. His feet, the mortar and the glassware read separately. Retain the approved counter height. |
-| Mines 3 | The dining seats line up with the smaller table and place settings after the existing ETAB change. Check the seated, eating and slumped states together in-game. The Elderbrain tank and its platform also need one assembled check through destruction. |
+| Mines 3 | The live dining encounter needed five bowl placements corrected. The Elderbrain tank needed two additional encounter pictures. Both sequences have since been played through. |
 | Captives and mine openings | Kovar's supports, the captive's rack and the mine opening frame their figures. Review attachment to the surroundings whenever an adjoining prop changes. |
 
 ## Live check in Tyr
@@ -190,25 +204,135 @@ Tamind’s sheet covers his head. Finali’s hand mirror remains visible on her 
 
 ![Museum before the puzzle and after the eighth shard, with the coin response and the room beyond the mirror](mosaic-mirror-repair.png)
 
+## Pavis’s basin and the two hinged chests
+
+In El’s Temple the paper rests just inside the curved rim while Pavis works. When he stands, the paper and the basin stay in place. The earlier figure redraw already handles both poses. [Matched DOSBox views of Pavis](pavis-basin-live.png)
+
+Mines 3 has a working loot chest. Its two stock drawings are identical to the closed and open chest in the Pyramid, which already received the furniture treatment. The Mines copy now uses the same proportions and retains its own drawing offsets. The gold boxes show where to find both chests and the upper castle reference in Shattered Lands.
+
+![Whole maps of Mines 3, the Pyramid and the upper castle with the chest rooms marked](mine-chest-maps.png)
+
+The comparison uses the same scale for all four rooms. Look at the front panel when the lid is down, then at the distance between the hinge and the top of the raised lid. In the Pyramid, the foreground wall covers the lower edge. [Playtest and fixture details](../../playtest/logs/2026-11-27-ravager-basin-and-chests.md)
+
+![Both stored poses of the previous and revised Mines chest, the Pyramid chest and an upper castle chest for scale](mine-chest-poses.png)
+
+The DOSBox close-ups below show the party opening the Mines chest on both builds. The map renders above show the front edge that the party partly covers.
+
+![Matched Mines 3 DOSBox views with the loot chest closed and open before and after lowering](mines-chest-live.png)
+
+![Pyramid chest default and staged raised pose in DOSBox, with the Mines 3 loot and second-use messages](chests-live.png)
+
+## Mines 3 dining room and Elderbrain
+
+The whole maps show where the two encounters sit and where to find the Gedron table used for scale. The close-ups below show what the game draws as the encounters run.
+
+![Whole maps of stock and revised Mines 3 and the Gedron dining reference](mine-encounter-maps.png)
+
+The earlier figure redraw already supplied the smaller table, chairs and all five diners. In play, their hands hid every red bowl during the meal. Moving the bowls eight pixels toward the front of the table makes all five visible. When the diners slump, they cover their own bowls as they do in stock Ravager.
+
+![Stock Ravager, previous mod and corrected dining room while eating and after the slump, with a Gedron table for scale](mine-dining-live.png)
+
+The previous build still showed stock tank art in play. The Elderbrain encounter draws a separate intact tank and a 29-frame destruction sequence. Both now carry the approved redraw, including the darker fluid, broken glass and ejected brain. The native reward appeared after the flash. [Playtest conditions and script details](../../playtest/logs/2026-11-27-ravager-mines-diners-and-elderbrain.md)
+
+![Elderbrain intact, shattering and thrown clear in the previous and revised mod](mine-elderbrain-live.png)
+
+## The prisoner’s rack and the weapon displays
+
+In Mines 3, the rescuer earns 1,000 experience when the prisoner comes off the rack. The redrawn rack stays in place. The game calls the freed prisoner a miner in the farewell message. Keep the earlier figure redraw for both the occupied and empty fixture. [Stock and revised rescue sequence](captive-rack-live.png)
+
+The lying weapons belong to a two-piece table. Both halves meet in the Mines and in the Yuan-ti tunnels. The tunnel jar and two bowls also keep their outlines against the brown floor. [Both weapon tables and the three vessels in DOSBox](weapon-tables-live.png)
+
+The tall polearms beside the table belong to a third, separate picture, 2796. This pass shortens its shafts and stand while keeping the upper 16 rows of blade detail. The top moves down 14 game pixels and both feet keep their positions. The Shattered Lands rack in the Subterranean Temple beneath Teaquetzl provides a same-scale comparison. [Four placements in DOSBox and the temple reference](polearm-stands-live.png)
+
+![Whole maps of Mines 3, the Yuan-ti tunnels and Volcano 2 before and after, with the Shattered Lands temple reference](rack-whole-maps.png)
+
+[Playtest route, stock controls and rescue conditions](../../playtest/logs/2026-11-27-ravager-racks-and-polearms.md)
+
+## Mines 3 and Yuan-ti shelves
+
+The mine’s orb shelf exposed a problem with scaling the contents along with their support. Stock Ravager uses the same 14 × 10 blue orb on the shelf and on the laboratory floor. At the first-pass height of 33 pixels, the six on the shelf lost the lower part of their facets. Moving the three loaded boards closer together gives a 42-pixel shelf, down from 50, with all six orbs intact.
+
+![Stock 50-pixel shelf, first 33-pixel squash and revised 42-pixel shelf in DOSBox](mine-orb-shelf-live.png)
+
+The eight mine shelves and three tunnel shelves were each compared in DOSBox against the stock figures control. The chemical shelf still lets the party choose a reagent, and touching an orb gives the Mind Flayer’s thoughts. The two piles of jars, barrels and sacks in the Yuan-ti storeroom already use the figure redraw. Their individual containers remain visible. [All eleven shelf placements in play](mine-tunnel-shelves-live.png) · [Interactions and storeroom comparison](mine-shelf-and-tunnel-storage-live.png) · [Playtest route](../../playtest/logs/2026-11-27-ravager-mine-and-tunnel-shelves.md)
+
+The blue box marks the orb shelf. The Shattered Lands comparison is the stocked potion stand in Gedron. It shows how much detail can fit on a low stand at the original game resolution.
+
+![Whole mine and tunnel maps in both builds, with Gedron and its potion stand for reference](mine-tunnel-shelf-maps.png)
+
+## Mines 3 kitchen, chests and loose furniture
+
+The gold squares mark the two chests. The blue square marks the kitchen crates. The Shattered Lands upper castle has a low chest between two beds, shown at the lower right for comparison.
+
+![Entire Mines 3 before and after, and the upper castle in Shattered Lands](mine-kitchen-whole-maps.png)
+
+The previous mod lowered the little box marked “Cooking poisons” and left three neighboring wooden crates at their original height. The revised crates stand 21 pixels tall, down from 31. The party can still open all three.
+
+![The same four kitchen boxes in stock Ravager, the previous mod and the revised mod](mine-kitchen-crates-live.png)
+
+The chest by the lava pool opens and gives plate armor. Unlocking the chef’s chest gives the triangular key and a scroll. It continues to show its closed lid after that interaction in both builds. The comparison shows its other stored drawing in a separate staged visit.
+
+![Both chests closed and raised in DOSBox](mine-armor-and-chef-chests.png)
+
+The five loose chairs and the stone table already use the lower drawings. Their bases align with stock in DOSBox. The separate red bowl by the side chair and the loose blue orb beside the front-facing chair remain visible. [All six furnishings in play](mine-loose-seats-live.png) · [Playtest route, interactions and capture conditions](../../playtest/logs/2026-11-27-ravager-mine-kitchen-and-chests.md)
+
+## Mines 3 worktables, safe and forge throne
+
+The five lab and kitchen worktables share a dark stone top. The vial rack, bottles and coiled tubing are painted into it. Lowering only the bottom 16 rows moves each top down five pixels and leaves every vessel intact. On the long table, the native pictures meet through a bottle. It stays whole because both pieces are lowered together. The short stocked stand in Gedron gives a Shattered Lands reference at the same magnification.
+
+![Previous and revised Mines 3 worktable alongside the potion display in Shattered Lands](mine-lab-worktable-comparison.png)
+
+[Whole maps before and after, alongside Gedron](mine-worktable-whole-maps.png) · [All five tables at their actual placements](mine-five-worktables-live.png)
+
+The Inquisitor’s safe is bolted to the floor. Its clamps extend before the lid comes away and rests in front. All three original poses remain visible through the unlock. [The three poses in DOSBox](mine-inquisitor-safe-live.png)
+
+The forge throne includes a skeleton whose hands release Promere’s Hammer. The two drawings meet through the weapon. They already align in both poses, so the throne keeps its original scale. The kitchen kettle and four winged statues also retain their proportions. [Forge throne, kettle and statues](mine-forge-and-statuary-live.png) · [Playtest conditions, room coordinates and scripted rewards](../../playtest/logs/2026-11-27-ravager-mine-worktables-and-forge.md)
+
+## The Volcano dining hall, shops and storeroom
+
+The dining hall in Volcano 1 used two different scales. Its four set tables had retained the tall stock drawing while the adjacent bare tables and stools were lower. Picture 1321 is an identical copy of 2624, the stocked table used in Volcano 2 and both Alliance layouts. Both now use the lowered bare table beneath the original bowls, cups and platter. The two counter designs keep the painted jugs by shortening the bases below them.
+
+![Whole Volcano maps beside Gedron and the upper castle, with reviewed rooms marked](volcano-furniture-whole-maps.png)
+
+![Stock game, previous mod and revised mod in DOSBox, beside Gedron and upper castle furnishings at the same scale](volcano-furniture-live.png)
+
+The rear barrel in the Volcano 2 southern storeroom moves down eight pixels. Its front partner sits on its original floor point. The side-by-side barrels and the neighboring pile from the earlier redraw keep their placements.
+
+All 21 original Volcano shelf placements were checked against the stock game. Four shop shelves, 2979–2982, had shortened glassware, vials or books. Removing bare rows from the wood and the spaces between boards preserves each occupied row of the original. All 14 placements of these shared shelf, counter and table designs in the Alliance headquarters were checked in play. [All 21 shelf placements in DOSBox](volcano-shelves-live.png)
+
+Another torn blanket was split across the bed pictures from the figure redraw. The head (530) and foot (531) overlap by five rows in both Volcano 1 and Tyr. The repaired blanket uses the joined 68-row drawing, lowered once to 45 visible rows. The turquoise bed nearby already has a single continuous drawing. [Both torn beds before and after repair](volcano-tyr-torn-bed-live.png) · [Playtest and room coordinates](../../playtest/logs/2026-11-27-ravager-volcano-furniture.md)
+
+## Silver furnishings and side-facing counters
+
+Volcano 1 has seven silver stools together in one room. Their 24-pixel width stays the same while their visible height drops from 30 to 20 pixels. The larger silver table drops from 44 rows to 29. The two matching rolled seats behind the tables each need their own placement adjustment. In Volcano 2 the seat still tucks under the table. In Volcano 1 the feet just meet its back edge. The other three tables keep their floor points.
+
+![Silver furnishings and counters in DOSBox before and after, beside original Shattered Lands rooms](silver-furniture-live.png)
+
+The narrow displays along the walls are counters viewed from the side. Compressing the whole picture flattened the jug and shortened the row of goods along the wall. Shortening only the bottom 18 rows lowers the top by six pixels. All 12 counters were reviewed in both builds, including four that face the opposite way and four shared by the intact and ruined Alliance layouts.
+
+![Whole Volcano and Alliance maps before and after, beside the upper castle, Gedron and the lower castle](silver-furniture-whole-maps.png)
+
+Both Ravager close-up columns use the mod’s figure redraws. All five furnishings still matched stock before this pass. [All 11 rooms in DOSBox](silver-furniture-all-rooms.png) · [Placement ledger and both seat joins](../../playtest/logs/2026-11-27-ravager-silver-furniture.md)
+
 ## Region work queue
 
-The scan covered all 20 shipped region files. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements, including repeats. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Six regions have in-game coverage for every placement currently listed in the furniture inventory. They are the Forest (60), the Yuan-ti tunnels (11), El’s Temple (9), Mines 3 (72), Volcano 1 (48) and Volcano 2 (57). Fourteen regions still have room or interaction checks open. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
-| 001 Forest | 252 | 0 | 56 | Check dining sets in play |
+| 001 Forest | 252 | 0 | 56 | All 60 inventoried placements checked in DOSBox. Both fruit prompts and Cleave’s cure played through. Snaggle’s bed and the chest’s raised lid checked with staged pose selection |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
-| 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
-| 034 Pyramid | 152 | 0 | 23 | Test cabinet 3250 in both states |
-| 036 Yuan-ti | 104 | 3 | 5 | Check the weapon display and small vessels in play |
-| 037 Temple | 62 | 0 | 6 | Six braziers and the vacated throne verified. Check Pavis leaving the basin |
+| 033 Veiled Alliance | 195 | 21 | 78 | Red beds, intact storage stacks and four side-facing counters checked in play. Check remaining ruined fixtures and pillows |
+| 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
+| 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
+| 037 Temple | 62 | 0 | 6 | All nine listed placements checked in DOSBox, including the six braziers, both occupied furnishings and their vacated states, and the coiled fixture beside the prisoner |
 | 038 Mines 1 | 108 | 0 | 12 | Red bed checked in play. Check worktable, crates and Sicky's neighboring furnishings |
 | 039 Mines 2 | 160 | 0 | 1 | Check the storage pile, miners and multi-state fixtures in play |
-| 03A Mines 3 | 219 | 8 | 11 | Check the weapon display, throne, dining sequence and tank destruction in play |
+| 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
-| 03D Volcano 2 | 143 | 15 | 23 | Compare room placements in-game |
-| 03E Volcano 1 | 133 | 6 | 19 | Check lowered stocked counter 2630 beside shelf 2631 in-game |
+| 03D Volcano 2 | 143 | 15 | 23 | All 57 listed placements checked in play, including 15 front-facing shelves, five side-facing counters, six silver furnishings and the repaired barrel stack |
+| 03E Volcano 1 | 133 | 6 | 19 | All 48 listed placements checked in play, including the redrawn beds, six front-facing shelves, four set tables, three side-facing counters and 13 silver furnishings |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
 | 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |

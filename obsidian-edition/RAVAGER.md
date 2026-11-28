@@ -279,15 +279,16 @@ bigger character sheets) as it goes in (a game already running lists it from its
   size and look (the Shattered Lands party figures, a mul or an elf of the sequel on the same body as
   Shattered Lands', its elementals Shattered Lands' own). The Loader puts them into its copies of the
   sequel's files each start (nothing in the sequel's folder changes), with the Mines' dining room laid
-  out again for its smaller furniture, and Tyr's tables, chairs, beds and other furniture lowered to
-  two-thirds of their height for Shattered Lands' steeper view. The same treatment now reaches 19
+  out again for its smaller furniture. Five soup bowls sit in front of the seated mind flayers, and the
+  redrawn Elderbrain appears in its tank and when the glass breaks. Tyr's tables, chairs, beds and other furniture are lowered to
+  two-thirds of their height for Shattered Lands' steeper view. The Loader also lowers 19
   freestanding shelf pictures used in Tyr, the Veiled Alliance headquarters, the Yuan-ti area, Mines 3
   and both inhabited volcano levels. Another 61 pictures lower loose furniture and storage in nine regions,
   including Forest beds, the Mines 1 worktable and the volcano tables and stools. The Forest dining sets, the Veiled Alliance crate and vase, and
-  the two-piece Mines 3 throne now have coordinated heights and placements. The Jann camp cushions sit lower around the Sultan,
+  the two-piece Mines 3 throne now have coordinated heights and placements. The Forest tables and side tables keep the full-sized jugs and dishes on their lowered wood, with the rear chairs visible above them. The Forest’s acorn and grape plants and the cup tables in the Forest and Alliance retain their full-size contents. The same low bed frame appears under Cleave and Snaggle and when the bed is empty. The Mines 3 loot chest, armor chest and chef’s locked chest sit as low as their Pyramid counterpart in both stored lid positions. The three kitchen crates sit lower beside the box of cooking poisons. The five worktables have shorter bases under their bottles and glassware. The set round tables in the Volcano and Alliance rooms carry full-sized bowls and cups on the lowered tabletop. The jugs on the two stocked counter designs retain their shape. The Volcano 2 storeroom barrels meet again. Both Volcano levels have lower silver tables and stools, with the two rolled seats still meeting their tables. The side-facing counters in the Volcano and Alliance rooms have shorter legs under the original jugs and goods. Four stocked shelves are lower while preserving the books and glassware on their boards. The two-piece torn red bed in Volcano 1 and Tyr has a continuous blanket. The Jann camp cushions sit lower around the Sultan,
   and the Silt Sea Giants’ tables and chairs keep their width at the lower height. The Crypt barracks beds, tables and seats and the Cloud jars
   use the same proportions. Jumah’s table still partly conceals the key. In the ruined Alliance headquarters, the loose pillows and
-  broken pottery sit against the lowered beds and crates. Both halves of the weapon display line up in the Yuan-ti tunnels and Mines 3.
+  broken pottery sit against the lowered beds and crates. Both halves of the weapon display line up in the Yuan-ti tunnels and Mines 3. The upright polearm stands in those regions and Volcano 2 sit lower, with their axe tips intact. In Mines 3, the six blue orbs on the lowered shelf keep the shape of the loose floor orbs.
   In El’s Temple the bowls of the six braziers sit lower beneath their curling smoke. When Tantris rises, the empty throne keeps its lowered height and its place between the braziers. The barrel and sack pile shared by the mines and Tyr
   sits lower while both barrel lids remain visible over the Tyr wall. The air and fire drakes have been seen fighting on their own maps.
 - **Shattered Lands' screens and icons in the sequel**: the USE screen, the inventory, the status box, the

@@ -232,9 +232,18 @@ map position. Nothing is built for it yet.
   game has such an item (2026-11-18).
 - The arena (2Ah): no water, jug or waterskin seen on the platform or on the champions' bodies
   (2026-11-18).
+- Wake of the Ravager, Forest (01h): The Hero Flask holds water from the Pool of Heroism. Using one dose on Cleave revives him. The two western plants offer acorns and grapes. [Forest playtest](logs/2026-11-27-ravager-forest-plants-and-sickbeds.md) The northern tables carry jugs and cups. Their presence did not establish a refill action. [Forest dining rooms](logs/2026-11-27-ravager-forest-dining.md)
 - Wake of the Ravager, Forest (01h): the Roost test jump and overhead-map check did not establish a water source (2026-11-27).
 - Wake of the Ravager, Veiled Alliance HQ (33h), Forest dining room and Mines 3 throne room: no water seen in the rooms looked at (2026-11-27, logs/2026-11-27-ravager-furniture-review.md).
 - Wake of the Ravager, El’s Temple throne aisle and Ikibod’s workroom in Mosaic. No water source identified in these two rooms during the [furniture check](logs/2026-11-27-ravager-throne-and-workshop.md).
+- Wake of the Ravager, the Mines laboratory shelf offers named chemicals. The northeast Yuan-ti storeroom holds barrels, jars and sacks. Drinking-water use was untested. [Room visits](logs/2026-11-27-ravager-mine-and-tunnel-shelves.md)
+- Wake of the Ravager, the four Mines 3 kitchen boxes contain cooking poisons or scripted crate contents including spices. [Kitchen visits](logs/2026-11-27-ravager-mine-kitchen-and-chests.md)
+- Wake of the Ravager, Mines 3. The kitchen kettle offers soup. The sealed laboratory safe yields a vial of greenish gas. Neither interaction supplied drinking water. [Room checks](logs/2026-11-27-ravager-mine-worktables-and-forge.md)
+- Wake of the Ravager, the narrow side-facing counters in both Volcano levels and the Alliance rooms show the same grey jug painted into picture 3486. The visual check did not exercise a drinking-water action. [Counter visits](logs/2026-11-27-ravager-silver-furniture.md)
+- Wake of the Ravager, Volcano 1 and 2. The grey jugs on the stocked counters and the bowls and goblets in the dining hall are painted into their tables. No drinking-water interaction was tested in these rooms. [Volcano room visits](logs/2026-11-27-ravager-volcano-furniture.md)
+- Wake of the Ravager, the Yuan-ti tunnels’ vessel room has a grey jar and two bowls with turquoise and blue contents. Their use as drinking water was untested. No rest-water source was identified at the Mines racks or the Volcano 2 stand. [Room visits](logs/2026-11-27-ravager-racks-and-polearms.md)
+- Wake of the Ravager, Mines 3 dining room and Elderbrain chamber. No rest-water source identified during the [encounter checks](logs/2026-11-27-ravager-mines-diners-and-elderbrain.md).
+- Wake of the Ravager, El’s Temple scribe’s desk and the Mines 3 chest chamber. No water source identified in either room during the [basin and chest playtest](logs/2026-11-27-ravager-basin-and-chests.md).
 - Wake of the Ravager, Mines 1 (38h), bedroom beside the worktable. No water source identified during the [bed placement check](logs/2026-11-27-ravager-furniture-joins.md).
 - Wake of the Ravager, Mosaic (3Ch), museum display room and Fletch’s bookcase. No water source identified during the [bust puzzle visit](logs/2026-11-27-ravager-mosaic-museum.md).
 - Wake of the Ravager, the first scene in Tyr (the street at the start): a red pot and a jug on the

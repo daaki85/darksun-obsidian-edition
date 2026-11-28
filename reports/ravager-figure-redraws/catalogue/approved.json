@@ -157,6 +157,7 @@
     {"zip": "approved/269-tarrasque-encounter.zip", "file": "RESOURCE.GFF", "chunks": {"BMP 11001": "11001/base.chunk", "CBMP 11001": "11001/combat.chunk", "SCMD 11001": "11001/script.chunk", "BMP 11002": "11002/base.chunk", "CBMP 11002": "11002/combat.chunk", "SCMD 11002": "11002/script.chunk"}},
     {"zip": "proposed/269-tarrasque-cinematic-v7.zip", "file": "RESOURCE.GFF", "chunks": {"BMP 11012": "11012/base.chunk", "BMP 11013": "11013/base.chunk", "BMP 11014": "11014/base.chunk"}},
     {"zip": "proposals/3231-dining-room.zip", "file": "RGN03A.GFF", "chunks": {"ETAB 58": "RGN03A/ETAB-58.chunk"}},
+    {"zip": "proposals/3511-elderbrain.zip", "file": "RESOURCE.GFF", "chunks": {"BMP 11008": "resource/11008/base.chunk", "BMP 11016": "resource/11016/base.chunk"}},
     {"zip": "proposals/3312-drakes-raptor-fire.zip", "file": "RESOURCE.GFF", "chunks": {"SCMD 11005": "resource/11005/script.chunk", "BMP 11005": "resource/11005/base.chunk", "CBMP 11005": "resource/11005/combat.chunk", "SCMD 11006": "resource/11006/script.chunk", "BMP 11006": "resource/11006/base.chunk", "CBMP 11006": "resource/11006/combat.chunk", "SCMD 11007": "resource/11007/script.chunk", "BMP 11007": "resource/11007/base.chunk", "CBMP 11007": "resource/11007/combat.chunk"}}
   ],
   "not_yet": {
