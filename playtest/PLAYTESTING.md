@@ -827,7 +827,7 @@ of its own beside the shared one**: its own display and work folder, never `:55`
   class clicked off before another is taken; KITS (234,138), NO KIT 106 and the kit rows 114, 122,
   130 at x 250, VIEW PSIONICS (260,138) back, DONE (271,182). `ravkits.py page` reads the sheet
   being made (race, classes, kit byte) and which window is up (3022/3023/3026+ the KIT PAGE's,
-  19504/19505 the game's own: no KITS button), and its hit points with their least and most and its PSP
+  19504/19505 the game's own: no KITS button; it is up at NEW when the dice log was attached after NEW, as `ravcreation.py` does, so the helper's kits rule wasn't set: click the class off and on again, logs/2026-11-28-ravager-hand-checks.md), and its hit points with their least and most and its PSP
   (a Battle Mage's, Arcanist's or Mind Warrior's rolled again as the kit is chosen:
   logs/2026-11-26-ravager-kit-psp-hd.md, step 3). A new character there is 7th level (a preserver with
   CON 18: 21 to 42 hit points). A member's menu (a right click on its roster portrait) has EDIT at
