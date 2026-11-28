@@ -276,6 +276,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-view-and-pace.md) | Wake of the Ravager: the view in fights still while a walker is on screen, the whole party spread after a load and fight (6 still gathers), steady pace counting (DSCLOG2 sites 230-234); the other QoL controls checked |
 | [2026-11-28](2026-11-28-ravager-creation-age.md) | Wake of the Ravager: the creation screen's age (rolled, kept by CON and RECALL, carried by DONE), no retrace wait with a screen up, no "Out of arrows" after a chatkcha throw |
 | [2026-11-28](2026-11-28-outfits-vs-stock.md) | The class outfits beside the stock people in both games (slave pens, the fountain, Tyr's street and the Roost); grabbing the sequel's screen in its own pixels and colours |
+| [2026-11-28](2026-11-28-ravager-walkthrough-bugs.md) | Wake of the Ravager's reported bugs: Detonate at a level up, Protection from Fire halving a Fireball, an Ioun stone's box with the new spells on (each with a control) |
 | [2026-11-28](2026-11-28-outfit-colours.md) | Codex's outfit colour pass (steady material layers) in both games; outfitlive.py now sets the palette |
 | [2026-11-28](2026-11-28-ravager-save-pages.md) | Wake of the Ravager: more saves, pages 2 to 4 and QUICK turned with PgDn and PgUp, the page's name under EXIT, a save and load on page 2 |
 | [2026-11-28](2026-11-28-ravager-journal-freeze.md) | Wake of the Ravager: its global numbers found (DS:15F6h, SAVE 31) for the journal's place in a save; DSCLOG2's notes for the freeze report |
@@ -352,3 +353,4 @@ schedules and diffs a log made or used.
 | [2026-11-28-ravager-to-ptar.sh](files/2026-11-28-ravager-to-ptar.sh) | [The same](2026-11-28-ravager-script-fixes.md): the sequel's party into Ptar's cave by its own mouth, the thief leading |
 | [2026-11-28-ravager-camera.py](files/2026-11-28-ravager-camera.py) | [The same](2026-11-28-ravager-script-fixes.md): reads the sequel's camera and party places; `set` puts the camera on the leader |
 | [2026-11-28-ravager-voucher-probe.hex](files/2026-11-28-ravager-voucher-probe.hex) | [The same](2026-11-28-ravager-script-fixes.md): the probe for `ravprobe.py`: the game's voucher sale of 460, then the Loader's capped one |
+| [2026-11-28](2026-11-28-memory-pass-play.md) | The memory pass: both helpers' changes against the old builds, screen for screen |

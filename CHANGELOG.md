@@ -69,6 +69,27 @@ so the Loader sets it there too, but only where it is still the starting value: 
 and the menu works as before ([the measurements](playtest/logs/2026-11-28-ravager-voice-volume.md)). **Dev:**
 `sfxvolume`, the patches `sfx_volume_full` (sequel) and `sfx_volume_dosbox_x` (`gamepatch.SFX_VOLUME_DBX`).
 
+**Fixed: Wake of the Ravager, the bugs players report** (branch `claude/ravager-walkthrough-bugs`). The 49 bugs in
+the owner's walkthrough checked against the sequel's scripts and program ([the report](reports/ravager-walkthrough-bugs-2026-11-28.md)).
+Mended now: Resist Fire, Resist Cold, Protection from Fire and from Lightning and Fire Shield never halved a
+spell of fire or cold alone (the damage routine's test the wrong way round; seen in play, a saved Fireball's 11
+now 5); Detonate was never offered at a psionicist's level up; the ranger's warning of the forest ambush read a
+flag nothing sets; Xarax the alchemist's potion of Free Action was an object no file has (now made), his "an
+order is waiting" flag was never cleared and his brewing clock was shared with the earth temple's. And a mod
+bug: with the new wizard spells on, the psionic powerstone, Ioun stones and other items with an effect of their
+own were taken for a new spell's scroll (the wrong picture in their box, and their effect not ended when taken
+off); only scrolls, spellbooks and rods are now, for the picture, the spell window's text and the take-off. The crystal rod had no picture at all (an empty-looking slot): it has the sequel's rod picture now. None of these is in Shattered Lands. **Dev:** patches
+`protection_halves` and `detonate_listed`; `ravager.free_action_potion`, `POTION_CLOCK`; DSCLOG2's `NS_BOOK` and `NS_INFO` (site 86),
+`ravspells.PLUS1_ITEM`; `ravager.crystal_rod_picture`; `ravlevel.py powers MEMBER forget N`.
+
+**Dev: memory pass, both helpers** (branch `claude/helper-memory-pass`, [the report](reports/memory-pass-2026-11-28.md)).
+DSCLOG walks a creature's items once (`WORN_ALL`, `WORN_ON`) in place of four copies: 208 bytes of Shattered Lands'
+helper back, in its segment and in upper memory. DSCLOG2 keeps the kits' names in its tail, as DSCLOG does
+(`kit_names_table.inc`, one table for both), with one `KIT_NAME_PTR`: 592 bytes of the sequel's segment back.
+A second pass runs ten of DSCLOG's self-contained routines from its tail (`TAIL_GO`): 1,200 bytes more of its
+segment (1,664 free now). Nothing a player sees changes (the same screens under both builds, in both games, and
+the fountain ambush fought with the moved routines). **Dev:** `playtest/scwatch.py` watches the shadow cache.
+
 **New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
 of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in
 (`build/ds2o` beside it: darksun-recompiled's new fifth build), after the same copies and widened sheets as a

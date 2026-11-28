@@ -296,10 +296,10 @@ into the Loader's copy of GPLDATA (`dsloader/itemtables.py`), so DSCLOG lost `EX
 
 | Limit | Used | Room | Spare |
 |---|---|---|---|
-| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 64,288 + `AFTER_INSTALL` 992, 2026-11-28) | 65,280 bytes | 65,536 | 256 bytes: `test_dsclog_room`'s margin, reached; the next code moves something to the tail first |
+| [DSCLOG's segment](#dsclogs-segment): `kept_end` (`resident_end` 62,880 + `AFTER_INSTALL` 992, 2026-11-28's memory passes) | 63,872 bytes | 65,536 | 1,664 bytes: 1,408 past `test_dsclog_room`'s margin of 256 |
 | [the far block](#the-far-block): `FAR_END` (its buffers from `FAR_RING`, 10h: 65,484 bytes) | 65,500 | 65,536 | 36 bytes |
-| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,490 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,692 |
-| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,112 paragraphs | 8,182 (`UMB_ROOM`) | 70 (1,120 bytes): the limit for new code and data, the segment's and the tail's alike |
+| upper memory as DSCLOG loads, its tail and stack too, with the overlay buffer: `UMB_NEED` (the header's +372; `test_fits_upper_memory` checks it too) | 6,514 paragraphs | 8,182 (`UMB_ROOM`: D00Ah to F000h, upper memory without `UMBPLUS.COM`) | 1,668 |
+| upper memory once installed: `UMB_KEPT` (DSCLOG, the overlay buffer, the music buffer and the see-through figures' tables, with their MCBs) | 8,136 paragraphs (2026-11-28's memory passes) | 8,182 (`UMB_ROOM`) | 46 (736 bytes; `test_dsclog_room` keeps 32): the limit for new code and data, the segment's and the tail's alike |
 | DSCLOG's PSP from 5Ch (the FCBs and the command line, of no use once it stays resident): `SQ_MAP` | 130 bytes | 164 (5Ch to FFh) | 34 bytes |
 | the Loader's item names and types: `NAMES_EXTRA` and `TYPES_EXTRA` (`names.EXTRA` and `len(npcitems.TYPES)`, the chunks of the Loader's copy of GPLDATA, `itemtables.py`; `test_names` and `test_header_offsets` check they agree) | 56 names, 44 types | the same | 0: a new one raises both sides' count; it costs no resident memory (the game's tables are as long as the chunks) |
 
@@ -360,6 +360,15 @@ leaves. The ways to free the segment:
   the tail's tables do. `SAVE_FAR` (quick save's `SAVE_TICK`) and `TINT_FAR` (the squares in
   reach's `TINT_PASS`) are there, after the tables; the tail is padded to a whole paragraph
   (`KEPT_PARAS` counts whole ones);
+- **a whole routine in the tail** (`TAIL_GO`, the second memory pass of 2026-11-28): a routine that calls
+  nothing in the segment and nothing of the game's moves as it is, its `cs:` reads made `gs:` and its `RET`s
+  `RETF`s (or a `call .run / retf` in front, if it calls its own parts), as `X_FAR` in the tail. Its callers
+  reach it by "call tail_go / dw X_FAR" (a stub `X: call tail_go / dw X_FAR / ret` where there are several, or
+  a test runs it by name), with every register and flag coming back as the routine leaves them. Not for a
+  routine that reads the stack by depth (`PSP_SCORES`) or is run per pixel (`RING_PX`). Ten moved
+  (`BUILD_DARK`, `SPANS_FLUSH`, `DUST_UNION`, `MISSILE_RATE`, `PAGE_SETUP`, `KIT_PSP_OF`, `LOOT_KEY`,
+  `GR_SHADOWED`, `ADND_NEEDED`, `TH_CAHULAKS`): 1,200 bytes of the segment, 6 paragraphs more upper memory
+  (the stubs and `TAIL_GO`);
 - **DSCLOG's PSP** (the 100h bytes before the header, kept with it): from 5Ch to FFh it holds
   what DOS gave the program as it started (two FCBs and the command line), which nothing reads
   after DSCLOG stays resident, and `KEEP`'s stack while it installs. A buffer of the Loader's
@@ -483,13 +492,16 @@ labels' already did). A buffer handed to the game as a far pointer takes the tai
 with the install, to 56,902, 8,624 free; with every open pull request joined on 2026-11-27, 57,440,
 8,096 free); the upper memory taken is the same (the parts are one
 block: the tail's 8,512 bytes, its tables first, `section tail`, then its buffers, `section tailz`),
-and the install's 800 bytes never were kept.
+and the install's 800 bytes never were kept. The memory pass of 2026-11-28 put the kits' names there too (`KIT_NAMES`, `KIT_SHORT`:
+`kit_names_table.inc`, DSCLOG's tail's table as well), read by one `KIT_NAME_PTR` as in DSCLOG: 592 bytes
+of the segment (`IMAGE_END` 63,392 to 62,800), and moved `LBL_SLOTS` to the tail's start after `ITEM_NAMES`, so
+the emulator tests' return spot at CS:FFF0 still lands in a buffer (`test_dsclog2_room`).
 
 **To make room for a port**: put a table or buffer that only a few routines read in the tail (a
 `section tail` / `section image` pair around it, in place, so the lines round it are untouched) and
 read it through FS (`push fs` / `call tail_fs` / `[fs:...]` / `pop fs`, or once for a whole routine,
 setting FS again after a call into the game). Data handed to the game, or read with `cs lodsb`
-from many places (the kits' names, the weapon kinds' names), stays in the segment. The far block
+from many places (the weapon kinds' names), stays in the segment. The far block
 can't take more: it is the HMA's, 768 bytes free (`FAR_TOP` FD00h).
 
 ### Upper memory moved down
