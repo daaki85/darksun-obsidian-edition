@@ -828,6 +828,17 @@ class GameFileTests(unittest.TestCase):
         self.assertEqual(chunks[("OJFF", ravager.FREE_ACTION_POTION)], chunks[("OJFF", ravager.POTION_TEMPLATE)])
         self.assertNotIn(ravager.FREE_ACTION_POTION_FIX, ravager.objects_fixed(data, {ravager.FREE_ACTION_POTION_FIX})[1])
 
+    def test_crystal_rod_picture(self):
+        """The crystal rod (30046) has an item record and no picture in the game; the copy gives it the rod's."""
+        data = open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read()
+        game_chunks = gff.read_gff(data)
+        self.assertIn(("RDFF", ravager.CRYSTAL_ROD), game_chunks)
+        self.assertNotIn(("OJFF", ravager.CRYSTAL_ROD), game_chunks)
+        copy, done = ravager.objects_fixed(data)
+        self.assertIn(ravager.CRYSTAL_ROD_FIX, done)
+        chunks = gff.read_gff(copy)
+        self.assertEqual(chunks[("OJFF", ravager.CRYSTAL_ROD)], game_chunks[("OJFF", ravager.ROD_PICTURE)])
+
     def test_walkthrough_program_fixes(self):
         """The damage routine's halving branches as Shattered Lands' does (jnz: a spell all of the kinds
         guarded against), and the pop-up's discipline of a power takes power 0 as the program's other copy

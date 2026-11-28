@@ -68,9 +68,9 @@ flag nothing sets; Xarax the alchemist's potion of Free Action was an object no 
 order is waiting" flag was never cleared and his brewing clock was shared with the earth temple's. And a mod
 bug: with the new wizard spells on, the psionic powerstone, Ioun stones and other items with an effect of their
 own were taken for a new spell's scroll (the wrong picture in their box, and their effect not ended when taken
-off); only scrolls and spellbooks are now. None of these is in Shattered Lands. **Dev:** patches
-`protection_halves` and `detonate_listed`; `ravager.free_action_potion`, `POTION_CLOCK`; DSCLOG2's `NS_BOOK`,
-`ravspells.PLUS1_ITEM`; `ravlevel.py powers MEMBER forget N`.
+off); only scrolls, spellbooks and rods are now, for the picture, the spell window's text and the take-off. The crystal rod had no picture at all (an empty-looking slot): it has the sequel's rod picture now. None of these is in Shattered Lands. **Dev:** patches
+`protection_halves` and `detonate_listed`; `ravager.free_action_potion`, `POTION_CLOCK`; DSCLOG2's `NS_BOOK` and `NS_INFO` (site 86),
+`ravspells.PLUS1_ITEM`; `ravager.crystal_rod_picture`; `ravlevel.py powers MEMBER forget N`.
 
 **New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
 of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in

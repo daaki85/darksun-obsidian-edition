@@ -4964,7 +4964,7 @@ site_table:
         dw rs_click                         ; 83 SITE_RS_CLICK (6DE85h: a button on the creation screen: STORE and RECALL)
         dw greq_load                        ; 84 SITE_GREQ_LOAD (7DA30h: a loaded save's GREQ number: the quick saves' own)
         dw gear_done                        ; 85 SITE_GEAR_DONE (6E2F2h: DONE has given a new character the game's gear: the Loader's)
-        dw site_none                        ; 86 (none here)
+        dw ns_info                          ; 86 SITE_NS_INFO (9AA95h: an item's INFO text: no new spell's on an item's own effect)
         dw cr_picks                        ; 87 SITE_CR_PICKS (6ED55h: a new member's spells and powers given: picked on the game's windows)
         dw psi_grant                       ; 88 SITE_PSI_GRANT (6E9C9h, 6E9F7h: a new member's power given: a pick, or kept on EDIT)
         dw site_none                        ; 89 (none here)
@@ -5265,6 +5265,7 @@ ns_cmp:
         jnc .old
         test byte [cs:si + 4], NS_PLUS1
         jz .old
+        mov bx, [cs:si + 6]
         call ns_book                ; (an item's power: a new spell's only on a scroll or a book)
 .old:   pop ax
         pop bx
@@ -5277,18 +5278,17 @@ ns_cmp:
         jmp acid_flags
 ns_entry times 10 db 0         ; (NS_CMP's entry found, copied from the tail)
 ; NS_BOOK: CF set if the item an NS_PLUS1 compare reads the power of is a wizard's scroll or spellbook (type
-; NS_BOOK_TYPE, the mod's books' as the game's): the item at the game's ES:BX, or (the entry's displacement
-; not 0) the item numbered by the word at the game's [BP+displacement]. The game's own effects of an item
+; NS_BOOK_TYPE, the game's and the mod's scrolls', spellbooks' and rods'): the item at the game's ES:BX, or (BX,
+; the entry's displacement, not 0) the item numbered by the word at the game's [BP+BX]. The game's own effects of an item
 ; (powers 140h to 147h: the psionic powerstone's 146h, the Ioun stones' 142h, a staff's 143h...) take the
 ; powers the new spells' scrolls have (141h to 146h): on any other item the power is the game's effect
 ; (the walkthrough's bugs, 2026-11-28: the stones' effect never taken off with the rule, their pictures the
-; new spells'). DI NS_CMP's frame, SI its entry; DS the game's; all registers kept.
+; new spells'). DI NS_CMP's frame; DS the game's; all registers kept.
 NS_BOOK_TYPE equ 77
 ns_book:
         push ax
         push bx
         push es
-        mov bx, [cs:si + 6]
         or bx, bx
         jnz .index
         mov es, [ss:di]             ; (the game's ES and BX)
@@ -5299,16 +5299,36 @@ ns_book:
         les bx, [ITEMS_PTR]
         add bx, ax
 .type:  cmp word [es:bx + ITEM_TYPE], NS_BOOK_TYPE
-        je .book
-        inc word [cs:ns_not_books]
+        stc
+        je .out
         clc
-        jmp .out
-.book:  stc
 .out:   pop es
         pop bx
         pop ax
         ret
-ns_not_books dw 0                   ; (a look in play: an item's power taken as the game's, not a new spell)
+; - NS_INFO (site 86): the item box's INFO (9A94Eh, [BP+6] the item's +2 word, the spell + 1, its caller's SI
+;   the item at [BP-0Eh]), its "movzx eax,di" (9AA95h) before the SPIN text is looked up: a number a new
+;   spell's text has (141h to 146h, ravspells' SPIN 321-326) on an item that isn't a wizard's scroll or book
+;   (NS_BOOK) is one of the game's own item effects, which have no text: NS_NO_TEXT, so the box says UNKNOWN as
+;   the game's does, not a new spell's description (the lemon, the powerstone, Ioun stones; 2026-11-28).
+NS_NO_TEXT   equ 0x7FFF               ; (no SPIN chunk has it)
+ns_info:
+        pushad
+        push es
+        mov di, sp
+        movzx eax, word [ss:di + 2]     ; (the game's DI)
+        dec ax                          ; (the spell + 1)
+        call ns_new
+        inc ax
+        jnc .put
+        mov bx, -0x0E                   ; (the item's number at the game's [BP-0Eh])
+        call ns_book
+        jc .put
+        mov eax, NS_NO_TEXT
+.put:   mov [ss:di + 30], eax           ; (the game's EAX)
+        pop es
+        popad
+        iret
 section tail
 ns_cmp_table:
 %include "ns_cmp_table.inc"

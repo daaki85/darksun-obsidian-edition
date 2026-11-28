@@ -2227,6 +2227,22 @@ def free_action_potion(chunks: gff.Chunks) -> gff.Chunks:
     return {("RDFF", FREE_ACTION_POTION): rdff, ("OJFF", FREE_ACTION_POTION): icon}
 
 
+# The crystal rod (object 30046, name 174, a loot item of two people's: no power, no script uses it) has an item
+# record but no OJFF, so no picture: in a body's or the party's slots it looked like an empty cell (the
+# walkthrough's bugs, 2026-11-28). Given the Rod's picture (object 31201's OJFF, the sequel's rod of the same
+# look), its record as it is.
+CRYSTAL_ROD, ROD_PICTURE = 30046, 31201
+CRYSTAL_ROD_FIX = "crystal_rod_picture"
+
+
+def crystal_rod_picture(chunks: gff.Chunks) -> gff.Chunks:
+    """The crystal rod's OJFF (CRYSTAL_ROD) for OBJEX.GFF's CHUNKS, the rod's (ROD_PICTURE); none where it has one
+    or isn't the game's object."""
+    if ("OJFF", CRYSTAL_ROD) in chunks or ("RDFF", CRYSTAL_ROD) not in chunks or ("OJFF", ROD_PICTURE) not in chunks:
+        return {}
+    return {("OJFF", CRYSTAL_ROD): chunks[("OJFF", ROD_PICTURE)]}
+
+
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
@@ -2273,6 +2289,10 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
     if potion:  # (Xarax's potion of free action: FREE_ACTION_POTION)
         new.update(potion)
         done.append(FREE_ACTION_POTION_FIX)
+    rod = {} if CRYSTAL_ROD_FIX in skip else crystal_rod_picture(chunks)
+    if rod:  # (the crystal rod's picture: CRYSTAL_ROD)
+        new.update(rod)
+        done.append(CRYSTAL_ROD_FIX)
     if added and "transfer_items" not in skip:
         new.update({k: v for k, v in added.items() if k[0] in ravitems.OBJECT_KINDS})
         done.append("transfer_items")

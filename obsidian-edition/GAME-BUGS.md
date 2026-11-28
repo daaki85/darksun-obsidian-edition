@@ -280,6 +280,7 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | **Detonate** at a level up | Never offered to a psionicist gaining a power: the list's routine skipped the first power | Listed with the other Kinetics powers |
 | The **ranger's warning** of the forest ambush | Never given: the tracking roll's result was stored in one flag and read from another | Given when the roll succeeds |
 | **Xarax's potions** (the alchemist) | The potion of Free Action was paid for and never handed over (an object no file has); a second order was mixed up with the first; his brewing time was shared with the earth temple's count | The potion is handed over; each order kept apart; his own clock ([the report](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/ravager-walkthrough-bugs-2026-11-28.md)) |
+| The **crystal rod** | Had no picture: in a body's or the party's slots it looked like an empty cell | The sequel's rod picture |
 
 ## Saved games
 

@@ -19,7 +19,7 @@ script's end); the new potion is made in `ravager.free_action_potion`. Seen in p
 | **Detonate** never offered when a psionicist gains a power | The level-up list finds a power's discipline through a routine whose test skipped power 0, Detonate, so it was never listed (the program's other copy of the routine has it right). | The test as the other copy's (`detonate_listed`). In play: a Kinetics level-up lists 6 powers with LEARN DETONATE (5 before). |
 | The **ranger's warning** of the Draxans' ambush in the forest never comes | The tracking roll stores its result in one flag (70); the two scripts that should warn the party (GPL 234 and 187) read another (424) that no script sets. | Both read flag 70 (`ambush_warning_*`). |
 | **Xarax's potions** (the alchemist): the potion of Free Action was paid for and never given, and orders went astray | Three slips: the potion he hands over for Free Action is an object no file has; the "an order is waiting" flag (506) was never cleared, so a later order was mixed up with the first; and his brewing clock was a global number (113) the earth temple's script also counts down and resets. | A potion of Free Action made from the potion beside it in the objects file (`free_action_potion`); the flag cleared as each order is priced (`potion_batch`); his clock on a number no script uses (160, `potion_clock_*`). |
-| The **psionic powerstone, Ioun stones** and other items with an effect of their own (a mod bug) | With the mod's six new wizard spells on, an item whose effect number fell in the new spells' numbers (the powerstone, two Ioun stones, a staff and some others) was taken for a scroll of a new spell: its box showed the new spell's picture, and taking it off ended the new spell's effects instead of the item's own. | Only a wizard's scroll or spellbook is taken for a new spell (DSCLOG2's `NS_BOOK`). In play: an Ioun stone's box shows its own picture again (a new spell's face before). |
+| The **psionic powerstone, Ioun stones** and other items with an effect of their own (a mod bug) | With the mod's six new wizard spells on, an item whose effect number fell in the new spells' numbers (the powerstone, two Ioun stones, the lemon, a longsword, some rings and armours) was taken for a scroll of a new spell: its box showed the new spell's picture (and its spell window would have shown the new spell's text), and taking it off ended the new spell's effects instead of the item's own (so the item's bonus stayed on). | Only a scroll, spellbook or rod is taken for a new spell (DSCLOG2's `NS_BOOK`, `NS_INFO`). In play: an Ioun stone's box shows its own picture again (a new spell's face before). |
 
 ## Already fixed by the mod
 
@@ -65,11 +65,30 @@ out of bounds, the volcano's Draxans, the Jumah crypt's walls going black, the m
 maps, key mashing on a black screen, and merging the two yellow keys (a crash not reproduced). These are
 the maps', the pictures' or the walking code's; a few may be looked at in the recompiled program later.
 
-## Still to look at
+## The last five (read after the first pass)
 
-The Sultan's "access to the treasure" line before the guards allow it, the option to free Magnolia
-going away, the Helm +3 missing from a body, the lemon showing as Unknown, and the Crystal Rod's
-picture: not yet read in the scripts and objects.
+- **The crystal rod has no picture**: fixed. Its item record is there (object 30046, in two creature
+  records' gear; the walkthrough found it on the hut woman on the islands) but the objects file has no picture entry for it, so it
+  sat in a slot looking like an empty cell. The Loader's copy gives it the sequel's rod picture
+  (`crystal_rod_picture`). It has no power at all, so its box rightly has no ability to describe.
+- **The lemon's ability shows as UNKNOWN**: the game's own. The lemon, the powerstone, Ioun stones and a few
+  rings and armours have an effect of the game's own (powers 140h to 147h) rather than a spell, and the
+  game has no description text for those, so it says UNKNOWN. With the mod's new spells on, six of those
+  numbers are also the new spells' description numbers, so the spell window, which looks its text up by
+  that number, would have shown a new spell's description for them. Fixed with the rest of that mod bug:
+  on anything but a scroll, spellbook or rod the window finds no text, as in the game (DSCLOG2's
+  `NS_INFO`; in the program the Loader starts, but the window itself wasn't reached in play). Writing real
+  descriptions for these effects would be new text (the cluebook calls the lemon's and the powerstone's
+  "Psionic Restore"), a later choice.
+- **The Helm +3 missing from the hut woman's body**: not a bug. The cluebook's treasure guide places the
+  Helm +3 in the Clouds; the islands' item in that list is the Leathers +3.
+- **The Sultan's "take what you like from my treasure room"** at the end: left. The line sets a flag
+  (175) that nothing reads, and the treasure piles answer only before that stage of the story, so the
+  guards never let the party in. How much treasure was meant isn't in the scripts, so mending it would be
+  new design, not a fix.
+- **The option to free Magnolia going away**: not a bug. It is offered only while the member talking stands
+  next to her chains, and it is taken away once Ptar has given up the key (the key is offered instead) or
+  after a try.
 
 ## Shattered Lands (both games' parity)
 

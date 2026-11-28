@@ -52,14 +52,15 @@ class TableTests(unittest.TestCase):
 
     def test_sites(self):
         """The program's patches are DSCLOG2's SITE 140-149 (each its routine in the site table), past the
-        other threads' 130-139 and short of 150; the effect records after the game's 113."""
+        other threads' 130-139 and short of 150, and 86 (the item box's INFO); the effect records after the game's 113."""
         import re
         src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog2.asm")).read()
         routine = {ravspells.NS_CMP: "ns_cmp", ravspells.NS_KNOW: "ns_know", ravspells.NS_LEVEL: "ns_level",
                    ravspells.NS_LIST: "ns_list", ravspells.NS_CAST: "ns_cast", ravspells.NS_EFFECT: "ns_effect",
                    ravspells.NS_ABILITY: "ns_ability", ravspells.NS_CLAW: "ns_claw",
-                   ravspells.NS_SCROLL: "ns_scroll", ravspells.NS_LEARN: "ns_learn"}
-        self.assertEqual(sorted(routine), list(range(140, 150)))
+                   ravspells.NS_SCROLL: "ns_scroll", ravspells.NS_LEARN: "ns_learn",
+                   ravspells.NS_INFO: "ns_info"}
+        self.assertEqual(sorted(routine), [86] + list(range(140, 150)))
         for number, name in routine.items():
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
         names = {p.name for p in ravager.PATCHES}

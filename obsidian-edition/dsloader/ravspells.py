@@ -174,6 +174,9 @@ VEC_SITE = 0xF5  # (DSCLOG2's SITE: INT F5h, then the site's number)
 NS_CMP, NS_KNOW, NS_LEVEL, NS_LIST = 140, 141, 142, 143
 NS_CAST, NS_EFFECT, NS_ABILITY, NS_CLAW = 144, 145, 146, 147
 NS_SCROLL, NS_LEARN = 148, 149  # (a scroll's teaching, CHOOSE A SPELL's)
+NS_INFO = 86  # (an item box's INFO text: a site the table had free; the new spells' SPIN numbers, 321-326, are
+# the game's own item effects' too (140h-147h), which have no text: on an item that isn't a scroll or book the
+# box says UNKNOWN, as the game's, not a new spell's description)
 # The spells' effects: the sequel's effect records past its 113 (0-112; zeros after them, and the creature's
 # effect bits 15 bytes, 0-119), named and given their spells' icons by "ns_effects". Cat's Grace's and
 # Friends' are put by Strength's case (DSCLOG2's NS_EFFECT) and raise DEX and CHA (NS_ABILITY), Erdlu
@@ -267,7 +270,7 @@ def effect_patch() -> Patch:
 
 
 def program_patches() -> List[Patch]:
-    """The program's patches for them (ravager.PATCHES'): DSCLOG2's sites 140-149 and the effect records."""
+    """The program's patches for them (ravager.PATCHES'): DSCLOG2's sites 140-149 and 86 and the effect records."""
     return [
         Patch("ns_list", 0x6254F, bytes.fromhex("33f63b7efe"), site_bytes(NS_LIST, 5)),
         Patch("ns_know", 0x62625, bytes.fromhex("837e0873"), site_bytes(NS_KNOW, 4)),
@@ -279,6 +282,7 @@ def program_patches() -> List[Patch]:
         Patch("ns_claw", 0x86A45, bytes.fromhex("0bd27547"), site_bytes(NS_CLAW, 4)),
         Patch("ns_scroll", 0x999FB, bytes.fromhex("8ec0268b1e440b"), site_bytes(NS_SCROLL, 7)),
         Patch("ns_learn", 0x936B4, bytes.fromhex("8ec02608979c03"), site_bytes(NS_LEARN, 7)),
+        Patch("ns_info", 0x9AA95, bytes.fromhex("660fb7c7"), site_bytes(NS_INFO, 4)),
         effect_patch(),
     ]
 

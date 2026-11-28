@@ -32,14 +32,22 @@ the hit points are the truth there.)
 `ravload.sh ravager-after-ambush`; DSCLOG2's rules are set by the dice log's attach (`ravdice.py`), so it
 must run (rules 0 without it: no new spell, no NS_CMP). One of Ar'Anda's items made an Ioun stone (object
 30013's record: power 142h) in memory, then its box opened (I, her portrait, a right click on it):
-the stone's own picture, and DSCLOG2's `ns_not_books` 1. The control: NS_BOOK's first bytes made `stc /
+the stone's own picture, and DSCLOG2's `ns_not_books` 1 (a counter of that build, dropped since for the segment's room). The control: NS_BOOK's first bytes made `stc /
 ret` in memory (the old way, every item a new spell's scroll): the same box showed a new spell's face.
 
 ![Fixed: the stone's own picture](img/2026-11-28-wotr-ioun-fixed.png) ![Control: a new spell's](img/2026-11-28-wotr-ioun-control.png)
 
 Moving a powerstone (146h) in and out of a worn slot did not reach the take-off routine's compare
-(`ns_not_books` stayed 0): the powerstone is used, not worn. The take-off path for a worn stone was not
+(the counter stayed 0): the powerstone is used, not worn. The take-off path for a worn stone was not
 played.
+
+## The new spells' descriptions on items' own effects: not reached in play
+
+The second pass's `NS_INFO` (site 86 at 9AA95h: the SPIN text the item box's spell window looks up) is in the
+program the Loader starts (`cd f5 56 90` there in `dos/DSUNLOG2.EXE`), but no click reached that window:
+a lemon's box (its icon from the charges word, +0Eh, as the fruit type's flag asks) shows its icon and
+INFO lists who may use it; a left click on the box's icon eats the fruit or picks the item up. DSCLOG2's
+`ns_infos` (a counter of that build, dropped since) stayed 0. The cluebook says the window comes up with a right click on a scroll.
 
 ## Not played
 
