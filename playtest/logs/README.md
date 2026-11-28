@@ -261,6 +261,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-log-clicks.md) | Wake of the Ravager's combat log panel: clicks on it walked the party and were often missed; now taken from the mouse events, L and clicks gated by the panel on the map |
 | [2026-11-27](2026-11-27-ravager-view-and-pace.md) | Wake of the Ravager: the view in fights still while a walker is on screen, the whole party spread after a load and fight (6 still gathers), steady pace counting (DSCLOG2 sites 230-234); the other QoL controls checked |
 | [2026-11-28](2026-11-28-ravager-creation-age.md) | Wake of the Ravager: the creation screen's age (rolled, kept by CON and RECALL, carried by DONE), no retrace wait with a screen up, no "Out of arrows" after a chatkcha throw |
+| [2026-11-28](2026-11-28-outfits-vs-stock.md) | The class outfits beside the stock people in both games (slave pens, the fountain, Tyr's street and the Roost); grabbing the sequel's screen in its own pixels and colours |
 
 ## files/
 
