@@ -63,7 +63,9 @@ Releases, newest first (2.12.0 and older in the archive):
 DSCLOG walks a creature's items once (`WORN_ALL`, `WORN_ON`) in place of four copies: 208 bytes of Shattered Lands'
 helper back, in its segment and in upper memory. DSCLOG2 keeps the kits' names in its tail, as DSCLOG does
 (`kit_names_table.inc`, one table for both), with one `KIT_NAME_PTR`: 592 bytes of the sequel's segment back.
-Nothing a player sees changes (the same screens under both builds, in both games).
+A second pass runs ten of DSCLOG's self-contained routines from its tail (`TAIL_GO`): 1,200 bytes more of its
+segment (1,664 free now). Nothing a player sees changes (the same screens under both builds, in both games, and
+the fountain ambush fought with the moved routines). **Dev:** `playtest/scwatch.py` watches the shadow cache.
 
 **Fixed: both games, race and sex in talk and the typos** (branch `claude/ravager-script-room`). Wake of the
 Ravager's 17 lines that read a character's race or sex straight off the combat record (always 0: a thri-kreen

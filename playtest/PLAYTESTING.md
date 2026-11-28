@@ -409,6 +409,10 @@ sequel itself: `sh setup_ravager.sh`, the user's GOG installer (from the private
   old build), copy it into `obsidian-edition/dos/` for one `loadsave.sh`, run `memaudit.py`, then
   put the new one back and `cmp` it with a fresh build; not while the unit tests run (they read
   `dos/DSCLOG.EXE`).
+- **The shadow cache in use** (logs/2026-11-28-memory-pass-play.md): `scwatch.py SECONDS` reads DSCLOG's
+  SHADOW CACHE every second (slots filled, the next, the rounds). The fountain ambush filled all 80 slots in two
+  minutes and went round once in five, so the cache is used in full in a big fight. (`fountain-user`'s
+  speech on loading went with eight clicks on its box, `click.py 160 30` 2.5 s apart; msgbox.sh only tells one is up.)
 - **Comparing two builds' screens** (logs/2026-11-28-memory-pass-play.md): the old helper from
   `git show origin/obsidian-edition:obsidian-edition/dos/DSCLOG.EXE` (or `DSCLOG2.EXE`) copied into `dos/` for one
   load, the same clicks, `compare -metric AE` on each pair of grabs. In Shattered Lands' inventory the bag icon's

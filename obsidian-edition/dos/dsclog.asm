@@ -1663,6 +1663,34 @@ tail_call:
 .back:  pop gs
         ret
 
+; TAIL_GO: a routine kept in the tail (2026-11-28's second memory pass) run from its stub in this
+; segment, "call tail_go / dw X_FAR / ret": X_FAR runs with every register as the stub's caller left
+; them but GS (this segment, for its variables "gs:"), and ends with RETF; its registers and flags come
+; back to the caller (the flags going in are not kept but DF and IF). X_FAR's code is the routine as it
+; was, its CS: reads made GS: reads, run by a near call ("call .run / retf"). Only routines that call
+; nothing in this segment and nothing of the game's (which may change GS) go there.
+tail_go:
+        push gs                 ; (the stack: the stub's word's address P, then its caller's way back)
+        push bp
+        mov bp, sp              ; [BP+2] the caller's GS, [BP+4] P
+        push cs
+        pop gs
+        push cs                 ; (the way back here, for the routine's RETF)
+        push word .back
+        push word [cs:tail_seg] ; (the routine: TAIL_SEG:[P])
+        push word [ss:bp + 4]
+        push bx
+        mov bx, [ss:bp - 8]
+        mov bx, [cs:bx]
+        mov [ss:bp - 8], bx
+        pop bx
+        add word [ss:bp + 4], 2 ; (back to the stub's RET)
+        mov bp, [ss:bp]
+        retf
+.back:  pop gs                  ; (BP as it was pushed: dropped)
+        pop gs
+        ret
+
 ; SOUND_TICK: from the map's main loop (PROBE_SCROLL, DS the game's), the sound the Loader asked
 ; for (SOUND_REQ), once. All registers kept.
 sound_tick:
@@ -3581,80 +3609,9 @@ MISSILE_KIND equ 13             ; (the chatkcha's kind + 1; then the bow, the sl
 MISSILE_RAV  equ 21             ; (the javelin's kind + 1; then the darts)
 missile_halves db 3, 4, 5, 6, 8, 10, 3, 4, 5, 3, 4, 5, 3, 4, 5, 6, 8, 10
 missile_rate:
-        cmp dl, SPEC_PLAIN
-        jb .ret
-        cmp si, KIND_TYPES
-        jae .ret
-        push cx
-        push dx
-        push si
-        movzx cx, byte [cs:si + kind_of_type]
-        sub cx, MISSILE_KIND
-        jb .out
-        cmp cx, 3
-        jbe .kind
-        sub cx, MISSILE_RAV - MISSILE_KIND - 4  ; (the javelin 4, the darts 5)
-        cmp cx, 4
-        jb .out
-        cmp cx, 5
-        ja .out
-.kind:
-        xor dx, dx              ; DL the specialist's level
-        xor si, si
-.class: push ax
-        mov al, [es:bx + si + 0x21]
-        mov ah, [es:bx + si + 0x24]
-        or si, si               ; (a human's earlier classes once the first's level has passed theirs)
-        jz .on
-        cmp byte [es:bx + 0x18], 1
-        jne .on
-        cmp ah, [es:bx + 0x24]
-        jae .next
-.on:    cmp al, FIGHTER_CLASS
-        je .warrior
-        cmp al, GLADIATOR_CLASS
-        je .warrior
-        cmp al, 13              ; (a ranger, 13-16)
-        jb .next
-        cmp al, 16
-        ja .next
-.warrior:
-        cmp ah, dl
-        jbe .next
-        mov dl, ah
-.next:  pop ax
-        inc si
-        cmp si, 3
-        jb .class
-        imul cx, cx, 3
-        cmp dl, 7
-        jb .tier
-        inc cx
-        cmp dl, 13
-        jb .tier
-        inc cx
-.tier:  mov si, sp
-        cmp byte [ss:si + 2], SPEC_PLAIN  ; (the skill: DX, pushed before SI)
-        jne .rate
-        cmp dl, 7
-        jb .out                 ; (a kind not chosen before 7th level: the weapon's own rate)
-        dec cx                  ; (from 7th: a specialist's a band lower)
-.rate:  mov si, cx
-        movzx cx, byte [cs:si + missile_halves]
-        cmp cx, ax
-        jbe .grand
-        mov ax, cx
-.grand: pop si                  ; (DX, pushed after it: the skill back in DL)
-        pop dx
-        push dx
-        push si
-        cmp dl, SPEC_GRAND
-        jne .out
-        add ax, 2               ; (a grand master one more shot, as in melee)
-.out:   pop si
-        pop dx
-        pop cx
-.ret:   ret
+        call tail_go            ; (the tail's: MISSILE_RATE_FAR)
+        dw missile_rate_far
+        ret
 
 ; EXPERT_OF: EXPERT_HALVES for the attack routine's attacker ([BP+10h] its sheet's number).
 expert_of:
@@ -7374,48 +7331,9 @@ psi_kit:
 .titan: mov al, KIT_TITAN_MIND
         ret
 kit_psp_of:
-        or ax, ax
-        jle .ret
-        push dx
-        xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
-        cmp cl, KIT_TITAN_MIND
-        jne .seer
-        cmp bx, PSP_PK_LAST
-        jbe .out                ; (a Titan Mind's psychokinesis: as it was)
-        mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
-        cmp bx, PSP_TP_FIRST
-        jb .add
-        mov dx, 2
-        jmp .add
-.seer:  mov dx, -2              ; (a Wasteland Seer's every power: 2 less under the open sky,
-        cmp cl, KIT_WASTE_SEER  ; 1 more under a roof)
-        je .add
-        mov dx, 1
-        cmp cl, KIT_SEER_ROOF
-        je .add
-        xor dx, dx
-.bender:
-        cmp cl, KIT_MIND_BENDER
-        jne .kineticist
-        mov dx, -2
-        jmp .discipline
-.kineticist:
-        cmp cl, KIT_KINETICIST
-        jne .out
-        mov dx, 2
-.discipline:
-        cmp bx, PSP_TP_FIRST
-        jae .add
-        neg dx
-        cmp bx, PSP_PK_LAST
-        jbe .add
-        xor dx, dx              ; (psychometabolism: as it was)
-.add:   add ax, dx
-        cmp ax, 1
-        jge .out
-        mov ax, 1
-.out:   pop dx
-.ret:   ret
+        call tail_go            ; (the tail's: KIT_PSP_OF_FAR)
+        dw kit_psp_of_far
+        ret
 
 ; PROBE_PSP_USE: INT VEC_PSP_USE replaces "or di,di / jge $+4 / xor di,di" (6 bytes: INT + 4
 ; NOPs; DSUN.EXE 5CBE7h) where the routine using a power has its cost in DI (SI the combatant,
@@ -14888,48 +14806,6 @@ strength_dice:
 ; (66) where its creature has a bigger one of either, a Cat's Grace (54) where it has a bigger Cat's
 ; Grace (as big: the first counts). (The spells as the manual has them.) DS the
 ; game's; all registers kept.
-gr_shadowed:
-        pusha
-        mov ah, GRACE_EFFECT
-        cmp al, ah
-        je .group
-        mov ah, 66
-        cmp al, ah
-        je .group
-        cmp al, STRENGTH_EFFECT
-        jne .no
-.group: lea di, [bx + EFFECTS_OFF]      ; (this one)
-        mov dx, [es:di]                 ; (its creature)
-        mov cl, [es:di + 9]             ; (its amount)
-        mov si, EFFECTS_OFF
-        mov bx, [EFFECTS_COUNT]
-.each:  dec bx
-        js .no
-        cmp si, di
-        je .next
-        cmp [es:si], dx
-        jne .next
-        mov al, [es:si + 6]
-        cmp al, ah
-        je .same
-        cmp ah, 66
-        jne .next
-        cmp al, STRENGTH_EFFECT
-        jne .next
-.same:  mov al, [es:si + 9]
-        cmp al, cl
-        jg .yes
-        jl .next
-        cmp si, di
-        jb .yes
-.next:  add si, 10
-        jmp .each
-.yes:   popa
-        stc
-        ret
-.no:    popa
-        clc
-        ret
 
 ; RAINBOW_SITE (gamepatch "rainbow_pattern_damage"): the start of the routine taking hit points off
 ; a creature (5859Ah, 4E0:61h: every blow's and spell's damage), "mov di,[bp+6] / mov dx,[bp+8]"
@@ -17376,44 +17252,8 @@ aim_site:
 ; ADND_NEEDED: CX = AD&D's save against acid for item BX (DS the game's): its material's
 ; number, less its plus, less 1 for a magical power. Keeps every other register.
 adnd_needed:
-        push ax
-        push bx
-        push di
-        push es
-        mov di, bx
-        les bx, [ITEMS]
-        imul ax, di, 0x15
-        add bx, ax
-        mov al, [es:bx+0x14]            ; its plus
-        cbw
-        mov cx, ax
-        cmp byte [es:bx+0x0F], 0
-        je .type
-        inc cx                          ; a magical power: one plus more
-.type:  mov ax, [es:bx+0x0A]
-        les bx, [ITEM_TYPES]
-        imul ax, ax, 0x14
-        add bx, ax
-        mov al, [es:bx+8]               ; its material (40h with 0: none, cloth)
-        mov ah, al
-        and al, 0x0F
-        test ah, 0x40
-        jz .known
-        or al, al
-        jnz .known
-        mov al, MATERIAL_CLOTH
-.known: cmp al, MATERIAL_CLOTH
-        jbe .look
-        mov al, MATERIAL_METAL          ; (no other is used)
-.look:  xor ah, ah
-        mov bx, ax
-        mov al, [cs:acid_saves+bx]
-        sub ax, cx
-        mov cx, ax
-        pop es
-        pop di
-        pop bx
-        pop ax
+        call tail_go            ; (the tail's: ADND_NEEDED_FAR)
+        dw adnd_needed_far
         ret
 
 MATERIAL_CLOTH equ 6
@@ -18558,7 +18398,8 @@ probe_two_handed:
         pop es
         pop ax
         jne .test
-        call th_cahulaks
+        call tail_go
+        dw th_cahulaks_far ; (TH_CAHULAKS, the tail's)
         je .test                ; (cahulaks: a blade in each hand, for a half-giant too)
         cmp ax, ax              ; ZF: not two-handed, for a half-giant
         retf 2
@@ -18566,31 +18407,6 @@ probe_two_handed:
         retf 2
 TH_CAHULAKS  equ 21             ; the cahulaks' item type
 ITEM_TYPES_PTR equ 0x1669       ; DS: far pointer to the item types, 20 bytes each
-th_cahulaks:                    ; ZF if ES:BX is the cahulaks' type (by address: the table's
-        push eax                ;   segment may be another's for the same place)
-        push edx
-        mov ax, es
-        movzx eax, ax
-        shl eax, 4
-        movzx edx, bx
-        add eax, edx
-        movzx edx, word [ITEM_TYPES_PTR + 2]
-        shl edx, 4
-        push eax
-        movzx eax, word [ITEM_TYPES_PTR]
-        add edx, eax
-        pop eax
-        add edx, TH_CAHULAKS * 20
-        cmp eax, edx
-        je .out
-        add edx, (115 + 31 - TH_CAHULAKS) * 20   ; (the metal ones: METAL_CAHULAKS)
-        cmp eax, edx
-        je .out
-        add edx, 20                     ; (the obsidian ones: OBSIDIAN_CAHULAKS)
-        cmp eax, edx
-.out:   pop edx
-        pop eax
-        ret
 
 ; PROBE_SPELL_TEXT: INT VEC_SPELL_TEXT replaces "add sp,0Ch" (3 bytes: INT + NOP) after the game
 ; reads a spell's description (RESOURCE.GFF's SPIN chunk DI, the spell's number + 1) for its box.
@@ -19207,7 +19023,8 @@ probe_grace_effect:
 probe_grace_ability:
         mov [bp-0x0A], ax
         mov cx, 7
-        call gr_shadowed
+        call tail_go
+        dw gr_shadowed_far ; (GR_SHADOWED, the tail's)
         jnc .counts
         mov word [bp-0x0A], 0   ; (shadowed: no case in the game's table)
         iret
@@ -23367,7 +23184,8 @@ probe_redraw_all:
 .x:     cmp word [bp-0x0E], 0xC7
         jle .dust
         mov word [bp-0x0E], 0xC7
-.dust:  call dust_union
+.dust:  call tail_go
+        dw dust_union_far  ; (DUST_UNION, the tail's)
         call ghost_union
         push ax                         ; (over the combat log's panel: drawn in parts round it,
         push bx                         ;   the routine's own drawing left out: on at its end)
@@ -23506,38 +23324,8 @@ F_ARGS equ 38                   ; (FLOOR_POST's frame: ES, DS, PUSHAD, flags, th
 ; PAGE_SETUP: page BX (DS the game's): where it is (its bounds, the clip: CLIP_X0...) and the page it
 ; is part of (its memory: V_SEG, V_Y0, V_X0, V_ROW); GAME_DS and LOAD_SEG too. AX, BX, CX, ES changed.
 page_setup:
-        mov [cs:game_ds], ds
-        mov ax, ds
-        sub ax, DGROUP_SEG
-        mov [cs:load_seg], ax
-        add ax, PAGES_SEG
-        mov es, ax
-        shl bx, 1
-        mov ax, [es:bx + 0x404]
-        mov [cs:clip_x0], ax
-        mov ax, [es:bx + 0x604]
-        mov [cs:clip_y0], ax
-        mov ax, [es:bx + 0x804]
-        mov [cs:clip_x1], ax
-        mov ax, [es:bx + 0xA04]
-        mov [cs:clip_y1], ax
-.parent:
-        test word [es:bx + 0xC04], 0x40
-        jz .root
-        mov bx, [es:bx + 4]
-        jmp .parent
-.root:  mov ax, [es:bx + 4]
-        mov [cs:v_seg], ax
-        mov ax, [es:bx + 0x604]
-        mov [cs:v_y0], ax
-        mov ax, [es:bx + 0x404]
-        shr ax, 2
-        mov [cs:v_x0], ax
-        mov cx, [es:bx + 0x804]
-        shr cx, 2
-        sub cx, ax
-        inc cx
-        mov [cs:v_row], cx
+        call tail_go            ; (the tail's: PAGE_SETUP_FAR)
+        dw page_setup_far
         ret
 
 shadow_pass:
@@ -24101,57 +23889,9 @@ darken: cmp bx, [cs:clip_y0]
 .out:   ret
 
 spans_flush:                            ; the noted runs darkened, a plane at a time
-        cmp word [cs:n_spans], 0
-        je .ret
-        push fs
-        push ds
-        push bp
-        mov fs, [cs:far_seg]
-        mov es, [cs:v_seg]
-        imul bp, [cs:n_spans], 6        ; (BP: past the last span)
-        add bp, FAR_SPANS
-        push fs
-        pop ds
-        mov bx, FAR_DARK                ; (DS:BX: DARK, the far block's, for XLAT)
-        xor ah, ah                      ; AH: the plane
-.plane: push ax
-        mov cl, ah
-        mov ax, 0x0102                  ; write to this plane, read from it
-        shl ah, cl
-        mov dx, 0x3C4
-        out dx, ax
-        pop ax
-        mov al, 4
-        mov dx, 0x3CE
-        out dx, ax
-        mov si, FAR_SPANS
-.span:  mov dl, ah
-        sub dl, [fs:si + 2]
-        and dx, 3
-        add dx, [fs:si + 2]             ; the first x on this plane
-        mov cx, [fs:si + 4]
-        sub cx, dx
-        jl .nspan
-        shr cx, 2
-        inc cx                          ; CX: how many
-        shr dx, 2
-        add dx, [fs:si]
-        mov di, dx
-.pix:   mov al, [es:di]
-        xlatb
-        stosb
-        loop .pix
-.nspan: add si, 6
-        cmp si, bp
-        jb .span
-        inc ah
-        cmp ah, 4
-        jb .plane
-        mov word [cs:n_spans], 0
-        pop bp
-        pop ds
-        pop fs
-.ret:   ret
+        call tail_go            ; (the tail's: SPANS_FLUSH_FAR)
+        dw spans_flush_far
+        ret
 
 n_spans dw 0                    ; (the spans in the far block, FAR_SPANS: 6 bytes each, the row's
                                 ;   place in the page, first x, last x)
@@ -24447,115 +24187,8 @@ DARK_WHOLE equ 4
 DARK_HUE   equ 4                ; (how much a change of hue counts against a colour)
 DARK_LIT   equ 4000             ; (the palette's 768 values, out of 63 each, add up to less in a fade)
 build_dark:
-        push ds
-        push fs
-        push cs
-        pop ds
-        mov fs, [cs:far_seg]            ; (FS: the far block, DAC's: FAR_DAC)
-        mov dx, 0x3C7
-        xor al, al
-        out dx, al
-        mov dx, 0x3C9
-        mov di, FAR_DAC
-        mov cx, 768
-        xor bx, bx                      ; (BX: how bright it is in all)
-.read:  in al, dx
-        mov [fs:di], al
-        xor ah, ah
-        add bx, ax
-        inc di
-        loop .read
-        cmp bx, DARK_LIT
-        jae .lit
-        pop fs
-        pop ds                          ; (nearly black: a fade, not the area's colours)
-        stc
-        ret
-.lit:
-        xor bx, bx                      ; the colour
-.colour:
-        mov si, bx
-        imul si, si, 3
-        add si, FAR_DAC
-        xor di, di                      ; its darker self
-.chan:  fs lodsb
-        mov ah, DARK_PARTS
-        mul ah
-        mov dl, DARK_WHOLE
-        div dl
-        mov [want + di], al
-        inc di
-        cmp di, 3
-        jb .chan
-        mov si, bx                      ; (only clearly darker ones: brightness under 7/8 of its own)
-        imul si, si, 3
-        add si, FAR_DAC
-        xor ax, ax
-        xor dx, dx
-        mov di, 3
-.own:   fs lodsb
-        add dx, ax
-        dec di
-        jnz .own
-        imul dx, dx, 7
-        shr dx, 3
-        mov [lit_most], dx
-        mov dword [best_d], 0xFFFFFFFF
-        mov [best_c], bl
-        mov cx, DARK_FIRST
-.cand:  mov word [lit_sum], 0
-        mov si, cx                      ; how far a colour is from the one wanted: the differences
-        imul si, si, 3                  ;   squared, and those between them weighted (DARK_HUE),
-        add si, FAR_DAC                     ;   so that it keeps its hue (sand stays sand, not pink)
-        xor di, di
-.diff:  fs lodsb
-        mov ah, 0
-        add [lit_sum], ax
-        sub al, [want + di]
-        cbw
-        mov [diffs + di], al
-        inc di
-        cmp di, 3
-        jb .diff
-        mov ax, [lit_sum]
-        cmp ax, [lit_most]
-        jae .worse                      ; (not darker enough)
-        xor edx, edx
-        xor di, di
-.sq:    movsx eax, byte [diffs + di]
-        imul eax, eax
-        add edx, eax
-        inc di
-        cmp di, 3
-        jb .sq
-        movsx eax, byte [diffs]
-        movsx edi, byte [diffs + 1]
-        sub eax, edi
-        imul eax, eax
-        imul eax, eax, DARK_HUE
-        add edx, eax
-        movsx eax, byte [diffs + 1]
-        movsx edi, byte [diffs + 2]
-        sub eax, edi
-        imul eax, eax
-        imul eax, eax, DARK_HUE
-        add edx, eax
-        cmp edx, [best_d]
-        jae .worse
-        mov [best_d], edx
-        mov [best_c], cl
-.worse: inc cx
-        cmp cx, DARK_LAST
-        jbe .cand
-        mov al, [best_c]
-        mov [fs:FAR_DARK + bx], al      ; (FS: the far block)
-        inc bx
-        cmp bx, 256
-        jb .colour
-        mov byte [dark_ready], 1
-        pop fs
-        pop ds
-        clc
+        call tail_go            ; (the tail's: BUILD_DARK_FAR)
+        dw build_dark_far
         ret
 
 ; SCROLLING (SCROLL_ON): pressing the mouse wheel and moving scrolls the map with the pointer, as
@@ -26037,53 +25670,6 @@ pointer_ds  dw 0                ; the game's DS (PROBE_POINTER's)
 
 ; DUST_UNION: in PROBE_REDRAW_ALL (x0 [BP-8], x1 [BP-0Ah], y0 [BP-0Ch], y1 [BP-0Eh]: on screen),
 ; the puffs' ground taken in, as far as it is on screen
-dust_union:
-        cmp byte [cs:d_dirty], 0
-        je .ret
-        mov byte [cs:d_dirty], 0
-        mov ax, [cs:d_x0]
-        sub ax, [CAM_X]
-        mov cx, [cs:d_x1]
-        sub cx, [CAM_X]
-        mov dx, [cs:d_y0]
-        sub dx, [CAM_Y]
-        mov bx, [cs:d_y1]
-        sub bx, [CAM_Y]
-        cmp cx, 0                       ; (off screen: nothing)
-        jl .ret
-        cmp ax, 0x13F
-        jg .ret
-        cmp bx, 0
-        jl .ret
-        cmp dx, 0xC7
-        jg .ret
-        cmp ax, 0
-        jge .ax
-        xor ax, ax
-.ax:    and ax, 0xFFFC
-        cmp ax, [bp-8]
-        jge .cx
-        mov [bp-8], ax
-.cx:    cmp cx, 0x13F
-        jle .cx3
-        mov cx, 0x13F
-.cx3:   or cx, 3
-        cmp cx, [bp-0x0A]
-        jle .dx
-        mov [bp-0x0A], cx
-.dx:    cmp dx, 0
-        jge .dx0
-        xor dx, dx
-.dx0:   cmp dx, [bp-0x0C]
-        jge .bx
-        mov [bp-0x0C], dx
-.bx:    cmp bx, 0xC7
-        jle .bx1
-        mov bx, 0xC7
-.bx1:   cmp bx, [bp-0x0E]
-        jle .ret
-        mov [bp-0x0E], bx
-.ret:   ret
 
 ; GHOST_UNION: in PROBE_REDRAW_ALL, after DUST_UNION (the same rectangle at [BP-8] to [BP-0Eh]):
 ; a party member drawn see-through while hidden (GH_SHOWN) and hidden no longer (its STEALTH bit
@@ -26740,35 +26326,9 @@ KEY_SHIFT_T  equ 0x1454
 LOOT_OPEN    equ 0x05E6             ; (the game's DS) the container whose window is open
 LOOT_NONE    equ 9999
 loot_key:
-        cmp ax, KEY_T
-        je .t
-        cmp ax, KEY_SHIFT_T
-        jne .ret
-.t:     push ds
-        push bx
-        mov bx, [cs:game_ds]
-        or bx, bx
-        jz .out
-        mov ds, bx
-        mov bx, [LOOT_OPEN]
-        cmp bx, LOOT_NONE
-        je .out
-        cmp word [cs:loot_thing], 0xFFFF ; (the last T not yet taken by the Loader: this one left as
-        jne .out                        ;   the game's key, the window kept open, to be pressed again)
-        cmp byte [cs:mk_read], 0
-        je .esc                         ; (peeked: told it is Escape, counted when read)
-        mov [cs:loot_thing], bx
-        mov word [cs:loot_mode], 0
-        xor bx, bx                      ; (Shift held, from the BIOS keyboard flags, 0:0417h bits 0-1:
-        mov ds, bx                      ;   not the letter's case, which Caps Lock turns round; DS is
-        test byte [0x417], 3            ;   given back at .out)
-        jz .count
-        mov word [cs:loot_mode], 1
-.count: inc word [cs:loot_seq]
-.esc:   mov ax, KEY_ESCAPE
-.out:   pop bx
-        pop ds
-.ret:   ret
+        call tail_go            ; (the tail's: LOOT_KEY_FAR)
+        dw loot_key_far
+        ret
 
 ; SELL_KEY: (OUR_KEY's) S or Shift+S on a shop's screen (its loop, SHOP_LOOP, run within the last
 ; SHOP_FRESH BIOS ticks) is made Escape, which shuts the shop, and, when the key is read (MK_READ),
@@ -28644,6 +28204,505 @@ tint_far:
         jb .row
         mov word [gs:r_tab], FAR_RED
         retf
+build_dark_far:                     ; (BUILD_DARK, through TAIL_GO)
+        push ds
+        push fs
+        push gs
+        pop ds
+        mov fs, [gs:far_seg]            ; (FS: the far block, DAC's: FAR_DAC)
+        mov dx, 0x3C7
+        xor al, al
+        out dx, al
+        mov dx, 0x3C9
+        mov di, FAR_DAC
+        mov cx, 768
+        xor bx, bx                      ; (BX: how bright it is in all)
+.read:  in al, dx
+        mov [fs:di], al
+        xor ah, ah
+        add bx, ax
+        inc di
+        loop .read
+        cmp bx, DARK_LIT
+        jae .lit
+        pop fs
+        pop ds                          ; (nearly black: a fade, not the area's colours)
+        stc
+        retf
+.lit:
+        xor bx, bx                      ; the colour
+.colour:
+        mov si, bx
+        imul si, si, 3
+        add si, FAR_DAC
+        xor di, di                      ; its darker self
+.chan:  fs lodsb
+        mov ah, DARK_PARTS
+        mul ah
+        mov dl, DARK_WHOLE
+        div dl
+        mov [want + di], al
+        inc di
+        cmp di, 3
+        jb .chan
+        mov si, bx                      ; (only clearly darker ones: brightness under 7/8 of its own)
+        imul si, si, 3
+        add si, FAR_DAC
+        xor ax, ax
+        xor dx, dx
+        mov di, 3
+.own:   fs lodsb
+        add dx, ax
+        dec di
+        jnz .own
+        imul dx, dx, 7
+        shr dx, 3
+        mov [lit_most], dx
+        mov dword [best_d], 0xFFFFFFFF
+        mov [best_c], bl
+        mov cx, DARK_FIRST
+.cand:  mov word [lit_sum], 0
+        mov si, cx                      ; how far a colour is from the one wanted: the differences
+        imul si, si, 3                  ;   squared, and those between them weighted (DARK_HUE),
+        add si, FAR_DAC                     ;   so that it keeps its hue (sand stays sand, not pink)
+        xor di, di
+.diff:  fs lodsb
+        mov ah, 0
+        add [lit_sum], ax
+        sub al, [want + di]
+        cbw
+        mov [diffs + di], al
+        inc di
+        cmp di, 3
+        jb .diff
+        mov ax, [lit_sum]
+        cmp ax, [lit_most]
+        jae .worse                      ; (not darker enough)
+        xor edx, edx
+        xor di, di
+.sq:    movsx eax, byte [diffs + di]
+        imul eax, eax
+        add edx, eax
+        inc di
+        cmp di, 3
+        jb .sq
+        movsx eax, byte [diffs]
+        movsx edi, byte [diffs + 1]
+        sub eax, edi
+        imul eax, eax
+        imul eax, eax, DARK_HUE
+        add edx, eax
+        movsx eax, byte [diffs + 1]
+        movsx edi, byte [diffs + 2]
+        sub eax, edi
+        imul eax, eax
+        imul eax, eax, DARK_HUE
+        add edx, eax
+        cmp edx, [best_d]
+        jae .worse
+        mov [best_d], edx
+        mov [best_c], cl
+.worse: inc cx
+        cmp cx, DARK_LAST
+        jbe .cand
+        mov al, [best_c]
+        mov [fs:FAR_DARK + bx], al      ; (FS: the far block)
+        inc bx
+        cmp bx, 256
+        jb .colour
+        mov byte [dark_ready], 1
+        pop fs
+        pop ds
+        clc
+        retf
+missile_rate_far:                     ; (MISSILE_RATE, through TAIL_GO)
+        cmp dl, SPEC_PLAIN
+        jb .ret
+        cmp si, KIND_TYPES
+        jae .ret
+        push cx
+        push dx
+        push si
+        movzx cx, byte [gs:si + kind_of_type]
+        sub cx, MISSILE_KIND
+        jb .out
+        cmp cx, 3
+        jbe .kind
+        sub cx, MISSILE_RAV - MISSILE_KIND - 4  ; (the javelin 4, the darts 5)
+        cmp cx, 4
+        jb .out
+        cmp cx, 5
+        ja .out
+.kind:
+        xor dx, dx              ; DL the specialist's level
+        xor si, si
+.class: push ax
+        mov al, [es:bx + si + 0x21]
+        mov ah, [es:bx + si + 0x24]
+        or si, si               ; (a human's earlier classes once the first's level has passed theirs)
+        jz .on
+        cmp byte [es:bx + 0x18], 1
+        jne .on
+        cmp ah, [es:bx + 0x24]
+        jae .next
+.on:    cmp al, FIGHTER_CLASS
+        je .warrior
+        cmp al, GLADIATOR_CLASS
+        je .warrior
+        cmp al, 13              ; (a ranger, 13-16)
+        jb .next
+        cmp al, 16
+        ja .next
+.warrior:
+        cmp ah, dl
+        jbe .next
+        mov dl, ah
+.next:  pop ax
+        inc si
+        cmp si, 3
+        jb .class
+        imul cx, cx, 3
+        cmp dl, 7
+        jb .tier
+        inc cx
+        cmp dl, 13
+        jb .tier
+        inc cx
+.tier:  mov si, sp
+        cmp byte [ss:si + 2], SPEC_PLAIN  ; (the skill: DX, pushed before SI)
+        jne .rate
+        cmp dl, 7
+        jb .out                 ; (a kind not chosen before 7th level: the weapon's own rate)
+        dec cx                  ; (from 7th: a specialist's a band lower)
+.rate:  mov si, cx
+        movzx cx, byte [gs:si + missile_halves]
+        cmp cx, ax
+        jbe .grand
+        mov ax, cx
+.grand: pop si                  ; (DX, pushed after it: the skill back in DL)
+        pop dx
+        push dx
+        push si
+        cmp dl, SPEC_GRAND
+        jne .out
+        add ax, 2               ; (a grand master one more shot, as in melee)
+.out:   pop si
+        pop dx
+        pop cx
+.ret:   retf
+dust_union_far:                     ; (DUST_UNION, through TAIL_GO)
+        cmp byte [gs:d_dirty], 0
+        je .ret
+        mov byte [gs:d_dirty], 0
+        mov ax, [gs:d_x0]
+        sub ax, [CAM_X]
+        mov cx, [gs:d_x1]
+        sub cx, [CAM_X]
+        mov dx, [gs:d_y0]
+        sub dx, [CAM_Y]
+        mov bx, [gs:d_y1]
+        sub bx, [CAM_Y]
+        cmp cx, 0                       ; (off screen: nothing)
+        jl .ret
+        cmp ax, 0x13F
+        jg .ret
+        cmp bx, 0
+        jl .ret
+        cmp dx, 0xC7
+        jg .ret
+        cmp ax, 0
+        jge .ax
+        xor ax, ax
+.ax:    and ax, 0xFFFC
+        cmp ax, [bp-8]
+        jge .cx
+        mov [bp-8], ax
+.cx:    cmp cx, 0x13F
+        jle .cx3
+        mov cx, 0x13F
+.cx3:   or cx, 3
+        cmp cx, [bp-0x0A]
+        jle .dx
+        mov [bp-0x0A], cx
+.dx:    cmp dx, 0
+        jge .dx0
+        xor dx, dx
+.dx0:   cmp dx, [bp-0x0C]
+        jge .bx
+        mov [bp-0x0C], dx
+.bx:    cmp bx, 0xC7
+        jle .bx1
+        mov bx, 0xC7
+.bx1:   cmp bx, [bp-0x0E]
+        jle .ret
+        mov [bp-0x0E], bx
+.ret:   retf
+page_setup_far:                     ; (PAGE_SETUP, through TAIL_GO)
+        mov [gs:game_ds], ds
+        mov ax, ds
+        sub ax, DGROUP_SEG
+        mov [gs:load_seg], ax
+        add ax, PAGES_SEG
+        mov es, ax
+        shl bx, 1
+        mov ax, [es:bx + 0x404]
+        mov [gs:clip_x0], ax
+        mov ax, [es:bx + 0x604]
+        mov [gs:clip_y0], ax
+        mov ax, [es:bx + 0x804]
+        mov [gs:clip_x1], ax
+        mov ax, [es:bx + 0xA04]
+        mov [gs:clip_y1], ax
+.parent:
+        test word [es:bx + 0xC04], 0x40
+        jz .root
+        mov bx, [es:bx + 4]
+        jmp .parent
+.root:  mov ax, [es:bx + 4]
+        mov [gs:v_seg], ax
+        mov ax, [es:bx + 0x604]
+        mov [gs:v_y0], ax
+        mov ax, [es:bx + 0x404]
+        shr ax, 2
+        mov [gs:v_x0], ax
+        mov cx, [es:bx + 0x804]
+        shr cx, 2
+        sub cx, ax
+        inc cx
+        mov [gs:v_row], cx
+        retf
+kit_psp_of_far:                     ; (KIT_PSP_OF, through TAIL_GO)
+        or ax, ax
+        jle .ret
+        push dx
+        xor dx, dx              ; DX what the kit adds to telepathy (psychokinesis the opposite)
+        cmp cl, KIT_TITAN_MIND
+        jne .seer
+        cmp bx, PSP_PK_LAST
+        jbe .out                ; (a Titan Mind's psychokinesis: as it was)
+        mov dx, -2              ; (its psychometabolism 2 less, its telepathy 2 more)
+        cmp bx, PSP_TP_FIRST
+        jb .add
+        mov dx, 2
+        jmp .add
+.seer:  mov dx, -2              ; (a Wasteland Seer's every power: 2 less under the open sky,
+        cmp cl, KIT_WASTE_SEER  ; 1 more under a roof)
+        je .add
+        mov dx, 1
+        cmp cl, KIT_SEER_ROOF
+        je .add
+        xor dx, dx
+.bender:
+        cmp cl, KIT_MIND_BENDER
+        jne .kineticist
+        mov dx, -2
+        jmp .discipline
+.kineticist:
+        cmp cl, KIT_KINETICIST
+        jne .out
+        mov dx, 2
+.discipline:
+        cmp bx, PSP_TP_FIRST
+        jae .add
+        neg dx
+        cmp bx, PSP_PK_LAST
+        jbe .add
+        xor dx, dx              ; (psychometabolism: as it was)
+.add:   add ax, dx
+        cmp ax, 1
+        jge .out
+        mov ax, 1
+.out:   pop dx
+.ret:   retf
+loot_key_far:                     ; (LOOT_KEY, through TAIL_GO)
+        cmp ax, KEY_T
+        je .t
+        cmp ax, KEY_SHIFT_T
+        jne .ret
+.t:     push ds
+        push bx
+        mov bx, [gs:game_ds]
+        or bx, bx
+        jz .out
+        mov ds, bx
+        mov bx, [LOOT_OPEN]
+        cmp bx, LOOT_NONE
+        je .out
+        cmp word [gs:loot_thing], 0xFFFF ; (the last T not yet taken by the Loader: this one left as
+        jne .out                        ;   the game's key, the window kept open, to be pressed again)
+        cmp byte [gs:mk_read], 0
+        je .esc                         ; (peeked: told it is Escape, counted when read)
+        mov [gs:loot_thing], bx
+        mov word [gs:loot_mode], 0
+        xor bx, bx                      ; (Shift held, from the BIOS keyboard flags, 0:0417h bits 0-1:
+        mov ds, bx                      ;   not the letter's case, which Caps Lock turns round; DS is
+        test byte [0x417], 3            ;   given back at .out)
+        jz .count
+        mov word [gs:loot_mode], 1
+.count: inc word [gs:loot_seq]
+.esc:   mov ax, KEY_ESCAPE
+.out:   pop bx
+        pop ds
+.ret:   retf
+gr_shadowed_far:                     ; (GR_SHADOWED, through TAIL_GO)
+        pusha
+        mov ah, GRACE_EFFECT
+        cmp al, ah
+        je .group
+        mov ah, 66
+        cmp al, ah
+        je .group
+        cmp al, STRENGTH_EFFECT
+        jne .no
+.group: lea di, [bx + EFFECTS_OFF]      ; (this one)
+        mov dx, [es:di]                 ; (its creature)
+        mov cl, [es:di + 9]             ; (its amount)
+        mov si, EFFECTS_OFF
+        mov bx, [EFFECTS_COUNT]
+.each:  dec bx
+        js .no
+        cmp si, di
+        je .next
+        cmp [es:si], dx
+        jne .next
+        mov al, [es:si + 6]
+        cmp al, ah
+        je .same
+        cmp ah, 66
+        jne .next
+        cmp al, STRENGTH_EFFECT
+        jne .next
+.same:  mov al, [es:si + 9]
+        cmp al, cl
+        jg .yes
+        jl .next
+        cmp si, di
+        jb .yes
+.next:  add si, 10
+        jmp .each
+.yes:   popa
+        stc
+        retf
+.no:    popa
+        clc
+        retf
+adnd_needed_far:                     ; (ADND_NEEDED, through TAIL_GO)
+        push ax
+        push bx
+        push di
+        push es
+        mov di, bx
+        les bx, [ITEMS]
+        imul ax, di, 0x15
+        add bx, ax
+        mov al, [es:bx+0x14]            ; its plus
+        cbw
+        mov cx, ax
+        cmp byte [es:bx+0x0F], 0
+        je .type
+        inc cx                          ; a magical power: one plus more
+.type:  mov ax, [es:bx+0x0A]
+        les bx, [ITEM_TYPES]
+        imul ax, ax, 0x14
+        add bx, ax
+        mov al, [es:bx+8]               ; its material (40h with 0: none, cloth)
+        mov ah, al
+        and al, 0x0F
+        test ah, 0x40
+        jz .known
+        or al, al
+        jnz .known
+        mov al, MATERIAL_CLOTH
+.known: cmp al, MATERIAL_CLOTH
+        jbe .look
+        mov al, MATERIAL_METAL          ; (no other is used)
+.look:  xor ah, ah
+        mov bx, ax
+        mov al, [gs:acid_saves+bx]
+        sub ax, cx
+        mov cx, ax
+        pop es
+        pop di
+        pop bx
+        pop ax
+        retf
+th_cahulaks_far:                     ; (TH_CAHULAKS, through TAIL_GO)
+        push eax                ;   segment may be another's for the same place)
+        push edx
+        mov ax, es
+        movzx eax, ax
+        shl eax, 4
+        movzx edx, bx
+        add eax, edx
+        movzx edx, word [ITEM_TYPES_PTR + 2]
+        shl edx, 4
+        push eax
+        movzx eax, word [ITEM_TYPES_PTR]
+        add edx, eax
+        pop eax
+        add edx, TH_CAHULAKS * 20
+        cmp eax, edx
+        je .out
+        add edx, (115 + 31 - TH_CAHULAKS) * 20   ; (the metal ones: METAL_CAHULAKS)
+        cmp eax, edx
+        je .out
+        add edx, 20                     ; (the obsidian ones: OBSIDIAN_CAHULAKS)
+        cmp eax, edx
+.out:   pop edx
+        pop eax
+        retf
+spans_flush_far:                     ; (SPANS_FLUSH, through TAIL_GO)
+        cmp word [gs:n_spans], 0
+        je .ret
+        push fs
+        push ds
+        push bp
+        mov fs, [gs:far_seg]
+        mov es, [gs:v_seg]
+        imul bp, [gs:n_spans], 6        ; (BP: past the last span)
+        add bp, FAR_SPANS
+        push fs
+        pop ds
+        mov bx, FAR_DARK                ; (DS:BX: DARK, the far block's, for XLAT)
+        xor ah, ah                      ; AH: the plane
+.plane: push ax
+        mov cl, ah
+        mov ax, 0x0102                  ; write to this plane, read from it
+        shl ah, cl
+        mov dx, 0x3C4
+        out dx, ax
+        pop ax
+        mov al, 4
+        mov dx, 0x3CE
+        out dx, ax
+        mov si, FAR_SPANS
+.span:  mov dl, ah
+        sub dl, [fs:si + 2]
+        and dx, 3
+        add dx, [fs:si + 2]             ; the first x on this plane
+        mov cx, [fs:si + 4]
+        sub cx, dx
+        jl .nspan
+        shr cx, 2
+        inc cx                          ; CX: how many
+        shr dx, 2
+        add dx, [fs:si]
+        mov di, dx
+.pix:   mov al, [es:di]
+        xlatb
+        stosb
+        loop .pix
+.nspan: add si, 6
+        cmp si, bp
+        jb .span
+        inc ah
+        cmp ah, 4
+        jb .plane
+        mov word [gs:n_spans], 0
+        pop bp
+        pop ds
+        pop fs
+.ret:   retf
         align 16, db 0          ; (KEPT_PARAS counts whole paragraphs)
 tail_end:
 TAIL_BYTES equ tail_end - tail_start

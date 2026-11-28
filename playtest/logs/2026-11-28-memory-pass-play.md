@@ -29,3 +29,19 @@ kit names in its tail (EF_KIT_LINE, KIT_NAME_PTR). Check: the same screens under
   test_ravkits.test_kit_names checks KIT_NAME_PTR's names there for every kit.
 
 Result: both helpers' changes show the same screens as before. No saves made.
+
+## Second pass: Shattered Lands' routines in the tail, and the shadow cache (fountain-user)
+
+Under test: ten of DSCLOG's routines moved to its tail behind TAIL_GO (BUILD_DARK, SPANS_FLUSH, DUST_UNION,
+MISSILE_RATE, PAGE_SETUP, KIT_PSP_OF, LOOT_KEY, GR_SHADOWED, ADND_NEEDED, TH_CAHULAKS).
+
+- buildcheck.py OK: the tail, its code with it, the same as the EXE (kit_names to tail_end).
+- The ambush's speech came on loading; msgbox.sh only says whether a box is up, so eight clicks on the box
+  (click.py 160 30, 2.5 s apart) took it away and the fight began (turn 3).
+- `KEEP_HP=1 fightout.sh` fought it with the foes' hit points as they were: about five minutes, then YOUR
+  PARTY HAS BEEN DEFEATED (no save made). The figures' shadows and the dust were drawn throughout (the moved
+  BUILD_DARK, SPANS_FLUSH, DUST_UNION), the dice log's 362 lines had no error, and the attacks and Tab's
+  chances read as before.
+- scwatch.py (new) on the shadow cache: 21 of its 80 slots filled at the fountain before the fight, all 80
+  filled two minutes into the fight, and the filling went round once by five minutes. So a big fight uses the
+  whole cache: fewer slots would mean a shadow given up sooner, not room for free. The pass leaves it at 80.
