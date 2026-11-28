@@ -1065,12 +1065,35 @@ PATCHES: Tuple[Patch, ...] = (
     # "test [bp+0Ch],ax / jz" (85184h) halves only when the spell does some OTHER kind too, where SL's has
     # jnz: a Fireball or a Cone of Cold was never halved, a fire-and-crushing spell was. jz made jnz.
     Patch("protection_halves", 0x85187, bytes.fromhex("7409"), bytes.fromhex("7509")),
+    # Energy Control shut out every spell with no kind of damage, a heal too (the walkthrough's bug): the
+    # damage routine's percentage (85052h) is 0 under the power (+9 4) when the spell's kinds are none but
+    # fire, cold, electricity and magic, "test [bp+0Ch],0FD79h / jnz", and a kind of 0 is none but those; the
+    # same code in SL (gamepatch "energy_kinds"). Now the kinds go through ax, 0 skips it, and the power's
+    # "xor si,si" is the routine's own at 851BEh (ES:BX already the target, from 8516Bh)
+    Patch("energy_kinds", 0x85192, bytes.fromhex("f7460c79fd750cc45e0826f6470904740233f6"),
+          bytes.fromhex("8b460ca979fd750b85c0740726f647090475" + "19")),
     # Detonate never offered at a level up (the walkthrough's bugs): the psionicists' pop-up lists a
     # discipline's powers through 93DA6h (a power's discipline, the power 0-33 its record 235 on), whose
     # "or ax,ax / jle" (93DB1h) skips the 235 for power 0, Detonate, so its discipline was -1 and it never
     # listed; the program's other copy of the routine (62043h) has jl. jle made jl (DSCLOG2's PSI_GRANT
     # already gives Detonate at creation where the game's table does)
     Patch("detonate_listed", 0x93DB3, bytes.fromhex("7e03"), bytes.fromhex("7c03")),
+    # A weapon whose power is a spell spent a charge each time a hit cast it and was gone at its last (the
+    # walkthrough's bugs: Life Stealer, El's Drinker, a transferred Dagolar's Dagger...): the hit's cast
+    # (5D281h) ends with the use routine (5F0h:B6h, 7A843h) given 2, which takes a charge off (7A942h) and
+    # destroys the item at none (5F8h:43h) unless its type's +0Bh has 2 and it was given 2. Shattered Lands'
+    # hit casts the weapon's spell with no use at all (its 58BAFh), so never spends one; its use routine
+    # (721E4h) only skips a type with 2, given anything. "test [es:bx+0Bh],2 / jz" (7A929h) made to fall through
+    # to the "given 2" test: a hit's cast spends nothing; a use from the USE screen (given 1) as before,
+    # as Shattered Lands' (a wand's charges, its last one the wand). DSCLOG2's IB_CHARGES shows no charges on
+    # a weapon's box (TYPE_DICE) in step.
+    Patch("hit_spends_none", 0x7A92E, bytes.fromhex("7406"), bytes.fromhex("9090")),
+    # Waters of Life as Shattered Lands' Water of Life and the manual have it: the creature's wounds pass to the
+    # caster, who keeps 5 hit points (the sequel's simply heals: it takes poison off and runs Heal's code). The
+    # spell switch (656D0h: 81 numbers at the module's CS:28C1h, their handlers 0A2h on) sends 215 to its own
+    # handler (2060h); made Lend Health's (21EAh, 253's and Altruism's), as Shattered Lands' DSCLOG sends its
+    # Water of Life (PROBE_GRACE_CAST). With the manual's spells (RAV_SPELLS_MANUAL).
+    Patch("water_of_life_lends", 0x66CA9, bytes.fromhex("6020"), bytes.fromhex("ea21")),
     # a member added from the roster (the ADD screen, 58CB5h) wears its items with no spell on, the
     # game putting one on only as an item is readied: DSCLOG2's JOIN_READY readies each worn item with
     # a spell (77C1Ah) at "cmp byte [13FAh],0" (58D81h), right after the character's CHAR is loaded
@@ -1258,6 +1281,12 @@ SPELL_FIXES: Dict[str, Tuple[int, int]] = {
     "meteors_count": (33, 0x00), "meteors_damage": (33, 0x1C), "flame_arrow_damage": (28, 0x1C),
     "chill_touch_time": (3, 0x04), "rainbow_pattern_time": (49, 0x04), "stinking_cloud_dice": (22, 0x04),
 }
+# ... and the sequel's own, (spell, field, was, now): Produce Fire 1d6 as Shattered Lands' record has it (+1Eh
+# the die, 4 in the sequel's: 1 to 4, where both manuals say 2 to 5; HOW-THE-GAME-WORKS), the user's rule of
+# 2026-11-28 that a spell in both games works as in Shattered Lands
+RAV_SPELL_FIXES: Dict[str, Tuple[int, int, bytes, bytes]] = {
+    "produce_fire_d6": (180, 0x1E, b"\x04", b"\x06"),
+}
 SPELL_COUNT = 320  # (DATA 0-319)
 SPELL_SIZE = 73
 # ... and the dodge (with the patch no_double): every spell record whose flags word (+1Ah) has
@@ -1373,9 +1402,9 @@ RAV_WIZARD_LAST = 0x72  # (the wizard spells, 0-72h; the priests' 73h-EAh, PRIES
 RAV_NEW_WIZARD_SPELLS = range(320, 326)  # (the mod's six new spells, ravspells.FIRST on: wizard spells)
 # A Healer's sphere of the cosmos in the sequel: the spells every druid casts and no cleric (a sphere byte with
 # DRUIDS: Cure Serious and Critical Wounds, Free Action, Neutralize Poison, Raise Dead, Heal and the rest), and
-# Whirlwind and Restore Youth, which Shattered Lands' Healer casts at 6th level: they aren't in the sequel yet,
-# and their numbers go here (and in DSCLOG2's COSMOS_MORE, the header's +2060) once they are ported.
-RAV_COSMOS_MORE = {"Whirlwind": None, "Restore Youth": None}
+# Restore Youth, which Shattered Lands' Healer casts at 6th level: the mod's in the sequel (ravspells.RESTORE_YOUTH,
+# the new spells' rule; DSCLOG2's COSMOS_MORE, the header's +2060, the same).
+RAV_COSMOS_MORE = {"Restore Youth": 327}
 
 
 def healer_cosmos(sheet: bytes, cls: int, spell: int, sphere: int) -> bool:
@@ -1460,7 +1489,7 @@ def write_patched(game_dir: str, dest: str, skip=frozenset()) -> None:
 
 
 def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
-    """RESOURCE.GFF's bytes with SPELL_FIXES applied (but those named in SKIP), and the names of those
+    """RESOURCE.GFF's bytes with SPELL_FIXES and RAV_SPELL_FIXES applied (but those named in SKIP), and the names of those
     applied. Each only where the record holds gamepatch's original bytes; anything else raises (a
     RESOURCE.GFF this module doesn't know)."""
     places = gff.index_places(data, "DATA")
@@ -1474,6 +1503,15 @@ def spell_fixed(data: bytes, skip=frozenset()) -> Tuple[bytes, List[str]]:
             raise RavagerError(f"{RESOURCE_FILE}'s spell {spell} is not as the fix {name} expects")
         if name not in skip:
             out[at:at + len(p.original)] = p.replacement
+            done.append(name)
+    for name, (spell, field, was, now) in RAV_SPELL_FIXES.items():
+        if spell not in places or places[spell][2] != SPELL_SIZE:
+            raise RavagerError(f"{RESOURCE_FILE} has no spell record {spell}: not the GOG release's")
+        at = places[spell][1] + field
+        if bytes(out[at:at + len(was)]) != was:
+            raise RavagerError(f"{RESOURCE_FILE}'s spell {spell} is not as the fix {name} expects")
+        if name not in skip:
+            out[at:at + len(was)] = now
             done.append(name)
     if DODGE_FIX not in skip:
         for spell in range(SPELL_COUNT):
@@ -2253,8 +2291,8 @@ def crystal_rod_picture(chunks: gff.Chunks) -> gff.Chunks:
 def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = None,
                   gear: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
                   arrows: Optional[Callable[[gff.Chunks], gff.Chunks]] = None,
-                  party: Optional[Callable[[gff.Chunks], Tuple[gff.Chunks, Dict[Tuple[str, int], int]]]] = None
-                  ) -> Tuple[bytes, List[str]]:
+                  party: Optional[Callable[[gff.Chunks], Tuple[gff.Chunks, Dict[Tuple[str, int], int]]]] = None,
+                  funnel: Optional[Callable[[gff.Chunks], gff.Chunks]] = None) -> Tuple[bytes, List[str]]:
     """OBJEX.GFF's bytes with the sequel's item types weighed (RAV_WEIGHTS, unless "weights" is in SKIP), the
     double spear's range 1 (RAV_RANGES, unless "melee_range" is), the club's, bow's and sling's material
     SL's (RAV_MATERIALS, unless "materials" is), Dragonsbane SL's metal (RAV_OBJECT_TYPES, unless
@@ -2342,6 +2380,9 @@ def objects_fixed(data: bytes, skip=frozenset(), added: Optional[gff.Chunks] = N
         if made:
             new.update(made)
             done.append(ravdress.SKIP)
+    if funnel and ravspells.SKIP not in skip:
+        new.update(funnel(chunks))
+        done.append("whirlwind_art")
     wide = resized_chunks({**chunks, **new}, SHEET_SIZE)
     if wide:  # (the monsters' sheets 48h, as the copy of the game reads them: sheet_record_load)
         new.update(wide)
@@ -2454,12 +2495,26 @@ def write_objects(game_dir: str, dest: str, skip=frozenset(), sl_dir: Optional[s
     books = ravspells.SKIP not in skip  # (the new spells' spellbooks with their switch: ravgear.BOOKS)
     gear = (lambda chunks: ravgear.from_files(chunks, sl_dir, game_dir, books)) if sl_dir else None
     arrows = (lambda chunks: ravarrows.from_files(chunks, sl_dir, game_dir)) if sl_dir else None
+    resource_path = _find_file(game_dir, RESOURCE_FILE)
+
+    def funnel(objects):
+        from glob import glob
+        from . import ravitems, whirlart
+        with open(resource_path, "rb") as f:
+            resources = gff.read_gff(f.read())
+        regions = []
+        for path in sorted(glob(os.path.join(game_dir, "RGN*.GFF"))):
+            with open(path, "rb") as f:
+                regions.extend(v for (kind, _), v in gff.read_gff(f.read()).items() if kind == "PAL ")
+        return whirlart.chunks(objects, ravitems.stable_colours(resources, regions), picture=whirlart.OBJECT)
+
+    art = funnel if resource_path else None
 
     def party(chunks):
         sources = ravdress.Sources.from_files(sl_dir, game_dir)
         return ravdress.copy_chunks(chunks, sources) if sources is not None else ({}, {})
     return _write_copy(game_dir, OBJECTS_FILE, dest,
-                       lambda d, s: objects_fixed(d, s, added, gear, arrows, party if sl_dir else None), skip)
+                       lambda d, s: objects_fixed(d, s, added, gear, arrows, party if sl_dir else None, art), skip)
 
 
 def write_scripts(game_dir: str, dest: str, skip=frozenset()) -> List[str]:
@@ -2508,6 +2563,11 @@ def write_regions(game_dir: str, dos_dir: str, skip=frozenset()) -> List[str]:
     return done
 
 
+# The sequel's own spells made as the manual has them (the option "spells as the manual describes them", which
+# skips Shattered Lands' gamepatch.SPELLS_MANUAL too): the names of PATCHES' that it leaves out when off.
+RAV_SPELLS_MANUAL = ("water_of_life_lends",)
+
+
 def skipped(settings: dict) -> frozenset:
     """The patches and spell fixes the switches leave out: the spells as the manual describes them
     (as for Shattered Lands, gamepatch.SPELLS_MANUAL), spells kept on the Effects screen
@@ -2520,11 +2580,11 @@ def skipped(settings: dict) -> frozenset:
     spells = game.setting_on(settings, "new_spells")  # (the new spells' switch: ravspells)
     screens = settings.get(ravui.SETTING, True) is not False  # (Shattered Lands' screens and icons: ravui)
     pace = settings.get("steady_pace", True) is not False  # (steady pace, Shattered Lands' switch)
-    return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL)) \
+    return (frozenset() if on else frozenset(gamepatch.SPELLS_MANUAL) | frozenset(RAV_SPELLS_MANUAL)) \
         | (frozenset() if pace else frozenset(gamepatch.STEADY_PACE)) \
         | (frozenset() if screens else {ravui.SKIP}) \
         | (frozenset() if kept else frozenset(gamepatch.EFFECTS_KEPT)) | (frozenset() if items else {"new_items"}) \
-        | (frozenset() if spells else {ravspells.SKIP})
+        | (frozenset() if spells else {ravspells.SKIP, "ww_setup", "ww_gate", "ww_draw", ravspells.SPHERES_SKIP})
 
 
 def prepare(game_dir: str, dos_dir: str, settings: dict, sl_dir: Optional[str] = None) -> Optional[str]:

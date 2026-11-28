@@ -1371,6 +1371,14 @@ PATCHES = (
     # at 79 of 127 in DOSBox-X alone, not the game's 63, which plays the effects 8 dB quieter there than
     # in GOG's DOSBox (SFX_VOLUME_DBX; sfxvolume: a loaded game's in the roster)
     Patch("sfx_volume_dosbox_x", 0x4AC8E, bytes.fromhex("643f"), bytes.fromhex("9f4f")),
+    # Energy Containment shut out every spell with no kind of damage (a heal, Bless, Haste) as well as fire,
+    # cold, electricity and magic: the damage routine's percentage (7B492h) is 0 under the power (+4 20h)
+    # whenever the spell's kinds (its record's +1Ah) are none but those four, "test [bp+0Ch],0FD79h / jnz",
+    # and a spell of no kind is none but those four; the spell effect routine (7A22Ah) takes 0 to mean
+    # "unaffected". The manual's power stops damage of those kinds only: the kinds 0 made to skip it too
+    # (the walkthrough's bug in the sequel, which has the same code; ravager.py's "energy_kinds")
+    Patch("energy_kinds", 0x7B589, bytes.fromhex("f7460c79fd750cc45e0826f6470420740233f6"),
+          bytes.fromhex("8b460ca979fd750b85c0740726f647042075" + "19")),
 )
 
 

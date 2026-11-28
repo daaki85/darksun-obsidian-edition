@@ -2,6 +2,7 @@
 numbers, records, descriptions and icons. With DSUN_WOTR (and DSUN_SL for the icons: Shattered Lands'
 drawn ones) the copy is made from the player's own files (never in the repository)."""
 import os
+import struct
 import sys
 import unittest
 
@@ -52,21 +53,23 @@ class TableTests(unittest.TestCase):
 
     def test_sites(self):
         """The program's patches are DSCLOG2's SITE 140-149 (each its routine in the site table), past the
-        other threads' 130-139 and short of 150, and 86 (the item box's INFO); the effect records after the game's 113."""
+        other threads' 130-139 and short of 150, 86 (the item box's INFO), and the 6th-level priest spells'
+        222 and 225-227; the effect records after the game's 113."""
         import re
         src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos", "dsclog2.asm")).read()
         routine = {ravspells.NS_CMP: "ns_cmp", ravspells.NS_KNOW: "ns_know", ravspells.NS_LEVEL: "ns_level",
                    ravspells.NS_LIST: "ns_list", ravspells.NS_CAST: "ns_cast", ravspells.NS_EFFECT: "ns_effect",
                    ravspells.NS_ABILITY: "ns_ability", ravspells.NS_CLAW: "ns_claw",
                    ravspells.NS_SCROLL: "ns_scroll", ravspells.NS_LEARN: "ns_learn",
-                   ravspells.NS_INFO: "ns_info"}
-        self.assertEqual(sorted(routine), [86] + list(range(140, 150)))
+                   ravspells.NS_INFO: "ns_info", ravspells.PRIEST_SPHERE: "priest_sphere",
+                   ravspells.WW_SETUP: "ww_setup_s", ravspells.WW_GATE: "ww_gate_s", ravspells.WW_DRAW: "ww_draw_s"}
+        self.assertEqual(sorted(routine), [86, *range(140, 150), 222, 225, 226, 227])
         for number, name in routine.items():
             self.assertRegex(src, r"\n        dw %s +; %d SITE_" % (name, number))
         names = {p.name for p in ravager.PATCHES}
         for p in ravspells.program_patches():
             self.assertIn(p.name, names)
-            if p.name != "ns_effects":
+            if p.name not in ("ns_effects", ravspells.SPHERES_SKIP):
                 self.assertEqual(p.replacement[:2], bytes((0xCD, ravager.VEC_SITE)), p.name)
                 self.assertIn(p.replacement[2], routine, p.name)
                 self.assertEqual(len(p.replacement), len(p.original), p.name)
@@ -112,6 +115,69 @@ class GameFileTests(unittest.TestCase):
             if key[0] != "GFFI":
                 self.assertEqual(got[key], value, key)
         self.assertEqual(got[("DATA", ravspells.REFLECT)][:4], self.game[("DATA", 19)][:4])
+
+    def test_priest_resources(self):
+        patched, _ = ravager.resources_fixed(self.data, frozenset(), None, SL)
+        records = gff.read_gff(patched)
+        for number, name in ((326, b"WHIRLWIND"), (327, b"RESTORE YOUTH")):
+            data = records["DATA", number]
+            self.assertEqual(len(data), ravager.SPELL_SIZE)
+            self.assertEqual(data[32:64].rstrip(b"\0"), name)
+            self.assertTrue(records["SPIN", number + 1].startswith(name))
+            self.assertEqual(len(sequelicons.decode(records["ICON", 21000 + number])), 16)
+        self.assertEqual(records["DATA", 327][0x1C:0x1F], bytes(3))
+        self.assertNotIn(records["ICON", 21326], [v for (k, _), v in self.game.items() if k == "ICON"])  # (not Sand Storm's)
+        self.assertNotEqual(records["ICON", 21327], self.game["ICON", 21194])
+        self.assertEqual(records["DATA", 326][0x17], ravspells.WHIRL_AREA)
+        self.assertEqual(records["DATA", 326][0x19:0x20], bytes.fromhex("42 08 02 00 11 08 A1"))
+
+    def test_priest6_spheres(self):
+        """The 6th-level spheres' patch: the sequel's bytes there, made Shattered Lands' (game.PRIEST6_MASKS by
+        element: Blade Barrier air, Sunstroke fire, Wall of Thorns earth), where ravager's SPHERES_FILE says."""
+        exe = open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()
+        self.assertEqual(ravspells.SPHERES_FILE, ravager.SPHERES_FILE)
+        at = ravspells.SPHERES_FILE + ravspells.BLADE_BARRIER
+        self.assertEqual(exe[at:at + 7], ravspells.SPHERES_WAS)
+        now = dict(zip(range(208, 215), ravspells.SPHERES_NOW))
+        self.assertEqual((now[208], now[213], now[214]), (ravager.AIR, ravager.FIRE, ravager.EARTH))
+        self.assertEqual(ravager.skipped({"new_spells": False}) >= {ravspells.SPHERES_SKIP, "ww_setup"}, True)
+        self.assertNotIn(ravspells.SPHERES_SKIP, ravager.skipped({"new_spells": True}))
+
+    def test_area_segment_relocations(self):
+        """WW_SETUP's WW_REFS are every MZ relocation of selector 3D0h's segment (41F1h), and its selector."""
+        import re
+        exe = open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()
+        count, paragraphs = struct.unpack_from("<HH", exe, 6)
+        start, = struct.unpack_from("<H", exe, 0x18)
+        fixups = set()
+        for index in range(count):
+            off, seg = struct.unpack_from("<HH", exe, start + index * 4)
+            place = (paragraphs + seg) * 16 + off
+            if exe[place:place + 2] == bytes.fromhex("f1 41"):
+                fixups.add((seg, off))
+        helper = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                                   "dsclog2.asm")).read()
+        table = helper.split("ww_refs dw ", 1)[1].split("ww_refs_end:", 1)[0]
+        values = [int(word, 16) for word in re.findall(r"0x[0-9A-F]+", table)]
+        self.assertEqual(set(zip(values[::2], values[1::2])), fixups)
+        self.assertEqual(tuple(values[-2:]), (0x45E8, 0x3D0))
+
+    def test_funnel(self):
+        """Whirlwind's funnel (whirlart's, four frames) in the objects' copy with the new spells' rule, and none
+        without it."""
+        import tempfile
+        from dsloader import whirlart
+        with tempfile.TemporaryDirectory() as temp:
+            copy = os.path.join(temp, "OBJEX2.GFF")
+            for enabled in (True, False):
+                with self.subTest(enabled=enabled):
+                    skip = ravager.skipped({"new_spells": enabled, "new_items": False})
+                    ravager.write_objects(WOTR, copy, skip)
+                    chunks = gff.read_gff(open(copy, "rb").read())
+                    self.assertEqual(("OJFF", whirlart.OBJECT) in chunks, enabled)
+                    self.assertEqual(("BMP ", whirlart.OBJECT) in chunks, enabled)
+                    if enabled:
+                        self.assertEqual(struct.unpack_from("<H", chunks["BMP ", whirlart.OBJECT], 4)[0], 4)
 
     def test_program(self):
         """The patches' bytes are the sequel's DSUN.EXE's, its effect records 113-116 empty, and

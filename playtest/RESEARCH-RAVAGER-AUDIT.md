@@ -409,6 +409,15 @@ their results stand. `spell_arrows` also left `RESOURC2.GFF` as it was then.
   (195,171) goes round Metabolic and Telepath (Telepath's second icon, 192,59, Psionic Blast). A use costs 10 PSP;
   a failed power check 5, with no line (the power check isn't in the sequel's dice log). A member hit this round
   has its powers crossed out too (the casting rule above).
+- **The sequel's spell rules played** (logs/2026-11-28-ravager-spell-rules.md): a picked icon on USE names its spell or
+  power in the bottom bar (hovering doesn't); Ar'anda's Metabolic page (`ravkits.py power 0 7` added) has Energy
+  Containment first (game 175,59: self-cast at once, "Protected vs Energy" in the dice log), Cellular Adjustment fourth.
+  Its protection is NOT the creature record's +9 bit 4 (DS:19C9h's: Thy'rokh has 27h there from the start; setting
+  the bit blocked nothing even without the fix): use the real power. Priest icons on USE sit at y 59 (row 1) in game
+  pixels; the portraits at (70,58) and (116,58) take a picked spell. `ravfight.py attack` walks when the foe is far
+  (no blow): Tab then Return attacks the nearest. A charged weapon for a test: the item's +0Eh word the charges, +10h
+  the spell + 1 (9 Magic Missile), +16h the plus (15 to hit for sure; `files/2026-11-28-charge.py`). Whirlwind cast on
+  the party's own fight sweeps them as well: aim it away, or the funnel takes the party's turns for 18 rounds.
 - **Aiming a power at a party member**: the game refuses (the figure under the pointer lights yellow, nothing
   cast); with its side (+15h) made 7 (the Draxans') it takes it. Two members on one spot (0 and 1 start together, 2
   and 3 together) are taken first by the first of them: make both 7 (`files/2026-11-25-ravager-blast-log-side.py`),

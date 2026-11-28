@@ -74,6 +74,7 @@ and some of the sequel's own bugs mended: [In Wake of the Ravager](#in-wake-of-t
 | **Acid Arrow** | After the hit its acid never burned again: its time was a timer that only ended it, and nothing spent it a round at a time | 2d4 acid at the start of each round it lasts (a round for each started minute of its time: four for an 11th-level caster) |
 | **Psionic Blast** on a party member | Its imagined wounds (down to a fifth of its hit points) were real and stayed | Given back as the fight ends; until then a blow that would kill it knocks it out instead, and one knocked out wakes with them (the dice log says so; [how](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-CONTENT.md#worn-items-the-gladiators-armour-and-psionic-blast)) |
 | **Walls** cast by monsters | The computer aimed both ends of a wall at the same spot, so its walls were a single point | Across the line of fire, four cells long |
+| **Energy Containment** | Shut out every spell with no kind of damage as well as fire, cold, electricity and magic: a Cure Wounds, Bless or Haste on the psionicist did nothing | Stops damage of those four kinds only; other spells land as usual |
 
 ## Fights
 
@@ -228,6 +229,7 @@ to be read for it.
 | **Acid Arrow** | Fixed there too (the burns played) |
 | **Psionic Blast** on a party member | Fixed there too (played) |
 | **Walls** cast by monsters | Fixed there too; not yet seen in play |
+| **Energy Containment** (the sequel's Energy Control) | Fixed there too (2026-11-28; played: Ar'anda under her own Energy Control healed 27 by Heal; with the fix left out the Heal gave nothing) |
 | A **berserk** or **confused** party member | Confused: not needed (the sequel gives the side back as Confused ends). Berserk: fixed there too (the sequel's end had no case for it; played: a Draxan made berserk by Charm Mammal had its own side kept and given back as it ended; a party member's side, changed while she was berserk, back as her Berserk ran out) |
 | **Missiles from behind** | Fixed there too (melee played; a shot at a turned back not yet seen) |
 | An archer whose **quiver runs dry** | Fixed there too (2026-11-28; played: Gerakis with one arrow shot a thief dead and kept his turn to walk on) |
@@ -281,6 +283,8 @@ Bugs of Wake of the Ravager that Shattered Lands hasn't, or that the port found 
 | The **ranger's warning** of the forest ambush | Never given: the tracking roll's result was stored in one flag and read from another | Given when the roll succeeds |
 | **Xarax's potions** (the alchemist) | The potion of Free Action was paid for and never handed over (an object no file has); a second order was mixed up with the first; his brewing time was shared with the earth temple's count | The potion is handed over; each order kept apart; his own clock ([the report](https://github.com/daaki85/darksun-obsidian-edition/blob/main/reports/ravager-walkthrough-bugs-2026-11-28.md)) |
 | The **crystal rod** | Had no picture: in a body's or the party's slots it looked like an empty cell | The sequel's rod picture |
+| **Weapons that cast a spell** (Life Stealer, the Beast Club, the Staff of Paralysis, the Javelin of Lightning, Magma Blade...) | Each hit spent a charge, and the weapon vanished with its last: the use routine's spending ran for a hit's spell too | A hit's spell is free, as in Shattered Lands: the weapon keeps its charges and stays (the charges count for USE alone, and the item box shows none on a weapon) |
+| **Water of Life** | Healed as Heal does | The target's wounds pass to the caster, who keeps at least 5 hit points, as Shattered Lands' Water of Life (with the manual's spells) |
 
 ## Saved games
 

@@ -3,6 +3,20 @@
 ; (SHARED name). A fix here reaches both helpers; the rebuild checks prove the bytes unchanged.
 ; What each routine does is said where it is expanded.
 
+%macro SHARED_whirl_clear 0
+whirl_clear:
+        pushf
+        push di
+        mov di, wt_table
+.each:  mov word [cs:di], 0xFFFF
+        add di, WT_SIZE
+        cmp di, wt_table + WT_MAX * WT_SIZE
+        jb .each
+        pop di
+        popf
+        ret
+%endmacro
+
 %macro SHARED_abs16 0
 abs16:  or ax, ax
         jns .pos

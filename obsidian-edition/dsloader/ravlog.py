@@ -57,6 +57,7 @@ EFFECTS: Dict[str, object] = {
     "FOG_EFFECT": ravspells.FOG_EFFECT, "FRIENDS_EFFECT": ravspells.FRIENDS_EFFECT,
     "GRACE_SPELL": ravspells.GRACE, "CLAW_SPELL": ravspells.CLAW, "FOG_SPELL": ravspells.FOG,
     "REFLECT_SPELL": ravspells.REFLECT, "SPOOK_SPELL": ravspells.SPOOK, "FRIENDS_SPELL": ravspells.FRIENDS,
+    "RESTORE_YOUTH_SPELL": ravspells.RESTORE_YOUTH,
     "NEW_SPELLS": dict(ravspells.SPELLS), "NEW_SPELL_LEVELS": dict(ravspells.LEVELS),
     "INITIATIVE_EFFECTS": {10: -2, 42: 2, 91: -2},  # Blind, Hasted, Slowed
     # the attack's speed (628h:5Ch, 85899h: its halves doubled for 4, halved for 1): Paralyzed 69, and 66 and
@@ -772,7 +773,7 @@ SPELL_STARTS, SPELL_STARTS_ROW, SPELL_LEVELS_MOST = 0x0656, 11, 10  # (DS bytes,
 # priest: each level's first spell, 1 to 10, then the end: 0, 12, 25 ... 111, 115; 115, 127 ... 233, 235)
 SLOTS_ALL_19 = 0x13F8  # a DS byte the slot routine checks: 1 gives the party 19 of everything (SL's word 1164h)
 SPELL_COUNT, SPELL_RECORD = ravager.SPELL_COUNT, ravager.SPELL_SIZE
-SPELLS_END = ravspells.FIRST + len(ravspells.SPELLS)  # (past the new spells, 320-325, in the Loader's copy)
+SPELLS_END = ravspells.RESTORE_YOUTH + 1
 
 
 def spell_table(resources: bytes) -> Tuple[bytes, List[str]]:
@@ -1011,6 +1012,8 @@ class RavGameData(game.GameData):
         spell (wizard spells below RAV_PRIEST_FIRST: WIZARD_CLASSES; the rest PRIEST_CLASSES, spheres
         aside), a ranger's 7 less; a psionic power the psionicist's level; Enlarge's levels for the
         attack (DSCLOG2's ENL_SITE, 608h:52h) come from here. None for monsters' own powers."""
+        if spell in (ravspells.WHIRLWIND, ravspells.RESTORE_YOUTH):
+            spell = RAV_PRIEST_FIRST
         if not 0 <= spell < RAV_MONSTER_FIRST:
             return None
         if spell >= RAV_PSIONIC_FIRST:
@@ -1096,7 +1099,10 @@ class RavGameData(game.GameData):
             return UNSEEN_RANGE
         reach = struct.unpack_from("<H", rec, 9)[0] + rec[0x0B] * level
         if rec[0x17] != 0xFF:
-            kind = self.guest.read((self.load_seg + AREAS_SEG) * 16 + struct.unpack("b", rec[0x17:0x18])[0] * AREA_SIZE + 5, 1)
+            segment = self.load_seg + AREAS_SEG
+            if rec[0x17] == ravspells.WHIRL_AREA:
+                segment, = struct.unpack("<H", self.guest.read((self.load_seg + 0x45E8) * 16 + 0x3D0, 2))
+            kind = self.guest.read(segment * 16 + struct.unpack("b", rec[0x17:0x18])[0] * AREA_SIZE + 5, 1)
             if kind and (kind[0] >> 2) & 3 == 1:
                 reach *= 2
         return reach or 1

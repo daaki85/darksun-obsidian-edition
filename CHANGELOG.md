@@ -59,6 +59,21 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**New: Wake of the Ravager, the spells as Shattered Lands'** (branch `claude/ravager-spell-rules`; the owner's rule that
+a spell in both games works as in Shattered Lands). Whirlwind and Restore Youth, Codex's work taken over and finished:
+an air priest's Whirlwind with its turning funnel, 2d8 at the start of each round and as cast, a failed save sweeping
+the creature off its feet (played: the Draxans' ambush), and Restore Youth for druids. The sequel's 6th-level spells
+sorted as Shattered Lands': Blade Barrier for air (cosmos in the sequel), Sunstroke for fire alone (air and fire),
+Wall of Thorns for earth (played: an air cleric's list Whirlwind and Blade Barrier, a fire druid's Restore Youth,
+Fire Seeds, Heal, Harm, Sunstroke). Produce Fire 1d6, as Shattered Lands' (the sequel's 1d4). Water of Life passes
+the target's wounds to the caster, as Shattered Lands' (the sequel's healed as Heal), with the manual's spells.
+**Fixed:** weapons that cast a spell on a hit (Life Stealer, the Beast Club, the Javelin of Lightning, Magma
+Blade...) spent a charge each hit and vanished with the last; a hit's spell is free now, as in Shattered Lands.
+Energy Containment (Energy Control in the sequel) shut out every spell of no damage kind, a heal or Bless as well,
+**in both games**; it now stops fire, cold, electricity and magic damage alone (played: a Heal under it now heals; without the fix it gave nothing).
+**Dev:** DSCLOG2's tail code (`tail_call`, `seg_call`: routines past the segment's 64K), sites 222 and 225-227,
+`SHARED_whirl_clear`; patches `priest6_spheres`, `hit_spends_none`, `water_of_life_lends`, `energy_kinds` (both),
+`ravager.RAV_SPELL_FIXES`.
 **Fixed: Wake of the Ravager, Terrannus's hands in a game under way** (branch `claude/shield-hand-fix-2`). The swap
 of his shield and long sword (above) now also runs once each time a game is loaded, so a game begun before the fix
 is mended without a swap by hand. Gerakis's, Thy'rokh's and Terrannus's Effects panels seen in play.
