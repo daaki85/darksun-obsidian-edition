@@ -37,7 +37,7 @@ if skip:
         if p.name in skip:
             assert data[p.offset:p.offset + len(p.replacement)] == p.replacement, p.name
             data[p.offset:p.offset + len(p.original)] = p.original; skip.remove(p.name)
-    gone = [s for s in skip if s in ravager.SCRIPT_FIXES]   # (a script fix: GPLDAT2.GFF without it)
+    gone = [s for s in skip if s in ravager.SCRIPT_FIXES or s in {r.what for r in ravager.SCRIPT_DETOURS}]   # (a script fix: GPLDAT2.GFF without it)
     if gone or small:
         ravager.write_scripts(sys.argv[1], os.path.join(sys.argv[2], ravager.SCRIPT_COPY), set(gone) | small)
         skip = [s for s in skip if s not in gone]

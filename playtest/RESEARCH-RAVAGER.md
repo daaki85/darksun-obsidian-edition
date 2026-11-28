@@ -306,7 +306,16 @@ that address at once, before the overlay moves, then find those bytes in DSUN.EX
   6541 at square 85, 13: after the jump the view stays the Roost's; the camera DS:1408h written and USE opened
   and closed redraws it, the rock rises as the earth drake, but a fight there hangs: the party isn't set up), 0x44 (the Tarrasque: the area 31-36, 46
   runs GPL 124, the cinematic and the fight).
+  Region 1 (RGN001, Humbleton) square 20, 20 is inside Ptar's cave (where GPL 30 puts the party as it comes in), but the
+  jump leaves the party half there (the leader stuck at the east wall, the view garbled) and the scene's triggers unset
+  (Ptar's look, 857 of GPL 47, is set by GPL 30 only through the cave's exit). Jump instead to open ground beside
+  the scene's exit area (MAS N's 6Ah areas, a GMAP 0 square) and walk in: `ravjump.py 1 73 86`, the camera set, Up into
+  the mouth (73,83) and Yes brings the party whole into Ptar's cave (2026-11-28, logs/2026-11-28-ravager-script-fixes.md,
+  files/2026-11-28-ravager-to-ptar.sh).
   The Forest jump can leave the camera behind. The overhead map opens with O, and moving the pointer to the edge scrolls the scenery. Check the room landmarks before treating a capture as evidence for a furniture placement.
+- **A script probe** (2026-11-28): `ravprobe.py HEX` puts any commands in Reyhan's talk the way ravjump.py puts the
+  move, then return and exit: the game's own interpreter runs them and `ravtext.py` reads back what they print. The
+  ore voucher sale was checked that way (460 vouchers given with `39 ...`, the sale's commands copied from GPL 143).
 - **Mosaic museum** ([DOSBox playtest and captures](logs/2026-11-27-ravager-mosaic-museum.md)). Use `ravjump.py 0x3C 39 24` from the Roost fixture to reach the interactive rows. Row 13 lands across the wall. Look at the head of Horace or Ellith, dismiss the name, select the green hand and press 1 to remove the bust. Look picks the detached bust up. Click the empty stand to seat Horace, or open inventory with I and click a backpack slot to store Ellith. The sword breaks Khildril. Pick up the bookcase beside Fletch and set it elsewhere, then pick up the exposed book and click Biblid.
 - **Completing the museum mirror** ([playtest](logs/2026-11-27-ravager-mosaic-mirror.md)). Square (40, 34) puts the party near the cloth, hand mirror and bag. Carry them in the backpack to the stands. Drop them on clear floor so Look can pick them up again, then click the appropriate bust with the item. Once the busts match, pick up each of the eight shards and click the wall mirror. After the eighth, walk north through the repaired glass to the Veiled Alliance.
 - **Mines shelves and Yuan-ti storeroom.** In Mines 3, use the Bookcase at (35, 71) in sector 10 for the orbs or (93, 11) in sector 4 for the chemicals. In the northeast tunnel storeroom, flags 118 and 119 together open the eastern camera bound for a jump to (115, 6). [Room fixtures and stock controls](logs/2026-11-27-ravager-mine-and-tunnel-shelves.md)
