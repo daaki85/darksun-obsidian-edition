@@ -28369,32 +28369,7 @@ copies:
         COPY 'RGN0D.GFF', others_on
         db 0
 ; the kits' names (KIT_NAME_PTR, KIT_OF_SHEET, DK_ASK's rows), read through TAIL_SEG
-; Each class's kits (kitpages.KITS), the creation screen's classes in order, three each
-kit_names    db 'ELEMENTALIST', 0, 'HEALER', 0, 'CRUSADER', 0
-             db 'GROVE WARDEN', 0, 'LIFEBINDER', 0, 'WANDERER', 0
-             db 'MYRMIDON', 0, 'SENTINEL', 0, 'RAVAGER', 0
-             db 'ARENA CHAMPION', 0, 'TWIN-BLADE', 0, 'BRUTE', 0
-             db 'SCHOLAR', 0, 'BATTLE MAGE', 0, 'ARCANIST', 0
-             db 'MIND BENDER', 0, 'MIND WARRIOR', 0, 'KINETICIST', 0
-             db 'STALKER', 0, 'JUSTIFIER', 0, 'SEEKER', 0
-             db 'SWASHBUCKLER', 0, 'ASSASSIN', 0, 'SHINOBI', 0
-             db 'BATTLE DANCER', 0, 0, 0                ; (the multiclass groups', three to each)
-             db 'SHADOWBLADE', 0, 'MILITARY SCOUT', 0, 0
-             db 'WILDERNESS AVENGER', 0, 0, 0
-             db 'RESCUER', 0, 0, 0
-             db 'GHETTO FIGHTER', 0, 'WAYFINDER', 0, 0
-             db 'SPELLARCHER', 0, 0, 0
-             db 'TITAN MIND', 0, 0, 0
-             db 'POISONER', 0, 0, 0
-             db 'SPIRIT CALLER', 0, 0, 0
-             db 'WASTELAND SEER', 0, 0, 0
-             db 'WILD FURY', 0, 0, 0
-; Shorter names for the Effects screen's line (kitpages.SHORT): the kit, the name. 0 ends it.
-kit_short    db KIT_CHAMPION, 'CHAMPION', 0, KIT_SWASHBUCKLER, 'SWASHBUCK', 0, KIT_ELEMENTALIST, 'ELEMENTAL', 0
-             db KIT_GROVE_WARDEN, 'WARDEN', 0, KIT_BATTLE_MAGE, 'BATTLMAGE', 0, KIT_MIND_BENDER, 'M-BENDER', 0
-             db KIT_MIND_WARRIOR, 'M-WARRIOR', 0, KIT_BATTLE_DANCER, 'B-DANCER', 0, KIT_SHADOWBLADE, 'SHADOWBLD', 0
-             db KIT_SCOUT, 'M-SCOUT', 0, KIT_AVENGER, 'W-AVENGER', 0, KIT_GHETTO, 'G-FIGHTER', 0
-             db KIT_SPELLARCHER, 'SPELLARCH', 0, KIT_SPIRIT_CALLER, 'S-CALLER', 0, KIT_WASTE_SEER, 'WASTE SEER', 0, 0
+%include "kit_names_table.inc"
 ; tables only one reader uses, read through TAIL_SEG (the third memory pass)
 adnd_xp dw 0, 30, 60, 120, 260, 550, 1100, 2200, 4500, 9000, 13500, 18000, 22500, 27000  ; cleric
         dw 0, 40, 80, 150, 250, 400, 700, 1200, 1800, 2500, 4000, 6000, 15000, 30000  ; druid
