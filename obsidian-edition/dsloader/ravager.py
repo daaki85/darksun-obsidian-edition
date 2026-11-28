@@ -327,6 +327,8 @@ def _stride(at: int) -> Patch:
     return Patch("sheet_stride_%x" % at, at, bytes((0x6B, modrm, GAME_SHEET_SIZE)), bytes((0x6B, modrm, 0x48)))
 
 
+SFX_VOLUME_AT = 0x4F6B4  # (DS:26B4h in the file: the game menu's sound effect volume, slider then volume)
+
 PATCHES: Tuple[Patch, ...] = (
     # rand(): INT VEC_RAND at its start, DSCLOG2's INT_RAND being it (the same function as SL's at
     # 5C22h, its seed at DS:384Ah): the dice log's every roll.
@@ -1234,6 +1236,11 @@ PATCHES: Tuple[Patch, ...] = (
     # The talk portraits at Shattered Lands' size (ravportraits: its window, faces and frame in the copies):
     # the face or the empty frame drawn at (8, 6). RAV_SKIP=small_portraits leaves them out with the rest.
     *ravportraits.PATCHES,
+    # The game menu's SOUND EFFECT VOLUME (DS:26B4h the slider, DS:26B5h the driver's volume) starting at
+    # full, not the game's half, which the emulated card's mixer took 16 dB (GOG's DOSBox) or 24 dB
+    # (DOSBox-X) under the recordings while the CD music played at full: the speech barely heard
+    # (sfxvolume: a loaded game's in the roster)
+    Patch("sfx_volume_full", SFX_VOLUME_AT, bytes.fromhex("643f"), bytes.fromhex("ff7f")),
 )
 
 # The spell records' fixes: gamepatch's patch name -> (the sequel's DATA chunk, the field's offset).

@@ -59,6 +59,16 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: both games, quiet speech and sound effects** (branch `claude/ravager-voice-volume`). Wake of the Ravager's
+spoken lines came out 24 dB under their recording in DOSBox-X and 16 dB under in GOG's DOSBox, while its CD music
+played at full: the game menu's SOUND EFFECT VOLUME starts at half, and the emulated Sound Blaster's mixer makes
+half far quieter than a card did. The sequel now starts it at full (its speech and effects as recorded, as loud as
+the music, in both emulators), and Shattered Lands, whose music is MIDI, a notch up in DOSBox-X only (79 of 127,
+which plays its effects as loud as GOG's DOSBox at the game's 63). A loaded game takes the volume from the roster,
+so the Loader sets it there too, but only where it is still the starting value: a volume set in the menu stays,
+and the menu works as before ([the measurements](playtest/logs/2026-11-28-ravager-voice-volume.md)). **Dev:**
+`sfxvolume`, the patches `sfx_volume_full` (sequel) and `sfx_volume_dosbox_x` (`gamepatch.SFX_VOLUME_DBX`).
+
 **Fixed: Wake of the Ravager, the bugs players report** (branch `claude/ravager-walkthrough-bugs`). The 49 bugs in
 the owner's walkthrough checked against the sequel's scripts and program ([the report](reports/ravager-walkthrough-bugs-2026-11-28.md)).
 Mended now: Resist Fire, Resist Cold, Protection from Fire and from Lightning and Fire Shield never halved a

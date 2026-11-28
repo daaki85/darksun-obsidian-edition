@@ -203,6 +203,8 @@ The sequel, started from the Loader when it is installed (GOG sells it with Shat
 - **[Fixed]** The sequel's items weigh what they do in Shattered Lands *(71 of its 102 kinds weighed nothing)*, so two heavy weapons can't be held together and pockets go by weight.
 - **[Fixed]** **Weapons keep their material and kind** when the party crosses over *(a water cleric's Bone Great Sword +1 became an obsidian sword it couldn't wield, a bone Long Sword an obsidian one, the Polearm +1 a double spear)*: every weapon of Shattered Lands' kinds and materials is in the sequel too, a bone long sword added, and the sequel's club, bow and sling are wood and leather as in Shattered Lands, so earth and water clerics may use them ([taking the party](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/FEATURES.md#taking-the-party-to-wake-of-the-ravager)).
 
+- **[Fixed]** **The speech is heard**: the sound effect volume starts at full, so the spoken lines and sound effects play as loud as the CD music *(at the game's half volume the emulators made them 16 to 24 dB quieter than the music; the game menu's SOUND EFFECT VOLUME still turns them down)*. In Shattered Lands the effects start a notch up in DOSBox-X, as loud as in GOG's DOSBox.
+
 ## Bug Fixes
 
 The main fixes; every bug of the original game the mod mends, with what the game did, is in [the game's bugs, fixed](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/GAME-BUGS.md). Many were found by yuan-ti and the OpenDS project.
