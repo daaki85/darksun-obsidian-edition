@@ -103,8 +103,11 @@ for a game begun before the rule.
 
 ## Saves in the sequel
 
-The sequel keeps its own save and load window: its ten saves, `SAVE01.SAV` to `SAVE10.SAV`, with no more
-pages ([more saves](FEATURES.md#more-saves) is Shattered Lands' alone so far).
+The sequel's save and load window has [more saves](FEATURES.md#more-saves) as Shattered Lands' does: four
+pages of ten (`SAVE01.SAV` to `SAVE10.SAV`, then `SAVB..`, `SAVC..` and `SAVD..`) and, in the load window, the
+QUICK page, turned with PgDn and PgUp or a click on PGUP or PGDN under EXIT (with the page's name: the sequel has
+no PAGE buttons). It opens on
+page 1.
 
 [Quick save, quick load and autosave](FEATURES.md#quick-save-quick-load-and-autosave) work in the sequel too
 (started from the Loader), with the same switches, in its own save and load window: F9 opens its LOAD window
@@ -393,8 +396,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
   picture). The party column's and the creation screen's small figures wear the outfits too.
 - **Spells**: Restore Youth, the mod's Whirlwind damage and Sunstroke's heat (the sequel casts its own
   Whirlwind and Sunstroke), and so a Healer cleric's two more cosmos spells.
-- **[More saves](FEATURES.md#more-saves)**: the sequel's window keeps its own ten saves, with no pages 2 to 4
-  and no QUICK page (F9 opens its quick saves: [saves in the sequel](#saves-in-the-sequel)).
 - **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
 - **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
   shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the

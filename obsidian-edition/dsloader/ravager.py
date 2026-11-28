@@ -1005,6 +1005,15 @@ PATCHES: Tuple[Patch, ...] = (
     # + 1; DSCLOG2's site 84 (SITE_GREQ_LOAD) adds GREQ_QUICK on the quick saves' page, whose saves DSCLOG2
     # numbers so (GREQ_WRITE).
     Patch("greq_load", 0x7DA30, bytes.fromhex("26a10200"), _site(84, 4)),
+    # More saves (SL's save_page; savepages.py's pages, by key alone: the sequel's RESOURCE.GFF has no buttons
+    # of SL's to copy): the save and load window's jump for a key it has no use for (7DABCh, "jmp 7E00Fh"), where
+    # DSCLOG2's PAGE_KEY (site 238) turns the pages for PgUp and PgDn; and where the SAVE window's wrapper
+    # numbers a save's GREQ chunk ("mov ax,si / inc ax", 7D8A1h, 7D8BAh), its page's base more (GREQ_SAVE,
+    # site 239), as GREQ_LOAD reads them.
+    Patch("save_page", 0x7DABC, bytes.fromhex("e95005"), _site(238, 3)),
+    Patch("save_page_open", 0x7D691, bytes.fromhex("83c404"), _site(216, 3)),
+    Patch("greq_save", 0x7D8A1, bytes.fromhex("8bc640"), _site(239, 3)),
+    Patch("greq_save_2", 0x7D8BA, bytes.fromhex("8bc640"), _site(239, 3)),
     # S on a shop's screen sells the member's plain gear (DSCLOG's SELL_KEY, SHOP_LOOP; sell.py): the test of
     # the shop's own loop (88D52h, "while byte [143Dh] is 1", 143Dh set at 7BCA6h for a merchant's shop; SL's
     # word [11B2h] at 7DE11h), DSCLOG2's site 82 (SITE_SHOP_LOOP): the BIOS tick kept while the shop is open.
@@ -2031,7 +2040,8 @@ SHEET_RECORDS = ("CHAR", "RDFF")  # (record lists: a sheet is kind 3, SHEET_KIND
 SHEET_KIND = 3
 SHEETS_CHUNK, SHEETS_COUNT = ("SAVE", 6), 17  # (a save game's sheet table, whole: sheet_save_size)
 SHEET_FILES = ("CHARSAVE.GFF", "DARKRUN.GFF", "DARKSAVE.GFF")  # (and every SAVEnn.SAV)
-SAVE_PREFIXES = ("SAVE", "SAVQ")  # (the saves: the game's page, the quick saves' page: quicksave.py)
+SAVE_PREFIXES = ("SAVE", "SAVB", "SAVC", "SAVD", "SAVQ")  # (the saves: the window's pages, DSCLOG2's MORE SAVES,
+#   and the quick saves' page: quicksave.py)
 BACKUP = {SHEET_SIZE: ".42H", GAME_SHEET_SIZE: ".48H"}  # (the file before it was made that size)
 
 
@@ -2074,8 +2084,8 @@ def resized_chunks(chunks: gff.Chunks, size: int) -> gff.Chunks:
 
 
 def sheet_files(game_dir: str) -> List[str]:
-    """The files of GAME_DIR that may hold sheets (SHEET_FILES, the saves SAVEnn.SAV and the quick saves
-    SAVQnn.SAV)."""
+    """The files of GAME_DIR that may hold sheets (SHEET_FILES, the saves SAVEnn.SAV, SAVB, SAVC and SAVDnn.SAV,
+    and the quick saves SAVQnn.SAV)."""
     try:
         names = sorted(os.listdir(game_dir))
     except OSError:
