@@ -14,7 +14,10 @@ A string is 1 (a name the game fills in), 2 (bytes stored shifted) or 5 (7-bit p
 ending with code 3.
 
 The decoder was checked against every script: all of them read to the end, and every
-jump and call target in them lands on the start of a command.
+jump and call target in them lands on the start of a command. Wake of the Ravager's scripts
+read with it too (all 350, every jump target on a command): its GPLDATA.GFF has no GPLX, so a
+query's test takes a value when the byte after it can start one (_query), and it has a second
+field term, B3h, read as B1h.
 """
 
 from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Tuple
@@ -135,7 +138,7 @@ def _term(r: _Reader) -> tuple:
         return ("var", b & 0xBF, r.word())
     if b == 0x92:
         return _string(r)
-    if b == 0xB1:
+    if b in (0xB1, 0xB3):  # (B3h: the sequel's only, in GPL 37)
         return _field(r)
     raise ScriptError(f"unknown term {b:02X}h")
 
@@ -198,8 +201,12 @@ def _query(r: _Reader) -> list:
         if r.peek() == 0x53:
             r.byte()
         field, kind, value = r.byte(), r.byte(), None
-        if 4 <= kind <= 6 and field < len(r.field_types) and r.field_types[field] in (0x10, 0x12, 0x13, 0x14):
-            value = _expr(r)
+        if 4 <= kind <= 6:
+            if r.field_types:
+                if field < len(r.field_types) and r.field_types[field] in (0x10, 0x12, 0x13, 0x14):
+                    value = _expr(r)
+            elif not (r.peek() in (0x53, 0xE1) or 0xD1 <= r.peek() <= 0xDF):
+                value = _expr(r)  # (no GPLX, the sequel: a value unless another test, a bracket or an operator follows)
         tests.append((field, kind, value))
         if r.peek() != 0x53:
             return [who, a, b, tests]

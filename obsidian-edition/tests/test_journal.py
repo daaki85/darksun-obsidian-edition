@@ -362,9 +362,8 @@ WOTR = os.environ.get("DSUN_WOTR")
 @unittest.skipUnless(WOTR and os.path.isfile(os.path.join(WOTR, "GPLDATA.GFF")), "needs the sequel's folder (DSUN_WOTR)")
 class RavScriptNumbersTests(unittest.TestCase):
     def test_the_sequels_scripts_leave_the_journals_numbers(self):
-        """Wake of the Ravager's scripts that decode use global numbers well below the journal's two (93 don't
-        decode: in them the bytes 87h C6h come no oftener than in the ones that do, where they are never
-        number 198), and a save keeps the 200 as SAVE 31 (ravlog.RAV_NUMBERS_CHUNK)."""
+        """Wake of the Ravager's scripts (all 350 decode) use global numbers well below the journal's two, and
+        a save keeps the 200 as SAVE 31 (ravlog.RAV_NUMBERS_CHUNK)."""
         from dsloader import ravlog
         from dsloader.gff import read_gff
         with open(os.path.join(WOTR, "GPLDATA.GFF"), "rb") as f:
@@ -391,7 +390,7 @@ class RavScriptNumbersTests(unittest.TestCase):
                     undecoded += 1
         self.assertTrue(used)
         self.assertLess(max(used), min(journal.NUMBERS), sorted(used)[-5:])
-        self.assertLess(undecoded, 100)
+        self.assertEqual(undecoded, 0)
         for name in sorted(os.listdir(WOTR)):
             if name.upper().startswith("SAVE") and name.upper().endswith(".SAV"):
                 with open(os.path.join(WOTR, name), "rb") as f:

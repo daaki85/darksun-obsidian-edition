@@ -254,6 +254,26 @@ strongholds' ends), and "given" flags for most quests (of the game's, only
 Gilal, the chief's daughter, the temple, Notaku's three errands and the
 alliance have one): the rest show under Finished only.
 
+**Wake of the Ravager.** `dsloader/ravquests.py` is the sequel's table, put in
+`quests.QUESTS` (with `BY_KEY` and the saves' chunks) by `ravlog.apply_layout`
+while the sequel runs; `game.FLAGS_PTR` and `NUMBERS_PTR` are its DS:15F2h and
+DS:15F6h then (SAVE chunks 30 and 31; the flags' bytes in memory the same as a
+loaded save's, 2026-11-28), so `quest_look` reads it as Shattered Lands'. Its
+rewards: script 27's routines at 112 (each party member) and 148 (one person),
+the amount in number 3, the regions' scratch flags cleared at 228-353
+(`questdraft.SEQUEL`, chosen by the missing GPLX): 125 calls in 60 scripts and
+103 of the scripts' own awards, every one of its 350 scripts read (`gpl.py`:
+with no GPLX a query's test takes a value when the next byte can start one,
+and B3h is a field term as B1h). 42 quests: 37 by a flag set beside the
+reward, one by a number (Surrakina's bargain), four by their message alone;
+`LEFT_OUT` gives the reason for each of the other 82 calls (small finds and
+skill checks, talk checks that can be tried again, amounts shared in a
+region, flags cleared later). Three have a `given` (Arslan's errand, the
+medallion, the villager in the rubble); the walkthrough in the private
+repository helped name them, the words the project's own. Tests:
+`tests/test_ravquests.py` (with `DSUN_WOTR`, the same checks as Shattered
+Lands' against the sequel's scripts, and none of the table's lines theirs).
+
 ## The combat log in the game
 
 ([In the features page](FEATURES.md#the-combat-log-in-the-game).)
