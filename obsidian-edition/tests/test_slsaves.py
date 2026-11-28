@@ -129,12 +129,13 @@ class SaveBaseTests(unittest.TestCase):
                     ebx=group * 15 + save * 3, ecx=group, esi=save, edx=0x1234, edi=CREATURE)
         for name, value in regs.items():
             mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        base, rate, last = GAME_TABLE[group * 5 + save]
+        improve = min((level - 1) * rate // 100, last) + race_bonus
+        mu.mem_write(SS * 16 + BP - 2, struct.pack("<h", improve))  # (the game's [BP-2], which it takes off)
         mu.emu_start(TSR * 16 + self.sym["save_base"], TSR * 16 + 0xFFF0, count=20000)
         for name in ("bx", "cx", "dx", "si", "di", "ds", "es", "bp", "sp"):
             want = 0x7F6 if name == "sp" else regs.get(name, regs.get("e" + name)) & 0xFFFF
             self.assertEqual(mu.reg_read(getattr(r, "UC_X86_REG_" + name.upper())), want, name)
-        base, rate, last = GAME_TABLE[group * 5 + save]
-        improve = min((level - 1) * rate // 100, last) + race_bonus
         return struct.unpack("b", bytes((mu.reg_read(r.UC_X86_REG_AL),)))[0] - improve
 
     def test_every_group_and_level(self):
@@ -164,6 +165,14 @@ class SaveBaseTests(unittest.TestCase):
     def test_race_bonus(self):
         """A dwarf's or halfling's CON bonus, in the game's [BP-2], still comes off the Handbook's."""
         self.assertEqual(self.save(TABLES, 1, 12, 0, race_bonus=5), tables.rav_saves(1, 12)[0] - 5)
+
+    def test_least(self):
+        """No save under 2 (SAVE_LEAST): a dwarf fighter's with CON 18 (5 off) at 13th and 17th, whose
+        sum was 0 and -2 (a byte of 254, a save never made: 2026-11-28); the rule off, the game's own."""
+        self.assertEqual([self.save(TABLES, 1, 13, s, race_bonus=5) for s in range(5)], [2, 2, 2, 2, 3])
+        self.assertEqual([self.save(TABLES, 1, 17, s, race_bonus=5) for s in range(5)], [2, 2, 2, 2, 2])
+        self.assertEqual([self.save(TABLES, 1, 11, s, race_bonus=5) for s in range(5)], [2, 4, 3, 3, 5])
+        self.assertEqual(self.save(0, 1, 20, 0, race_bonus=5), 11 - 5)
 
     def test_multiclass_best(self):
         """A multiclass character keeps the best (lowest) of its groups' saves, as the game's "jle": a fighter/

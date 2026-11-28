@@ -242,6 +242,7 @@ creatures save again as they stay in them; those lines have no "from".
 | `Cilla is now a 3rd level Ranger` | A level gained. |
 | `    max HP unchanged: the game divides the hit point total by the classes, ...` | A multiclass level that added no hit points. |
 | `Cilla's 3rd Ranger level: hit points d10 = 2, raised to 3 for CON 21` | The hit point roll for a new level. |
+| `Kel's saving throws worked out again: PPD 11 to 10, BW 13 to 12` | A loaded party member's saves put as the game puts them at a level up. |
 
 **The lines above, in more detail.**
 
@@ -254,6 +255,7 @@ creatures save again as they stay in them; those lines have no "from".
 - XP held at the cap: a character's XP past its share of the [level cap by XP](FEATURES.md#level-cap-by-xp) (749,999 for one class, divided between a multiclass character's classes, less the old classes' for a human who changed class) is put back to the share as soon as it comes, and the XP line then shows only what counted. Other lines of the kind: `Lex's XP held at the cap: 374,999, 749,999 shared by 2 classes (15 not counted)`; a prime requisite bonus cut short says `, 46 of it held at the cap`.
 - A level gained, and the new maximum HP. Other lines of the kind: `    max HP 15 -> 21 (+6)`.
 - A multiclass character gained a level and its most hit points stayed the same: every class level rolls its die, but the game divides the whole total by the number of classes, so a small roll can add only a fraction (it counts at a later level). A human who changed class gets none in the new class until its level passes the old class's.
+- A party member's saving throws put right as a game is loaded: the game works them out only at a level up and on the creation screen, so a saved game keeps what its sheets had (the game's own table from before [the Player's Handbook's](PLAYER-GUIDE.md#saving-throws), or, in Wake of the Ravager, the nonsense a character made or levelled from 2026-11-27 to 28 had, such as PPD 81). Each save the routine's number now, only those that changed named; nothing on the creation screen or in a fight (it waits for the next look).
 - The hit point roll for a new level: the class's die (d8 clerics and druids, d10 fighters, gladiators and rangers, d4 preservers, d6 psionicists and thieves; the Battle Mage and Arcanist [kits](KITS.md#preserver-kits) have their own), never less than 2, 3 or 4 with CON 20, 21-22 or 23+, and doubled for half-giants. After level 9 or 10 there's no roll, just a fixed gain (thieves roll at 10th too with [Level cap by XP](FEATURES.md#level-cap-by-xp)). With [the better of two](FEATURES.md#hit-dice-the-better-of-two) both rolls show (`d10 = 2 and 7, the better 7`), and with [multiclass hit points](FEATURES.md#multiclass-hit-points) CON's bonus on the die (`, +4 CON 18, into the total shared by 3 classes`).
 
 ## Character creation
