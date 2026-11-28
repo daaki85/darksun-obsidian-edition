@@ -132,6 +132,16 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
 
 **Changed** (Wake of the Ravager)
+- The Forest acorn and grape plants and the cup tables in the Forest and Alliance retain the detail on their shorter stands. Cleave’s bed keeps its height when he gets up. Snaggle’s painted figure fits the shared frame.
+- Jugs and dishes on seven Forest dining tables and seven side tables keep their original shapes on the lowered wood. Three rear chairs sit where their backs can be seen above the settings.
+- The silver tables and stools in both Volcano levels sit lower. The two rear seats keep their original relationship to their tables. The 12 side-facing counters in the Volcano and Alliance rooms have shorter legs beneath the original goods.
+- The Volcano dining tables sit at the same height with or without a meal. Bowls, cups and counter jugs keep their shape, and the two barrels in the southern storeroom touch again. The books and glassware on four shelf designs retain their outlines. The torn red blanket in Volcano 1 and Tyr is continuous across both pieces.
+- The five stone worktables in Mines 3 sit five pixels lower. Their glassware retains its shape, including the bottle that spans two drawings.
+- The three kitchen crates in Mines 3 sit lower beside the poison box. The armor chest and the chef’s locked chest have matching proportions in both stored lid positions.
+- The lowered orb shelf in Mines 3 keeps the six blue orbs the same shape as the ones on the laboratory floor.
+- The four upright polearm stands in the Yuan-ti tunnels, Mines 3 and Volcano 2 are 14 pixels shorter. The tallest axe heads keep their shape.
+- All five bowls are visible while the Mines 3 mind flayers eat. The Elderbrain encounter now uses the approved tank drawing, including when the glass shatters.
+- The Mines 3 loot chest now matches the height of the same chest in the Pyramid, closed and open.
 - Lowered 19 freestanding shelf pictures at 54 placements and 61 other furniture and storage pictures
   at 217 placements, including the open and closed states of three fixtures. Another 18 pictures lower the Forest
   dining sets, the Alliance vase-bearing crate and the Mines 3 throne at 41 placements. The Jann cushions and baskets and the Silt Sea Giants’ furnishings

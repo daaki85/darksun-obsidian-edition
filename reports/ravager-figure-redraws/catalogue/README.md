@@ -671,7 +671,7 @@ The earlier proposal measures 23 × 21 visible pixels in each idle frame. The fa
 
 ## 1115: Captive on the upright rack
 
-**Approved captive and matching empty rack.** Object 5064 places the captive in RGN03A. The original three-step script holds the raised head for 90 timing units and the bowed head for 150, then returns to the first drawing. The approved animation confines the change to a 10 × 10 area around the head and upper chest. Both wrists, feet, chains and the handle stay fixed. The occupied fixture measures 45 × 41 pixels on the original canvas. Empty rack 1116 uses the same scale and anchor, with its loose lower restraints visible. It belongs to object 5065 in Limbo. The preview shows the room and the Shattered Lands Obsidian Human party figure at matching enlargement. The captive’s identity and race remain open. [Animation](img/audit-captive-rack.gif) · [Both poses and empty rack](img/audit-captive-rack.png) · [Approved picture banks](proposals/1115-captive-and-rack.zip)
+**Approved captive and matching empty rack.** Object 5064 places the captive in RGN03A. The original three-step script holds the raised head for 90 timing units and the bowed head for 150, then returns to the first drawing. The approved animation confines the change to a 10 × 10 area around the head and upper chest. Both wrists, feet, chains and the handle stay fixed. The occupied fixture measures 45 × 41 pixels on the original canvas. Empty rack 1116 uses the same scale and anchor, with its loose lower restraints visible. It belongs to object 5065 in Limbo. The preview shows the room and the Shattered Lands Obsidian Human party figure at matching enlargement. During the DOSBox rescue, the game calls the freed captive a miner. The text gives no personal name or race in the farewell. The empty rack keeps the occupied rack’s anchor. [Rescue in both builds](../../ravager-furniture/captive-rack-live.png) [Animation](img/audit-captive-rack.gif) · [Both poses and empty rack](img/audit-captive-rack.png) · [Approved picture banks](proposals/1115-captive-and-rack.zip)
 
 ## 1117: Mirrored fallen figure in Limbo
 
@@ -967,7 +967,7 @@ The preview cycles through standing, walking and side attacks at review speed. T
 
 ![Shipped, previous and revised front attacks in Tyr, revised recovery, and a comparison with the Shattered Lands Outcast and human party member](img/1753-matched-comparison.png)
 
-The four-facing preview follows each skeleton from idle through its walk, halt, attack and recovery at a common review pace. It holds the shorter left attack for one extra display beat to synchronize the columns. All 71 steps across the 16 active script slots selected the expected artwork in the test archive. Each step retains its game timing, movement and facing flags. A live encounter check is pending. [Game-size loop](img/1753-matched-native.gif) · [Enlarged loop](img/1753-matched-enlarged.gif) · [Revised figure and script](proposals/1753-giant-matched.zip)
+The four-facing preview follows each skeleton from idle through its walk, halt, attack and recovery at a common review pace. It holds the shorter left attack for one extra display beat to synchronize the columns. All 71 steps across the 16 active script slots selected the expected artwork in the test archive. Each step retains its game timing, movement and facing flags. In DOSBox the diners hid the bowls during the meal. Moving the five settings eight pixels toward the foreground exposed them while eating and kept them under the slumped diners. [Matched gameplay views](../../ravager-furniture/mine-dining-live.png) [Game-size loop](img/1753-matched-native.gif) · [Enlarged loop](img/1753-matched-enlarged.gif) · [Revised figure and script](proposals/1753-giant-matched.zip)
 
 ## 1754: skeleton warrior, red cloak, sword
 
@@ -3421,7 +3421,7 @@ The five place settings were checked in both eating poses and the slumped pose. 
 
 ![Original and redrawn diners in all five seats, with the Shattered Lands psurlon and party at the same scale](img/3231-mindflayer-comparison.gif)
 
-All three poses decoded from a test copy of OBJEX.GFF at the shipped dimensions with the original animation script and placement records. The previews reconstruct the dining room. A live in-game check is pending. [Game-size animation](img/3231-mindflayer-native.gif) · [Slumped pose in all five seats](img/3231-mindflayer-slumped.png) · [Proposed picture resource](proposals/3231-mindflayer.zip)
+All three poses decoded from a test copy of OBJEX.GFF at the shipped dimensions with the original animation script and placement records. These previews reconstruct the earlier figure-only proposal. The revised room above has since been checked in play. [Game-size animation](img/3231-mindflayer-native.gif) · [Slumped pose in all five seats](img/3231-mindflayer-slumped.png) · [Proposed picture resource](proposals/3231-mindflayer.zip)
 
 ![3231 playing](img/3231.gif)
 
@@ -3553,7 +3553,7 @@ The two upper pictures each store 36 frames, and the two lower ones each store 1
 
 The approved brain has two lobes with shaded rose folds suspended above deep teal fluid. The platform keeps its original footprint, cable and vents. Both GIFs show 20 idle steps followed by 16 destruction steps at review speed.
 
-All 99 stored frames across the five picture resources passed a decode check in a test copy of OBJEX.GFF. The 36 reassembled steps matched the corresponding complete redraws pixel for pixel. The original scripts and anchors are preserved, and 3511 matches frame index 21 of the revised 1032. A live in-game encounter check of the approved artwork is pending. [Game-size comparison](img/3511-elderbrain-redraw-native.gif) · [Five approved picture resources](proposals/3511-elderbrain.zip)
+All 99 stored frames across the five picture resources passed a decode check in a test copy of OBJEX.GFF. The 36 reassembled steps matched the corresponding complete redraws pixel for pixel. The original scripts and anchors are preserved, and 3511 matches frame index 21 of the revised 1032. The live encounter drew the stock tank until the same artwork was applied to RESOURCE.GFF pictures 11008 (intact) and 11016 (29-frame destruction). The updated package includes both. [Matched DOSBox captures](../../ravager-furniture/mine-elderbrain-live.png) [Game-size comparison](img/3511-elderbrain-redraw-native.gif) · [Five approved picture resources](proposals/3511-elderbrain.zip)
 
 ![3511 playing](img/3511.gif)
 
