@@ -28,6 +28,8 @@ as it is).
   and a hack that works leaves it shut; one that fails says the weapon breaks, and keeps it (now one that can break, as in a fight, is gone; a metal or magic one
   rings off the grate unharmed); and an attack on it always broke the lock (now a Strength roll,
   as ripping it open has).
+- Typos in the text (TEXT_FIXES: the same sweep as Wake of the Ravager's, ravager.TEXT_FIXES, every string
+  through a dictionary; the dialects, cries and the first letters printed apart are meant and left).
 - The Rebel Mindhome's 5000 XP for killing the spiders came again at every talk to their leader;
   now once.
 - Region 9's messenger (the slaves' rising from the sand) came only if the party left the region
@@ -42,7 +44,7 @@ as it is).
 game's clock running, the stage gate waits its window out as it should.)
 """
 
-from typing import Dict, NamedTuple, Tuple
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from . import gpl
 
@@ -301,6 +303,111 @@ REPAIRS = (
 )
 
 
+# Typos in Shattered Lands' text (the scripts' strings through a dictionary, 2026-11-28, as Wake of the
+# Ravager's): (script, the command printing it or the menu holding it, the words, the words mended)
+TEXT_FIXES = (
+    (3, 0x678, "tommorrow", "tomorrow"),
+    (26, 0x1F9, "setn me", "sent me"),
+    (26, 0x751, "fulfullied his prohecy", "fulfilled his prophecy"),
+    (39, 0x8A2, "glady", "gladly"),
+    (52, 0x206E, "woudn't", "wouldn't"),
+    (53, 0x2EE, "woudn't", "wouldn't"),
+    (56, 0xCB, "archane", "arcane"),
+    (56, 0x16A, "dicipher", "decipher"),
+    (57, 0x35A, "curiousity", "curiosity"),
+    (60, 0xA0E, "assualted", "assaulted"),
+    (70, 0x10A, "himelf", "himself"),
+    (105, 0x10, "dias", "dais"),
+    (117, 0x37, "destory", "destroy"),
+    (12, 0xAEF, "castl.", "castle."),
+    (123, 0x969, "warrrens", "warrens"),
+    (126, 0x80D, "parchement", "parchment"),
+    (135, 0x721, "resorceless", "resourceless"),
+    (139, 0x148B, "kepp", "keep"),
+    (139, 0x17AB, "fiercly", "fiercely"),
+    (156, 0x3C6, "paly", "play"),
+    (182, 0x989, "resistence", "resistance"),
+    (189, 0xC48, "seige", "siege"),
+    (190, 0xBA5, "sorceror-king's power, he layed", "sorcerer-king's power, he laid"),
+    (190, 0x165F, "sorceror", "sorcerer"),
+    (212, 0xFA6, "existance", "existence"),
+)
+
+
+def text_name(script: int, at: int) -> str:
+    """A text fix's name, as a copy's SKIP takes it."""
+    return f"text_{script}_{at:x}"
+
+
+def _mended(x, words: str, mended: str, count: list):
+    """X (a command's arguments) with WORDS made MENDED in its strings, COUNT[0] the strings changed."""
+    if isinstance(x, tuple) and len(x) == 2 and x[0] == "str" and isinstance(x[1], str):
+        if words in x[1]:
+            count[0] += 1
+            return ("str", x[1].replace(words, mended))
+        return x
+    if isinstance(x, tuple):
+        return tuple(_mended(y, words, mended, count) for y in x)
+    if isinstance(x, list):
+        return [_mended(y, words, mended, count) for y in x]
+    if isinstance(x, dict):
+        return {k: _mended(v, words, mended, count) for k, v in x.items()}
+    return x
+
+
+def _padded(x, pad: int):
+    """X (a command's arguments) with PAD spaces after its last string."""
+    done = [False]
+    def text(y):
+        return isinstance(y, tuple) and len(y) == 2 and y[0] == "str" and isinstance(y[1], str)
+    def walk(y):
+        if done[0]:
+            return y
+        if text(y):
+            if y[1] == "<name>":
+                return y
+            done[0] = True
+            return ("str", y[1] + " " * pad)
+        if isinstance(y, (list, tuple)):
+            items = [walk(v) for v in reversed(y)][::-1]
+            return items if isinstance(y, list) else tuple(items)
+        if isinstance(y, dict):
+            vals = {k: walk(y[k]) for k in reversed(list(y))}
+            return {k: vals[k] for k in y}
+        return y
+    return walk(x)
+
+
+def text_repairs(fixes: Sequence[Tuple[int, int, str, str]], script: int, code: bytes,
+                 field_types: bytes = b"", strict: bool = False) -> List[Repair]:
+    """FIXES' (TEXT_FIXES' form) for GPL SCRIPT (CODE) as Repair's: each command whole, its strings
+    mended (a shorter command padded with spaces after its last string to its length). One not found as
+    expected is left out, or with STRICT raises gpl.ScriptError."""
+    out = []
+    for number, at, words, mended in fixes:
+        if number != script:
+            continue
+        try:
+            op = gpl.op_at(code, at, field_types)
+            was = gpl.encode_op(op)
+            count = [0]
+            args = _mended(op.args, words, mended, count)
+            if code[at:at + len(was)] != was or count[0] != 1:
+                raise gpl.ScriptError(f"no {words!r} at {at:X}h")
+            now, pad = gpl.encode_op((op.code, args)), 0
+            while len(now) < len(was):
+                pad += 1
+                if pad > 8:
+                    raise gpl.ScriptError(f"no string to pad at {at:X}h")
+                now = gpl.encode_op((op.code, _padded(args, pad)))
+        except gpl.ScriptError:
+            if strict:
+                raise
+            continue
+        out.append(Repair(script, at, was, now, text_name(script, at)))
+    return out
+
+
 def repaired(script: int, code: bytes, repairs=None, longest: int = 0) -> bytes:
     """CODE (GPL SCRIPT) with the repairs that fit it (REPAIRS, or Wake of the Ravager's), no longer
     than LONGEST (else the game's: SCRIPT_BUFFER less a margin): a longer one run from after the
@@ -336,11 +443,11 @@ def _longest() -> int:
 def script_chunks(chunks, out: Dict[Tuple[str, int], bytes]) -> Dict[Tuple[str, int], bytes]:
     """The repaired scripts, each from OUT (the Loader's changes so far) or else CHUNKS (the game's)."""
     changed: Dict[Tuple[str, int], bytes] = {}
-    for script in sorted({r.script for r in REPAIRS}):
+    for script in sorted({r.script for r in REPAIRS} | {t[0] for t in TEXT_FIXES}):
         key = ("GPL ", script)
         code = out.get(key, chunks.get(key))
         if code is not None:
-            fixed = repaired(script, code)
+            fixed = repaired(script, code, [r for r in REPAIRS if r.script == script] + text_repairs(TEXT_FIXES, script, code))
             if fixed != code:
                 changed[key] = fixed
     return changed

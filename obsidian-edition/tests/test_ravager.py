@@ -569,10 +569,11 @@ class GameFileTests(unittest.TestCase):
                 script[offset:offset + len(original)] = replacement
                 fixed[key] = bytes(script)
             from dsloader import scriptfixes
-            for number in {r.script for r in ravager.SCRIPT_DETOURS}:
+            for number in {r.script for r in ravager.SCRIPT_DETOURS} | {t[0] for t in ravager.TEXT_FIXES}:
                 key = ("GPL ", number)
                 fixed[key] = scriptfixes.repaired(number, fixed.get(key, own[key]), [
-                    r for r in ravager.SCRIPT_DETOURS if r.script == number], ravager.SEQUEL_LONGEST)
+                    r for r in ravager.SCRIPT_DETOURS if r.script == number] + ravager.text_repairs(number, own[key]),
+                    ravager.SEQUEL_LONGEST)
             faces = {k for k in own if k[0] == "PORT"}  # (made smaller: ravportraits)
             self.assertEqual(set(gpl), set(own))
             self.assertEqual({k for k in own if own[k] != gpl[k] and k[0] != "GFFI"}, set(fixed) | faces)
@@ -653,8 +654,7 @@ class GameFileTests(unittest.TestCase):
 
     def test_script_fix_skipped(self):
         data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
-        same, done = ravager.script_fixed(data, set(ravager.SCRIPT_FIXES) | {r.what for r in ravager.SCRIPT_DETOURS}
-                                          | {ravportraits.SKIP})
+        same, done = ravager.script_fixed(data, set(ravager.script_fix_names()) | {ravportraits.SKIP})
         self.assertEqual((same, done), (data, []))
 
     def test_script_fixes_decode(self):
@@ -677,6 +677,62 @@ class GameFileTests(unittest.TestCase):
                 for o in gpl.walk(ops):
                     if o.code in (0x3E, 0x3F, 0x64) and o.args[0][0] == "n":
                         self.assertIn(o.args[0][1], starts, f"{o.code:02X}h at {o.at:X}h")
+
+    def test_script_detours_decode(self):
+        """Every script a detour or a mended text lengthens decodes whole, no longer than the Loader's
+        script buffer runs, and every jump in it lands on a command."""
+        from dsloader import gpl
+        data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+        fixed, done = ravager.script_fixed(data)
+        self.assertTrue(set(ravager.script_fix_names()) <= set(done))
+        scripts, types = gpl.load_scripts(fixed)
+        for number in {r.script for r in ravager.SCRIPT_DETOURS} | {t[0] for t in ravager.TEXT_FIXES}:
+            with self.subTest(number):
+                code = scripts[("GPL ", number)]
+                self.assertLessEqual(len(code), ravager.SEQUEL_LONGEST)
+                ops = gpl.decode(code, types)
+                starts = {o.at for o in ops}
+                for o in gpl.walk(ops):
+                    if o.code in (0x3E, 0x3F, 0x64) and o.args[0][0] == "n":
+                        self.assertIn(o.args[0][1], starts, f"{o.code:02X}h at {o.at:X}h")
+
+    def test_race_and_sex_read_from_the_character(self):
+        """No script reads a race (41) or sex (42) straight off a creature any more: each through field 15,
+        the character's own record, as the rest of the sequel's scripts do."""
+        from dsloader import gpl
+        data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+        def reads(scripts, types):
+            got = {"own": 0, "through": 0}
+            def look(x):
+                if isinstance(x, gpl.Op):
+                    look(x.args)
+                elif isinstance(x, tuple) and len(x) == 3 and x[0] == "field" and x[2] and x[2][-1] in (41, 42):
+                    got["own" if len(x[2]) == 1 else "through"] += x[2] in ([41], [42], [15, 41], [15, 42])
+                elif isinstance(x, (list, tuple)):
+                    for y in x:
+                        look(y)
+                elif isinstance(x, dict):
+                    for y in x.values():
+                        look(y)
+            for code in scripts.values():
+                look(gpl.decode(code, types))
+            return got
+        before = reads(*gpl.load_scripts(data))
+        after = reads(*gpl.load_scripts(ravager.script_fixed(data)[0]))
+        self.assertEqual(before["own"], len(ravager.RACE_SEX))
+        self.assertEqual(after, {"own": 0, "through": before["through"] + len(ravager.RACE_SEX)})
+
+    def test_text_mended(self):
+        """Each typo's command prints the mended words, and the typo is nowhere in it."""
+        from dsloader import gpl
+        data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+        own, _ = gpl.load_scripts(data)
+        scripts, types = gpl.load_scripts(ravager.script_fixed(data)[0])
+        for number, at, words, mended in ravager.TEXT_FIXES:
+            with self.subTest(f"{number} {words}"):
+                printed = " ".join(t for o in gpl.decode(scripts[("GPL ", number)], types) for t in gpl.strings(o) if t)
+                self.assertIn(mended, printed)
+                self.assertNotIn(words, printed)
 
     def test_vouchers_sold_327_at_most(self):
         """Each cashier caps the vouchers counted at 327 before the game's sums (its total, vouchers times

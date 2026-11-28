@@ -28,7 +28,7 @@ whole (`test_ravager`'s `test_script_fixes_decode`, `test_ptar_key_is_taken_once
 | 6 | Low | GPL 45 at CDBh (a camp's leaders and peons) | Each peon kind is given its look handler (the leaders -137, -131, -135, -133, their peons -138, -132, -136, -134); the last peon's went to -133, its leader, so peon -134 had no look text. | -134. |
 | 7 | Low | GPL 254 at B30h (a talk in the forest) | "I'm not scared to have a magician along" tested the class bits against 398 (18Eh: psionicist, preserver and three of the four clerics), leaving out the air cleric and the druid, who heard "We could use another sword-arm"; no other class test in the scripts leaves one cleric out. | 415 (19Fh, the casters, as GPL 195 at B80h and 46 at E36h test them). |
 
-## Found, waiting for room (they make a script longer)
+## Fixed in the follow-up, with the bigger script buffer (#315)
 
 - **Race and sex read from the combat record** (low): the same bug the Loader's sweep and yuan-ti found in
   Shattered Lands. The sequel's scripts read a character's race and sex through field 15 (the character's
@@ -37,20 +37,14 @@ whole (`test_ravager`'s `test_script_fixes_decode`, `test_ptar_key_is_taken_once
   "bug" or told of its mandibles, a woman never "lass", "girl", "her" or "woman", the halfling's "you're a
   halfling, too" and the races' insults never fit. GPL 31 at 975h, 35 at 1E3h, 46 at 2AEh, 64 at 8E7h,
   103 at 340h, 104 at F4Dh, 111 at 60Dh, 115 at 2086h, 125 at 9A5h, 126 at 339h, 149 at 78Fh, 219 at FBAh
-  and 1569h, 248 at 25D3h, 254 at FC7h (next to a `.15.42` test of its own), 295 at A79h, 307 at BA5h. Each
-  needs one byte more (the `.15`): Shattered Lands' detour (`scriptfixes.repaired`) once the buffer is
-  bigger. GPL 248 is already 9,982 bytes.
-- **Typos in the text** (low): a fix that changes a string's length needs a detour too. The clear ones:
-  acquaintence (GPL 134, 261), adressed (69), aliance (34, twice), aproached (60), aquaintance (242),
-  artristry (161), awfull (65), bracelt (18), bretheren (110), businees (136), ceremaic and Bohumir for
-  Bohimur (128; Bohumir in 134 too), chadelier (105), clorored and headress (60), comissioned (221),
-  competion's (155), cretures (88), embarassing (83), encorcelled (60), endebted (330), formidible (129),
-  infomation, ingrediant(s), memmories, neclace, occaisionally, occurances, parargraph, perhpass,
-  persistant, poisonus, recieve(s), reknowned, responsibilites, ressurect (256), resetd (127), saftey,
-  somone, somthing, sorrounded, soutwest, stangers, suddlenly, synposis, thier, tourquoise, unmistakeable,
-  vengance, villian, volunteeer, waitng, weilded, wthout, Noretmus for Nortemus, Solurnus beside Solurnis.
-  (The sweep's word list, with each script and place, is easy to make again: every string through a
-  dictionary; the dialects, hisses and the mind flayer's victim's run-together words are meant.)
+  and 1569h, 248 at 25D3h, 254 at FC7h, 295 at A79h, 307 at BA5h. Each now reads through field 15
+  (`ravager.RACE_SEX`, a detour each); in play a thri-kreen woman's reads gave 8 and 2 (0 before).
+- **Typos in the text** (low): 56 mended (`ravager.TEXT_FIXES`), from acquaintence to wthout, with
+  "Youa re", "none your businees", "hidden the niche", "reknowned for for" and "resetd healed" (rested and
+  healed). Left as written: the yuan-ti's hisses (Perhpass, requessted), Bohumir (the scripts' only
+  spelling), the sarcastic 'volunteeer', "unmistakeable" (a British spelling) and "gains access to the,"
+  (the missing word unknown). Shattered Lands' text through the same dictionary: 25 mended
+  (`scriptfixes.TEXT_FIXES`); its first letters printed apart (`ithout`, `owever`) are meant.
 
 ## Probable, left as the game has them
 

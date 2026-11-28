@@ -35,14 +35,24 @@ def move(region: int, col: int, row: int) -> bytes:
             + row.to_bytes(2, 'big') + bytes([NUMBER, 0]) + END)
 
 
+def talk_at(copy: bytes, talk: bytes) -> int:
+    """Where the talk (ENTRY of GPL 140, TALK the game's) starts in COPY: in its chunk the copy's index
+    names (a copy whose scripts the Loader lengthened keeps the old chunks' bytes too, unindexed)."""
+    from dsloader import gff
+    places = gff.index_places(copy, "GPL ")
+    if TALK not in places:
+        raise SystemExit("no GPL 140 in the script copy")
+    start = places[TALK][1]
+    if copy[start + ENTRY + 20:start + ENTRY + 300] != talk[ENTRY + 20:ENTRY + 300]:
+        raise SystemExit("Reyhan's talk not as the game's in the script copy (already replaced? start the game again)")
+    return start + ENTRY
+
+
 def patch(copy: bytes, talk: bytes, region: int, col: int, row: int) -> bytes:
     """COPY (the script file) with TALK (the game's own GPL 140) found by its body, its talk made the jump."""
-    key = talk[ENTRY + 20:ENTRY + 300]
-    at = copy.find(key)
-    if at < 0 or copy.find(key, at + 1) >= 0:
-        raise SystemExit("Reyhan's talk not found once in the script copy")
+    at = talk_at(copy, talk)
     out = bytearray(copy)
-    out[at - 20:at - 7] = move(region, col, row)
+    out[at:at + 13] = move(region, col, row)
     return bytes(out)
 
 
