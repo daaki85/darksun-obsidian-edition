@@ -2,7 +2,7 @@
 
 ## Project progress
 
-All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added 15 pictures, including the stocked round table used four times in Volcano 1. Six cover the empty throne summoned from Limbo into El’s Temple, three different mine chests, the kitchen crates and the upright polearm stand shared by three regions. Another eight form five two-piece worktables in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
+All 20 shipped region files have been scanned. The first eight passes revised 140 pictures at 387 placements across 16 regions. Follow-up checks added 20 pictures, including the stocked round table used four times in Volcano 1, three silver furnishings and two side-facing counters. Six cover the empty throne summoned from Limbo into El’s Temple, three different mine chests, the kitchen crates and the upright polearm stand shared by three regions. Another eight form five two-piece worktables in Mines 3. The four regions with no new furniture squash in the first eight passes were Mosaic, Volcano 3, the Temple of the Cosmos and Limbo. The first three have recorded decisions on puzzle fixtures or terrain. Limbo holds objects the game can bring into other areas.
 
 Live checks cover all four two-piece red beds in Tyr, both headquarters layouts and Mines 1. The Alliance storeroom stacks, Notaku’s stall and a chair in Tyr, and the complete Mosaic museum puzzle and exit have also been checked. All eleven inventoried Yuan-ti furniture placements have now been seen in DOSBox, including the two storage piles from the figure redraw. The Volcano pass covers all 21 inventoried shelves, the set dining tables and the second torn-bed design, including its other placement in Tyr. The wider all-area review is still open. Ikibod’s work surface, the six temple braziers and Tantris leaving his throne have now been checked in play. The wizard’s potion and tapestry sequence is still open. The Mines 3 dining sequence, tank destruction and prisoner release have been checked in DOSBox. The Cosmos ritual remains open. [Mosaic in DOSBox](#live-check-in-the-mosaic-museum)
 
@@ -288,15 +288,27 @@ All 21 original Volcano shelf placements were checked against the stock game. Fo
 
 Another torn blanket was split across the bed pictures from the figure redraw. The head (530) and foot (531) overlap by five rows in both Volcano 1 and Tyr. The repaired blanket uses the joined 68-row drawing, lowered once to 45 visible rows. The turquoise bed nearby already has a single continuous drawing. [Both torn beds before and after repair](volcano-tyr-torn-bed-live.png) · [Playtest and room coordinates](../../playtest/logs/2026-11-27-ravager-volcano-furniture.md)
 
+## Silver furnishings and side-facing counters
+
+Volcano 1 has seven silver stools together in one room. Their 24-pixel width stays the same while their visible height drops from 30 to 20 pixels. The larger silver table drops from 44 rows to 29. The two matching rolled seats behind the tables each need their own placement adjustment. In Volcano 2 the seat still tucks under the table. In Volcano 1 the feet just meet its back edge. The other three tables keep their floor points.
+
+![Silver furnishings and counters in DOSBox before and after, beside original Shattered Lands rooms](silver-furniture-live.png)
+
+The narrow displays along the walls are counters viewed from the side. Compressing the whole picture flattened the jug and shortened the row of goods along the wall. Shortening only the bottom 18 rows lowers the top by six pixels. All 12 counters were reviewed in both builds, including four that face the opposite way and four shared by the intact and ruined Alliance layouts.
+
+![Whole Volcano and Alliance maps before and after, beside the upper castle, Gedron and the lower castle](silver-furniture-whole-maps.png)
+
+Both Ravager close-up columns use the mod’s figure redraws. All five furnishings still matched stock before this pass. [All 11 rooms in DOSBox](silver-furniture-all-rooms.png) · [Placement ledger and both seat joins](../../playtest/logs/2026-11-27-ravager-silver-furniture.md)
+
 ## Region work queue
 
-The scan covered all 20 shipped region files. Four regions now have in-game coverage for every placement currently listed in the furniture inventory: Mines 3 (72), the Yuan-ti tunnels (11), Volcano 1 (32) and Volcano 2 (46). The other 16 regions still have entries requiring room or interaction checks. The Volcano rooms have additional scenery outside the inventory, including the silver furnishings and narrow side-facing shelves. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
+The scan covered all 20 shipped region files. Four regions now have in-game coverage for every placement currently listed in the furniture inventory: Mines 3 (72), the Yuan-ti tunnels (11), Volcano 1 (48) and Volcano 2 (57). The other 16 regions still have entries requiring room or interaction checks. The counts below are distinct picture references in each region's placement table before object-picture remaps, using the installed Mines 3 placement override. Pictures shared between regions count once in each. The two furniture columns count placements in the first eight passes, including repeats. The subsequent polearm change covers two stands in Mines 3, one in the Yuan-ti tunnels and one in Volcano 2. The last column names the next review for that region.
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
 | 001 Forest | 252 | 0 | 56 | The green-rug dining room was checked in play. Revisit the other table groups and the remaining furnishings |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
-| 033 Veiled Alliance | 195 | 21 | 78 | Red beds and intact storage stacks checked in play. Check remaining ruined fixtures and pillows |
+| 033 Veiled Alliance | 195 | 21 | 78 | Red beds, intact storage stacks and four side-facing counters checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |
 | 036 Yuan-ti | 104 | 3 | 5 | All eleven inventoried furniture placements checked in play, including three shelves and both redrawn storage piles |
 | 037 Temple | 62 | 0 | 6 | Six braziers, the vacated throne and Pavis leaving the basin verified. Check the prisoner’s fixture |
@@ -305,8 +317,8 @@ The scan covered all 20 shipped region files. Four regions now have in-game cove
 | 03A Mines 3 | 219 | 8 | 12 | Dining, tank, throne, chest, prisoner release and all three weapon displays checked in play. All eight shelves, loose furniture, five worktables and all safe poses checked. Both forge-throne poses, the kettle and four winged statues reviewed. All 72 inventoried placements have in-game coverage |
 | 03B Jann | 173 | 0 | 15 | Check cushion piles and baskets in play, and the covered wagon in both states |
 | 03C Mosaic | 89 | 0 | 0 | Museum exit and Ikibod’s occupied workbench verified. Check the potion and tapestry sequence |
-| 03D Volcano 2 | 143 | 15 | 23 | All 46 listed placements checked in play, including 15 shelves and the repaired barrel stack. Review the silver furnishings and side-facing shelves |
-| 03E Volcano 1 | 133 | 6 | 19 | All 32 listed placements checked in play, including the redrawn beds, six shelves, four set tables and both stocked counters. Review the silver furnishings and side-facing shelves |
+| 03D Volcano 2 | 143 | 15 | 23 | All 57 listed placements checked in play, including 15 front-facing shelves, five side-facing counters, six silver furnishings and the repaired barrel stack |
+| 03E Volcano 1 | 133 | 6 | 19 | All 48 listed placements checked in play, including the redrawn beds, six front-facing shelves, four set tables, three side-facing counters and 13 silver furnishings |
 | 03F Volcano 3 | 95 | 0 | 0 | Lava spires reviewed at terrain height. Check the remaining scenery in play |
 | 041 Giants | 216 | 0 | 11 | Check the plank tables, red chairs and Generoe’s rocker in play |
 | 042 Cloud | 131 | 0 | 3 | Check the jars in play and the occupied bed through Melantha’s scene |

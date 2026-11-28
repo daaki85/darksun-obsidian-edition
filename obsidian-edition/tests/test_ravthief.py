@@ -258,7 +258,7 @@ def real_mode_interrupt(mu, intno, _):
 class InGameCodeTests(unittest.TestCase):
     """The patched sites in the game's own code (DSUN.EXE's bytes, the Loader's patches on), INT F5h
     dispatched through DSCLOG2's SITE."""
-    CODE = 0x2000
+    CODE = 0x3000  # Place the game code beyond the helper and its interrupt dispatch tables.
 
     @classmethod
     def setUpClass(cls):
@@ -274,7 +274,7 @@ class InGameCodeTests(unittest.TestCase):
         cls.exe = bytes(game_exe)
 
     def run_game(self, rules, start, stops, setup, **regs):
-        """The game's code from file offset START (as CS 2000h:0) to the first of STOPS (file offsets),
+        """The game's code from file offset START (as CODE:0) to the first of STOPS (file offsets),
         SETUP(mu) first: (the machine, the stop reached)."""
         mu = Uc(UC_ARCH_X86, UC_MODE_16)
         mu.mem_map(0, 0x100000)
@@ -282,6 +282,7 @@ class InGameCodeTests(unittest.TestCase):
         mu.mem_write(TSR * 16 + self.sym["rules"], struct.pack("<H", rules))
         mu.hook_add(UC_HOOK_INTR, real_mode_interrupt)
         mu.mem_write(0xF5 * 4, struct.pack("<HH", self.sym["site_int"], TSR))
+        self.assertLessEqual(TSR * 16 + len(self.image), self.CODE * 16)
         mu.mem_write(self.CODE * 16, self.exe[start:start + 0x200])
         setup(mu)
         values = dict(cs=self.CODE, ds=GAME_DS, ss=SS, esp=0x5C0, ebp=BP, eflags=0x202)

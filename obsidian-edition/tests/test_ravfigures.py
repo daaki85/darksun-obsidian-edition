@@ -203,8 +203,9 @@ class GameFileTests(unittest.TestCase):
         changed = ravfigures.region_chunks("RGN03D.GFF", stock)[key]
         records = struct.Struct("<HHBBh")
         differences = [(a, b) for a, b in zip(records.iter_unpack(stock[key]), records.iter_unpack(changed)) if a != b]
-        self.assertEqual(len(differences), 1)
-        before, after = differences[0]
+        barrels = [(a, b) for a, b in differences if a[4] in (10649, 10650)]
+        self.assertEqual(len(barrels), 1)
+        before, after = barrels[0]
         self.assertEqual((before[:3], before[4]), ((1200, 1392, 0), 10650))
         self.assertEqual(after, (1200, 1400, *before[2:]))
 
@@ -229,6 +230,26 @@ class GameFileTests(unittest.TestCase):
             expected = imported.copy()
             ravfigures._lower_mine_worktables(stock, imported)
             self.assertEqual(imported, expected)
+
+    def test_silver_seats_follow_their_own_table_depth(self):
+        record = struct.Struct("<HHBBh")
+        for name, seat, table, expected in (("RGN03D.GFF", 10594, (830, 133), 111),
+                                            ("RGN03E.GFF", 10796, (1702, 1102), 1074)):
+            with open(os.path.join(WOTR, name), "rb") as f:
+                stock = gff.read_gff(f.read())
+            key = ("ETAB", int(name[3:6], 16))
+            revised = ravfigures.region_chunks(name, stock)
+            old_rows = list(record.iter_unpack(stock[key]))
+            new_rows = list(record.iter_unpack(revised[key]))
+            self.assertEqual(len(old_rows), len(new_rows))
+            changes = [(a, b) for a, b in zip(old_rows, new_rows) if a != b and a[4] != 10650]
+            self.assertEqual(len(changes), 1)
+            before, after = changes[0]
+            self.assertEqual(before[4], seat)
+            self.assertEqual(after, (before[0], expected, *before[2:]))
+            self.assertEqual(table[1] - expected, round((table[1] - before[1]) * 0.66))
+            self.assertTrue(any(row[:2] == table for row in new_rows))
+            self.assertEqual(ravfigures.region_chunks(name, revised), {})
 
     def test_volcano_shelves_keep_every_occupied_row(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
@@ -340,6 +361,7 @@ class GameFileTests(unittest.TestCase):
             offsets = {
                 9: (0, 2, 3, 5, 6, 8),
                 16: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15),
+                18: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17),
                 22: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21),
                 43: (0, 2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24,
                      26, 27, 29, 30, 32, 33, 35, 36, 38, 39, 41, 42),

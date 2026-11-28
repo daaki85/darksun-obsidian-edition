@@ -37,7 +37,7 @@ SKIP = "figures"  # (ravager's SKIP name: the copies without them, RAV_SKIP's co
 MANIFEST = "manifest.json"
 FILES = ("OBJEX.GFF", "RESOURCE.GFF", "RGN03A.GFF")  # Files with imported catalogue chunks.
 REGIONS = {"RGN001.GFF": "RGN0012.GFF", "RGN033.GFF": "RGN0332.GFF", "RGN03A.GFF": "RGN03A2.GFF",
-           "RGN03D.GFF": "RGN03D2.GFF"}
+           "RGN03D.GFF": "RGN03D2.GFF", "RGN03E.GFF": "RGN03E2.GFF"}
 PICTURE = 12  # (OJFF: the object's picture's number, a word)
 KINDS = ("BMP ", "CBMP", "SCMD", "ETAB")  # (the chunks DATA may hold)
 CLEAR_EDGE = (("CBMP", 2409),)  # (pack: a drawing's background made clear, see above)
@@ -56,13 +56,14 @@ STORAGE = (532, 533, 1014, 1015, 1016, 1135, 2220, 2221, 2222, 2223, 2225, 2354,
 TABLES = (515, 517, 628, 629, 630, 2050, 2585, 2589, 2625, 2626, 2627,
           2703, 2793, 3247, 3248, 3249, 3503, 3504, 3505, 3525, 3695, 3698, 3824, 3825, 3828, 3830, 3871)
 SEATING_AND_BEDS = (522, 523, 541, 543, 544, 545, 546, 626, 627, 632, 633, 634, 635, 789, 2218,
-                    2590, 2591, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
+                    2590, 2591, 2622, 2704, 2789, 2790, 2824, 2840, 3078, 3246, 3276, 3442, 3443, 3627, 3628,
                     3629, 3699, 3793, 3826, 3829, 3835, 3836, 3870)
 OPENABLE = (631, 1112, 1113, 1136, 2825, 3250)  # Two stored states, each with its original SCMD.
 FURNITURE = SHELVES + STORAGE + TABLES + SEATING_AND_BEDS + OPENABLE
 
 # Only these bottom rows take the Tyr scale. Keep cushion faces, brazier smoke and the tips of the polearms intact.
-BASE_ROWS = {1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43}
+BASE_ROWS = {1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2732: 22, 2733: 22, 2796: 43,
+             3485: 18, 3486: 18}
 
 # Each assembly uses the same floor line for the pictures and their attached pieces.
 # The four placement fields are stock object, x, y and the new y. Other placements
@@ -90,6 +91,9 @@ ASSEMBLIES = (
     )),
     ("RGN03A.GFF", (2785, 2786), ((10347, 223, 737, 747),)),
     ("RGN03D.GFF", (532, 533), ((10650, 1200, 1392, 1400),)),
+    # The silver seat sits at a different depth behind each table (33 and 43 rows).
+    ("RGN03D.GFF", (2621, 2623), ((10594, 832, 100, 111),)),
+    ("RGN03E.GFF", (2621, 2623), ((10796, 1703, 1059, 1074),)),
     (None, (2794, 2795), ()),  # Weapons cross the join in both the Yuan-ti tunnels and Mines 3.
 )
 
