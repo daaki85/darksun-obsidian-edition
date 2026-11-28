@@ -12282,7 +12282,8 @@ ef_lines_of:
 .kit_next:
         dec di
         jns .kit
-.specs: test word [cs:rules], RULE_SPECIALIZE
+.specs: call ef_own_lines               ; (the own party's features: a line each, as DSCLOG's OWN_LINES)
+        test word [cs:rules], RULE_SPECIALIZE
         jz .ret
         xor di, di
 .slot:  cmp di, SPEC_ALL
@@ -12343,6 +12344,48 @@ ef_lines_of:
         cmp di, SPEC_ALL
         jbe .slot
 .ret:   ret
+
+; EF_OWN_LINES: the sequel's own party's features of their own (OWN_RACE_B, kits.own_features), a line each
+; through EF_LINE, as DSCLOG's OWN_LINES (Shattered Lands' Cilla shows SHADOW-WALKER): a half-giant WILD
+; FIGHTING (Gerakis); a thri-kreen OPEN SKY SPELLS/PSI with a psionicist class (Shattered Lands' K'ratchek),
+; else GROVE WARDEN AC (Thy'rokh); an elf SHADOW-WALKER, and with no druid class LIGHT ARMOUR CASTING too
+; (Ar'Anda, whose panel was empty: no kit, no warrior class, 2026-11-28). Sheet ES:BX; all registers kept.
+ef_own_lines:
+        push ax
+        push si
+        call own_race_b
+        jz .out
+        mov si, own_wild
+        cmp al, 5
+        je .one
+        cmp al, OWN_KREEN
+        jne .elf
+        mov al, OWN_PSI
+        call own_has
+        mov si, own_sky
+        je .one
+        mov si, own_warden
+        jmp .one
+.elf:   cmp al, OWN_ELF
+        jne .out
+        mov si, own_shadow
+        call ef_line
+        mov al, 5               ; (the druid's classes, 5-8: OWN_LIGHT's)
+.druid: call own_has
+        je .out
+        inc al
+        cmp al, 8
+        jbe .druid
+        mov si, own_light_line
+.one:   call ef_line
+.out:   pop si
+        pop ax
+        ret
+own_wild       db 'WILD FIGHTING', 0
+own_sky        db 'OPEN SKY SPELLS/PSI', 0
+own_warden     db 'GROVE WARDEN AC', 0
+own_shadow     db 'SHADOW-WALKER', 0
+own_light_line db 'LIGHT ARMOUR CASTING', 0
 
 ; EF_LINE: CS:SI EF_DRAW's next line: counted (EF_INDEX), and put on the panel (EF_PUT) if drawing and on
 ; the page shown. All registers kept. (DSCLOG's.)

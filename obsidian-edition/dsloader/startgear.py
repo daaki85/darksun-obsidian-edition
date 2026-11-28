@@ -85,6 +85,42 @@ def _weapon(gd, sheet: bytes, kind: int, read) -> Optional[Tuple[bytes, Tuple[in
     return None
 
 
+def weapon_hand(gd, member: int) -> List[str]:
+    """Party member MEMBER's weapon in the weapon hand and its shield in the other (both games, 2026-11-28):
+    a shield in the right hand (the one the attacks a round are counted for) goes to the left, a weapon
+    there coming to the right in its place; a melee weapon alone in the left hand goes to the right. Wake of
+    the Ravager's own party starts so (Terrannus: his Shield +1 in the right hand, his Longsword +1 in the
+    left; defaultparty.rav_hands), as did its new characters before ravager.GEAR_HANDS; Shattered Lands'
+    game keeps the weapon in the right hand, so this is a safety net there. Lines for the log."""
+    from . import pickpocket, ring
+    types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
+    read: Callable[[int], bytes] = lambda t: gd.guest.read(types + t * game.ITEM_TYPE_SIZE, game.ITEM_TYPE_SIZE)
+    owned = list(gd._worn(member))
+    at = lambda slot: next(((i, item) for i, item, _ in owned if item[game.ITEM_SLOT] == slot), None)
+    flags = lambda item: read(_type(item))[0] if _type(item) < game.NO_ITEM else 0
+    shield = lambda found: found is not None and bool(flags(found[1]) & restrict.SHIELD)
+    melee = lambda found: found is not None and bool(flags(found[1]) & restrict.MELEE) and not shield(found)
+    right, left = at(RIGHT), at(LEFT)
+    who = gd.creature_name(member)
+    name = lambda item: gd.item_name(struct.unpack_from("<H", item, game.ITEM_NAME)[0])
+    if shield(right) and not shield(left):
+        if left is not None:
+            cell = pickpocket.free_cell(gd, ring.Items(gd), member)
+            if cell is None or not pickpocket.place(gd, member, right[0], cell):
+                return []
+            if not pickpocket.place(gd, member, left[0], RIGHT):
+                pickpocket.place(gd, member, right[0], RIGHT)  # (as it was)
+                return []
+        if not pickpocket.place(gd, member, right[0], LEFT):
+            return []
+        if left is None:
+            return [f"{who}'s {name(right[1])} goes to the left hand: the right is the weapon hand"]
+        return [f"{who}'s {name(left[1])} goes to the right hand, the weapon hand, and the {name(right[1])} to the left"]
+    if right is None and melee(left) and pickpocket.place(gd, member, left[0], RIGHT):
+        return [f"{who}'s {name(left[1])} goes to the right hand, the weapon hand"]
+    return []
+
+
 def fill(gd) -> List[str]:
     """The party's New characters' starting gear filled out (the module's notes): lines for the log."""
     out: List[str] = []
@@ -137,6 +173,10 @@ def fill_member(gd, member: int) -> List[str]:
             if restrict.is_armour(read(_type(item))) \
                     and ring.unlink(gd, ring.Items(gd), item_index, "starting gear", empty=True):
                 out.append(f"{who}'s {name(item)} is left behind: a multiclass preserver can't cast in armour")
+
+    # the weapon in the weapon hand, the shield in the other (weapon_hand)
+    out += weapon_hand(gd, member)
+    owned = list(gd._worn(member))
 
     # a melee weapon in hand (HANDS)
     melee = lambda item: bool(read(_type(item))[0] & restrict.MELEE) and can_use(gd, sheet, _type(item), read(_type(item)))

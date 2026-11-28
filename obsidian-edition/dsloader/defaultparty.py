@@ -325,6 +325,39 @@ def rav_ready(gd: GameData, rules: int) -> List[str]:
     return out
 
 
+def rav_hands_due(gd: GameData) -> List[int]:
+    """The sequel's own party's members (rav_who) not yet made ready (no OWN_BIT: rav_ready marks them) whose
+    shield is in the weapon hand: the game starts Terrannus with his Shield +1 in the right hand, his Longsword +1
+    in the left, one swing a round (2026-11-28). Shattered Lands' own party starts with the weapons in the right
+    hand already."""
+    from . import kits
+    types = game.far_pointer(gd.guest, gd.ds, game.ITEM_TYPES_PTR)
+    right = game.WEAPON_HANDS[0]
+    out = []
+    for member in range(game.PARTY_SIZE):
+        if not rav_who(gd, member):
+            continue
+        byte = gd.sheet(member)[kitpages.KIT_BYTE]
+        if byte != kits.KIT_OPEN and byte & kits.OWN_BIT:
+            continue
+        for _, item, _ in gd._worn(member):
+            kind = struct.unpack_from("<H", item, game.ITEM_TYPE)[0]
+            if item[game.ITEM_SLOT] == right and kind < game.NO_ITEM \
+                    and gd.guest.read(types + kind * game.ITEM_TYPE_SIZE, 1)[0] & restrict.SHIELD:
+                out.append(member)
+    return out
+
+
+def rav_hands(gd: GameData, members: List[int]) -> List[str]:
+    """MEMBERS' (rav_hands_due's) weapons put in the weapon hand, their shields in the other
+    (startgear.weapon_hand). Lines for the log."""
+    from . import startgear
+    out: List[str] = []
+    for member in members:
+        out += startgear.weapon_hand(gd, member)
+    return out
+
+
 def rav_ranges(gd: GameData) -> List[Tuple[int, int]]:
     """The bytes rav_ready writes: each party member's sheet's packed specs and kit byte."""
     out = []
