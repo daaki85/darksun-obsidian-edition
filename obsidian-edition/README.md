@@ -290,6 +290,14 @@ don't apply to it. Double-clicked on its own, in or beside this folder, it offer
 with the Obsidian Edition" once the Loader has prepared the `dos` folder (the first start through
 the Loader does that).
 
+**Wake of the Ravager** runs on it too, with the mod, when the program has the sequel's mod built in
+(its zip has a `build\ds2o` folder beside `dsun.exe`): **Play Wake of the Ravager** then starts it
+instead of DOSBox, the same way, after making the sequel's copies and widening the roster's sheets
+as for DOSBox. An older program without it is passed over and the sequel starts in DOSBox. On its
+own, the program offers "Wake of the Ravager with the Obsidian Edition" once the Loader has started
+the sequel once. It unpacks the CD's files from `game.gog` into a `cd` folder in the sequel's folder
+the first time.
+
 ## The Loader's window
 
 The window has the party on one side and the logs and tools on the other, with
