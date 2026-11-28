@@ -59,6 +59,17 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager, the hands-on checks of the quality-of-life port** (branch
+`claude/ravager-play-checks`). Every saving throw the sequel worked out with AD&D's tables (a new character on
+the creation screen, every level up) was nonsense since the helper's tail moved out of its segment (2026-11-27):
+DSCLOG2's SAVE_BASE read its bands through the tail's segment while they stayed in the segment (a new 7th-level
+fighter's 81/2/235/0/208; now 10/12/11/12/13, as the Player's Handbook has it). View Character's DAM line takes a
+wood, bone, stone or obsidian weapon's damage off as the inventory's line and the attack do (an Obsidian
+Dagger's 1D4+4 beside 1D4+3; SL's VIEW_MATERIAL, now in both games). The arrows label reads "Arrows: 24 left"
+in the sequel (its arrows are named "Arrow"). The Journal tab: Fayina's debt and the hermit's student show while
+open, and Dariya's quest says what its reward is for (her judgment, not the root). **Dev:** the level-cap rig
+reads the save bands where the helper keeps them; a VIEW_MATERIAL test.
+
 **New: Wake of the Ravager, the Journal tab's quests** (branch `claude/ravager-quests`). The Quests list
 shows the sequel's own: 42 deeds read from its scripts (`dsloader/ravquests.py`), each finished by the flag set
 beside its reward (the sequel's flags at DS:15F2h, SAVE chunk 30) or by its reward's message; three show while

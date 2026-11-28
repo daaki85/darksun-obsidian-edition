@@ -682,6 +682,33 @@ class KitTests(unittest.TestCase):
                 self.assertEqual(got, want, (level, skill))
                 self.assertEqual(struct.unpack("<H", self.mu.mem_read(rates, 2))[0], 5)
 
+    def test_view_material(self):
+        """VIEW_MATERIAL takes a weak material's damage off View Character's bonus as the inventory's line and
+        the attack do (an Obsidian Dagger's 1D4+4 there beside the inventory's 1D4+3, 2026-11-28): 2 for wood,
+        1 for bone, stone or obsidian; nothing for metal, a club's or a staff's (80h), no material (40h), a
+        weapon with a plus, or no item."""
+        items_at = 0x8000
+        bp = 0x600
+        self.mu.mem_write(GDS * 16 + 0x19C1, struct.pack("<HH", items_at, GDS))
+        self.mu.mem_write(GDS * 16 + 0x19CD, struct.pack("<HH", TYPES_AT, GDS))
+        cases = ((0, 0, 2), (1, 0, 1), (2, 0, 1), (3, 0, 1), (4, 0, 0), (5, 0, 0), (0x80, 0, 0), (0x40, 0, 0),
+                 (0, 1, 0), (3, 2, 0))
+        for kind, plus, less in cases:
+            with self.subTest(kind=kind, plus=plus):
+                typ = bytearray(15)
+                typ[4] = kind
+                self.mu.mem_write(GDS * 16 + TYPES_AT + 7 * 15, bytes(typ))
+                item = bytearray(0x17)
+                item[0x0A:0x0C] = struct.pack("<H", 7)
+                item[0x16] = plus
+                self.mu.mem_write(GDS * 16 + items_at + 3 * 0x17, bytes(item))
+                self.mu.mem_write(SS * 16 + bp - 0x0E, struct.pack("<hHH", 4, 0, 3))  # (the bonus 4; the item 3)
+                self.run_routine("view_material", b"", ebp=bp)
+                self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + bp - 0x0E, 2))[0], 4 - less)
+        self.mu.mem_write(SS * 16 + bp - 0x0E, struct.pack("<hHH", 4, 0, 9999))
+        self.run_routine("view_material", b"", ebp=bp)
+        self.assertEqual(struct.unpack("<h", self.mu.mem_read(SS * 16 + bp - 0x0E, 2))[0], 4)
+
     def test_kit_rolls_due(self):
         """KIT_ROLLS_DUE: KIT_REROLL due for the sheet being made's Battle Mage, Arcanist or Mind Warrior
         (KIT_ROW calls it with the kit before and after the click), not for another kit or none."""

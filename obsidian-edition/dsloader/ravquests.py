@@ -36,7 +36,8 @@ QUESTS: Tuple[Quest, ...] = (
           given=(F(337),), done=(F(341),), sites=((131, 4900), (131, 3702))),
     Quest("fayina", "Fayina's debt", "Tyr",
           "Acar let Fayina off her debt once Boric agreed to his terms.",
-          done=(F(324),), sites=((128, 7890),)),
+          "Fayina owes Acar money and asked the party to go and speak to him on her behalf.",
+          given=(F(325),), done=(F(324),), sites=((128, 7890),)),
     Quest("kalak-statue", "The way into Kalak's pyramid", "Tyr",
           "The stone medallion opened Kalak's statue and the stairs beneath it.",
           "A stone medallion turned up in a bookcase. It must fit something in the city.",
@@ -82,8 +83,10 @@ QUESTS: Tuple[Quest, ...] = (
           done=(F(178),), sites=((110, 1184), (110, 1189), (110, 1194), (110, 1199), (110, 1204),
                                  (110, 1209), (110, 1214))),
     # ---- Humbleton forest (region 1) ----
-    Quest("dariya-root", "Hudgerun root for Dariya", HUMBLETON,
-          "Dariya was brought the hudgerun root she asked for.",
+    # (94 is set, and the reward given, when she sends the party for the root: what the root itself
+    # earns, at 33's 206, is in LEFT_OUT)
+    Quest("dariya-judgment", "Dariya's judgment", HUMBLETON,
+          "Dariya judged the party's cause a fair one and sent it to her garden for hudgerun root.",
           done=(F(94),), sites=((32, 1014),)),
     Quest("obelisk-tracks", "Tracks by the obelisk", HUMBLETON,
           "A ranger found tracks in the dirt by the ruined obelisk.",
@@ -144,9 +147,11 @@ QUESTS: Tuple[Quest, ...] = (
     Quest("generoe-treasure", "Generoe's treasure", ISLANDS,
           "Generoe's buried treasure was dug up.",
           done=(F(598),), sites=((264, 293),)),
+    # (585 is cleared beside 584 as she goes free)
     Quest("acolyte", "The captive acolyte", ISLANDS,
           "An acolyte held captive on the islands was set free.",
-          done=(F(584),), sites=((264, 1545),)),
+          "The old hermit on the islands will help only once the party brings his missing student home.",
+          given=(F(585),), done=(F(584),), sites=((264, 1545),)),
     Quest("beastheads", "The beasthead giants' thanks", ISLANDS,
           "The beasthead giants rewarded the party for its service to all of Athas.",
           done=(F(588),), sites=((260, 1999),)),
