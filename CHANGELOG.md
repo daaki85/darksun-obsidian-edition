@@ -59,6 +59,19 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager, the bugs players report** (branch `claude/ravager-walkthrough-bugs`). The 49 bugs in
+the owner's walkthrough checked against the sequel's scripts and program ([the report](reports/ravager-walkthrough-bugs-2026-11-28.md)).
+Mended now: Resist Fire, Resist Cold, Protection from Fire and from Lightning and Fire Shield never halved a
+spell of fire or cold alone (the damage routine's test the wrong way round; seen in play, a saved Fireball's 11
+now 5); Detonate was never offered at a psionicist's level up; the ranger's warning of the forest ambush read a
+flag nothing sets; Xarax the alchemist's potion of Free Action was an object no file has (now made), his "an
+order is waiting" flag was never cleared and his brewing clock was shared with the earth temple's. And a mod
+bug: with the new wizard spells on, the psionic powerstone, Ioun stones and other items with an effect of their
+own were taken for a new spell's scroll (the wrong picture in their box, and their effect not ended when taken
+off); only scrolls and spellbooks are now. None of these is in Shattered Lands. **Dev:** patches
+`protection_halves` and `detonate_listed`; `ravager.free_action_potion`, `POTION_CLOCK`; DSCLOG2's `NS_BOOK`,
+`ravspells.PLUS1_ITEM`; `ravlevel.py powers MEMBER forget N`.
+
 **New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
 of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in
 (`build/ds2o` beside it: darksun-recompiled's new fifth build), after the same copies and widened sheets as a

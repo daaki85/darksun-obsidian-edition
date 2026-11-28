@@ -56,7 +56,7 @@ class TableTests(unittest.TestCase):
                             "psionic_blast", "blast_knockout", "rl_try", "roll_store", "gear_done",
                             "price_shown", "price_afford", "price_buy", "sell_price", "sell_keep",
                             "message_window", "message_shown", "text", "message", "mouse_init", "mouse_set", "speech_wait", "fli_key", "fli_end",
-                            "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
+                            "dual_level_window", "dual_old_prime", "dual_new_prime", "floor_all", "floor_rect", "protection_ac", "protection_save", "amulet_resistance", "weapon_cast", "worn_spell_off", "protection_halves", "detonate_listed", "join_ready", "tome", "plain_arrow", "spec_damage", "dam_line", "missile_line", "view_dam", "ef_rows", "ef_click", "unlook", "hit", "ranger_two", "greq_load", "shop_loop",
                             "sound_3c", "sound_3e", "sheet_party_loop", "sheet_table", "sheet_record_size",
                             "sheet_record_load", "sheet_save_size", "sheet_new_tail", "thief_table", "backstab_dice",
                             "cr_picks", "psi_grant", "psi_grant_psionicist", "psi_count", "psi_list", "psi_cycle",
@@ -771,6 +771,72 @@ class GameFileTests(unittest.TestCase):
                     yield from flags(y)
         read = {n: {f for f in flags(gpl.decode(scripts[("GPL ", n)], types))} for n in (29, 46, 47)}
         self.assertTrue(all(131 in f and 82 not in f for f in read.values()), read)
+
+    def test_walkthrough_scripts(self):
+        """The ranger's ambush warnings read the tracking roll's flag 70; Xarax's potions keep their hours in
+        number 160, which no game script used, and nothing of 229, 197 or 218 reads 113 any more (the
+        earth temple's GPL 200 still does); his batch flag is cleared before each order's batch question."""
+        from dsloader import gpl
+        data = open(os.path.join(WOTR, ravager.SCRIPT_FILE), "rb").read()
+        own, _ = gpl.load_scripts(data)
+        scripts, types = gpl.load_scripts(ravager.script_fixed(data)[0])
+        def numbers(code, kinds):
+            out = set()
+            def look(x):
+                if isinstance(x, gpl.Op):
+                    look(x.args)
+                elif isinstance(x, tuple) and len(x) == 3 and x[0] == "var" and x[1] in kinds:
+                    out.add(x[2])
+                elif isinstance(x, (list, tuple)):
+                    for y in x:
+                        look(y)
+                elif isinstance(x, dict):
+                    for y in x.values():
+                        look(y)
+            look(gpl.decode(code, types))
+            return out
+        for number, at in ((234, 0x2BA), (187, 0x12A0)):
+            by = {o.at: o for o in gpl.decode(scripts[("GPL ", number)], types)}
+            self.assertEqual((by[at].code, by[at].args), (0x18, [("var", 0x8D, 70)]))
+        self.assertFalse(any(424 in numbers(code, (0x8D, 0x0D)) for code in scripts.values()))
+        self.assertFalse(any(ravager.POTION_CLOCK_NUMBER in numbers(code, (0x87, 0x07)) for code in own.values()))
+        for number, *_ in ravager.POTION_CLOCK:
+            got = numbers(scripts[("GPL ", number)], (0x87, 0x07))
+            self.assertIn(ravager.POTION_CLOCK_NUMBER, got)
+            self.assertNotIn(113, got)
+        self.assertIn(113, numbers(scripts[("GPL ", 200)], (0x87, 0x07)))
+        ops = gpl.decode(scripts[("GPL ", 229)], types)
+        by = {o.at: o for o in ops}
+        detour = [o for o in ops if o.at >= by[0x1326].args[0][1]][:3]
+        self.assertEqual([(o.code, o.args) for o in detour], [
+            (0x16, [("n", 0), ("var", 0x0D, 506)]), (0x4F, [("n", 115), ("str", "A potion of ")]),
+            (0x64, [("n", 0x1337)])])
+
+    def test_free_action_potion(self):
+        """Xarax's potion of free action (31922) is in the copy of OBJEX.GFF: a Potion of the Cure Serious
+        Wounds potion's type and picture with Free Action's power."""
+        data = open(os.path.join(WOTR, ravager.OBJECTS_FILE), "rb").read()
+        self.assertNotIn(("RDFF", ravager.FREE_ACTION_POTION), gff.read_gff(data))
+        copy, done = ravager.objects_fixed(data)
+        self.assertIn(ravager.FREE_ACTION_POTION_FIX, done)
+        chunks = gff.read_gff(copy)
+        item = dataitems.records(chunks[("RDFF", ravager.FREE_ACTION_POTION)])[0][0].data
+        template = dataitems.records(chunks[("RDFF", ravager.POTION_TEMPLATE)])[0][0].data
+        self.assertEqual(struct.unpack_from("<hH", item, 0), (-ravager.FREE_ACTION_POTION, 176))
+        self.assertEqual(struct.unpack_from("<H", item, 0x10)[0], 176)
+        self.assertEqual(item[0x0A:0x10] + item[0x12:], template[0x0A:0x10] + template[0x12:])
+        self.assertEqual(chunks[("OJFF", ravager.FREE_ACTION_POTION)], chunks[("OJFF", ravager.POTION_TEMPLATE)])
+        self.assertNotIn(ravager.FREE_ACTION_POTION_FIX, ravager.objects_fixed(data, {ravager.FREE_ACTION_POTION_FIX})[1])
+
+    def test_walkthrough_program_fixes(self):
+        """The damage routine's halving branches as Shattered Lands' does (jnz: a spell all of the kinds
+        guarded against), and the pop-up's discipline of a power takes power 0 as the program's other copy
+        of the routine does (jl)."""
+        sl = open(os.path.join(os.environ["DSUN_SL"], "DSUN.EXE"), "rb").read() if os.environ.get("DSUN_SL") else None
+        exe = open(os.path.join(WOTR, "DSUN.EXE"), "rb").read()
+        if sl:
+            self.assertEqual(sl[0x7B56F:0x7B589], exe[0x85178:0x85187] + bytes.fromhex("7509") + exe[0x85189:0x85192])
+        self.assertEqual(exe[0x62038:0x6204B], exe[0x93DA6:0x93DB3] + bytes.fromhex("7c03") + exe[0x93DB5:0x93DB9])
 
     def test_manual_check_decodes(self):
         """The copy's GPL 331 still decodes whole, and starts with the right answer's settings."""

@@ -5262,7 +5262,11 @@ ns_cmp:
         jz .new
         dec ax                      ; (an item's power: the spell + 1)
 .new:   call ns_new
-        pop ax
+        jnc .old
+        test byte [cs:si + 4], NS_PLUS1
+        jz .old
+        call ns_book                ; (an item's power: a new spell's only on a scroll or a book)
+.old:   pop ax
         pop bx
         jnc .cmp
         mov ax, NS_AS
@@ -5272,6 +5276,39 @@ ns_cmp:
         pop ax
         jmp acid_flags
 ns_entry times 10 db 0         ; (NS_CMP's entry found, copied from the tail)
+; NS_BOOK: CF set if the item an NS_PLUS1 compare reads the power of is a wizard's scroll or spellbook (type
+; NS_BOOK_TYPE, the mod's books' as the game's): the item at the game's ES:BX, or (the entry's displacement
+; not 0) the item numbered by the word at the game's [BP+displacement]. The game's own effects of an item
+; (powers 140h to 147h: the psionic powerstone's 146h, the Ioun stones' 142h, a staff's 143h...) take the
+; powers the new spells' scrolls have (141h to 146h): on any other item the power is the game's effect
+; (the walkthrough's bugs, 2026-11-28: the stones' effect never taken off with the rule, their pictures the
+; new spells'). DI NS_CMP's frame, SI its entry; DS the game's; all registers kept.
+NS_BOOK_TYPE equ 77
+ns_book:
+        push ax
+        push bx
+        push es
+        mov bx, [cs:si + 6]
+        or bx, bx
+        jnz .index
+        mov es, [ss:di]             ; (the game's ES and BX)
+        mov bx, [ss:di + 18]
+        jmp .type
+.index: add bx, [ss:di + 10]        ; ([BP+disp], the game's BP: the item's number)
+        imul ax, [ss:bx], ITEM_SIZE
+        les bx, [ITEMS_PTR]
+        add bx, ax
+.type:  cmp word [es:bx + ITEM_TYPE], NS_BOOK_TYPE
+        je .book
+        inc word [cs:ns_not_books]
+        clc
+        jmp .out
+.book:  stc
+.out:   pop es
+        pop bx
+        pop ax
+        ret
+ns_not_books dw 0                   ; (a look in play: an item's power taken as the game's, not a new spell)
 section tail
 ns_cmp_table:
 %include "ns_cmp_table.inc"

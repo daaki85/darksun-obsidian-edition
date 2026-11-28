@@ -215,6 +215,10 @@ CMP_SITES: Tuple[Tuple[int, int, str], ...] = (
     (0x77CF9, 0x749B0, "3d4001"), (0x9A7D4, 0x99260, "3d4001"), (0x9A9C5, 0x99260, "3d4001"),
 )
 PLUS1_SITES = frozenset({0x77CF9, 0x9A7D4, 0x9A9C5})  # (NS_CMP's NS_PLUS1: the operand is the spell + 1)
+# where NS_CMP's NS_BOOK finds the item at each (a new spell's only on a wizard's scroll or book: the game's own
+# item effects are powers 140h to 147h): 0 the game's ES:BX, else the game's [BP+this] the item's number (the
+# box icon's routine, 9A94Eh, its caller's SI pushed at [BP-0Eh]: 99E35h's item); in the table's displacement
+PLUS1_ITEM = {0x77CF9: 0, 0x9A7D4: 0, 0x9A9C5: -0x0E}
 FORM_PLUS1 = 0x80
 # NS_CMP's forms of the compare's operand: a register (its number, AX 0 ... DI 7), [BP+disp], [disp] (DS),
 # ES:[BX+disp]; all words
@@ -286,8 +290,9 @@ def cmp_table(exe: bytes) -> List[Tuple[int, int, int, int, int, int]]:
     for at, start, code in CMP_SITES:
         back = at + 3
         form, reg, disp, imm = cmp_form(bytes.fromhex(code))
-        out.append((back - start, struct.unpack_from("<H", exe, back)[0],
-                    form | (FORM_PLUS1 if at in PLUS1_SITES else 0), reg, disp, imm))
+        if at in PLUS1_SITES:
+            form, disp = form | FORM_PLUS1, PLUS1_ITEM[at] & 0xFFFF
+        out.append((back - start, struct.unpack_from("<H", exe, back)[0], form, reg, disp, imm))
     return out
 
 

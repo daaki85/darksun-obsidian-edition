@@ -129,6 +129,38 @@ class GameFileTests(unittest.TestCase):
         with open(inc) as f:
             self.assertEqual(f.read(), ravspells.cmp_table_asm(patched))
 
+    def test_item_powers(self):
+        """The sequel's items whose power (the spell + 1) is a new spell's, 321 to 326, are the game's own
+        effects (the psionic powerstone, Ioun stones...), none of them the type DSCLOG2's NS_BOOK takes as a
+        wizard's scroll or book (77, the spellbooks' and scrolls'), and NS_CMP's item sites each say where
+        their item is."""
+        import struct
+        from dsloader import dataitems
+        self.assertEqual(set(ravspells.PLUS1_ITEM), set(ravspells.PLUS1_SITES))
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            objects = gff.read_gff(f.read())
+        powered, books = [], []
+        for (kind, number), chunk in objects.items():
+            if kind != "RDFF":
+                continue
+            try:
+                item = dataitems.records(chunk)[0][0].data
+            except (IndexError, ValueError, struct.error):
+                continue
+            if len(item) < 0x12:
+                continue
+            kind_of = struct.unpack_from("<H", item, 0x0A)[0]
+            if 321 <= struct.unpack_from("<H", item, 0x10)[0] <= 326:
+                powered.append((number, kind_of))
+            if number in (31002, 31010, 31300):
+                books.append(kind_of)
+        self.assertIn((30033, 78), powered)  # (the powerstone, 146h)
+        self.assertNotIn(77, [k for _, k in powered])
+        self.assertEqual(books, [77, 77, 77])
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "dos",
+                               "dsclog2.asm")) as f:
+            self.assertIn("NS_BOOK_TYPE equ 77", f.read())
+
     @unittest.skipUnless(SL, "DSUN_SL: Shattered Lands' folder, for the drawn icons")
     def test_drawn_icons(self):
         """With Shattered Lands' files the icons are the mod's drawn ones, not the templates'."""
