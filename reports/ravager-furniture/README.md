@@ -60,6 +60,12 @@ The whole Forest is shown at one quarter of game-map resolution. The box marks t
 
 ![Forest dining room, Alliance crate and Mines throne before and after alongside Shattered Lands furnishings](grouped-furniture.png)
 
+### Forest dining tables in play
+
+Seven main tables and seven small side tables now retain their full-size vessels on the lowered wood. Three rear chairs moved four to six pixels from the earlier squash so their backs remain visible. All eight main tables and 30 associated pieces were checked in the game. A hanging cloth covers the middle of one long bench in both builds. Cleave’s occupied bed uses its catalogue redraw. [Playtest and remaining Forest checks](../../playtest/logs/2026-11-27-ravager-forest-dining.md)
+
+[Whole Forest beside Gedron](forest-dining-whole-maps.png) · [Original, previous and revised rooms beside Shattered Lands](forest-dining-live.png) · [All eight tables in DOSBox](forest-dining-all-eight.png)
+
 ## Jann, Mosaic and the Silt Sea Giants
 
 The fourth pass changes 14 pictures at 26 placements. On the maps, the gold rectangles pick out the Sultan’s room and a giant’s plank table. The Shattered Lands references show a furnished room in the upper castle and a table in Gedron at the same map scale.
@@ -306,7 +312,7 @@ The scan covered all 20 shipped region files. Four regions now have in-game cove
 
 | Region | Pictures | Shelves lowered | Other furniture lowered | Next review |
 |---|---:|---:|---:|---|
-| 001 Forest | 252 | 0 | 56 | The green-rug dining room was checked in play. Revisit the other table groups and the remaining furnishings |
+| 001 Forest | 252 | 0 | 56 | All 60 inventoried placements located in DOSBox, including all eight dining tables and Cleave’s redrawn sickbed. Recheck the gem and cup tables, the foot chest opening and Cleave’s healing scene |
 | 032 Tyr | 246 | 1 | 44 | Check remaining indoor storage states in play |
 | 033 Veiled Alliance | 195 | 21 | 78 | Red beds, intact storage stacks and four side-facing counters checked in play. Check remaining ruined fixtures and pillows |
 | 034 Pyramid | 152 | 0 | 23 | Closed and staged raised chest checked against the foreground wall in DOSBox. Check remaining furnishings in play |

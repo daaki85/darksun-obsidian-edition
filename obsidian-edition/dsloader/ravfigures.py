@@ -70,7 +70,8 @@ BASE_ROWS = {1342: 9, 2166: 16, 2167: 16, 2630: 22, 2697: 9, 2698: 9, 2699: 9, 2
 # of the same object (especially vase 9606) keep their own coordinates.
 ASSEMBLIES = (
     ("RGN001.GFF", tuple(range(567, 582)), (
-        (9026, 1897, 121, 131), (9022, 1234, 177, 189), (9026, 1166, 133, 143),
+        # Leave the backs of the three rear chairs visible above the full-size place settings.
+        (9026, 1897, 121, 127), (9022, 1234, 177, 183), (9026, 1166, 133, 138),
         (9046, 1706, 132, 142), (9027, 1723, 148, 153), (9026, 1245, 90, 100),
         (9038, 1225, 118, 119), (9038, 1265, 118, 119), (9044, 537, 180, 187),
         (9044, 536, 195, 197), (9038, 587, 196, 197), (9026, 646, 168, 179),
@@ -309,6 +310,47 @@ def _lower_set_tables(old: gff.Chunks, new: gff.Chunks) -> None:
         new[key] = sprites.encode_frames([rows])
 
 
+# Empty tabletop, its horizontal inset, stock size, and settings to lift off the wood.
+# Coordinates are half-open. Touching pieces on each laden table move together.
+FOREST_SETTINGS = {
+    567: (571, 11, (56, 36), ((18, 0, 27, 8, 6), (29, 3, 41, 13, 6),
+                              (20, 15, 29, 23, 6), (30, 14, 41, 25, 6))),
+    568: (571, 11, (56, 39), ((26, 0, 39, 13, 6), (18, 8, 27, 15, 6),
+                              (13, 15, 24, 25, 6), (27, 13, 42, 26, 6))),
+    569: (571, 0, (34, 36), ((21, 0, 32, 9, 9), (4, 10, 14, 17, 6))),
+    570: (571, 0, (34, 35), ((12, 5, 23, 14, 7),)),
+    572: (574, 0, (15, 14), ((3, 0, 13, 7, 2),)),
+    573: (574, 0, (15, 16), ((1, 0, 10, 10, 2),)),
+}
+
+
+def _lower_forest_table(old: gff.Chunks, picture: int) -> bytes:
+    """Lower the wood with its fitted benches, then put each setting back at its original size."""
+    from . import sequelicons, sprites
+    chunk = old["BMP ", picture]
+    empty, inset, size, settings = FOREST_SETTINGS[picture]
+    stocked = sequelicons.decode(chunk)
+    bare = sequelicons.decode(old["BMP ", empty])
+    if (len(stocked[0]), len(stocked)) != size:
+        return chunk
+    top = len(stocked) - len(bare)
+    if top < 0 or len(bare[0]) + 2 * inset != size[0]:
+        return chunk
+    wood = [row.copy() for row in stocked]
+    pieces = []
+    for left, first, right, end, drop in settings:
+        for y in range(first, end):
+            for x in range(left, right):
+                grain = bare[y - top][x - inset] if y >= top else None
+                if stocked[y][x] != grain:
+                    wood[y][x] = grain
+                    pieces.append((y + drop, x, stocked[y][x]))
+    rows = sequelicons.decode(lowered_furniture(sprites.encode_frames([wood])))
+    for y, x, colour in pieces:
+        rows[y][x] = colour
+    return sprites.encode_frames([rows])
+
+
 def _lower_mine_worktables(old: gff.Chunks, new: gff.Chunks) -> None:
     """Shorten the bases under the laboratory tops. A catalogue redraw owns the entire pair."""
     from . import sequelicons, sprites
@@ -398,8 +440,13 @@ def pack(imported: str, stock: str, dest: str = DATA, source: str = "") -> dict:
                 if any(k not in old or k not in new or ("SCMD", k[1]) in new for k in keys):
                     continue
                 lowered = {k: lowered_furniture(old[k], scale=FURNITURE_SCALES.get(k[1], 0.66)) for k in keys}
-                if all(new[k] in (old[k], lowered[k]) for k in keys):
-                    new.update(lowered)
+                finished = lowered.copy()
+                if region == "RGN001.GFF":
+                    for key in keys:
+                        if key[1] in FOREST_SETTINGS:
+                            finished[key] = _lower_forest_table(old, key[1])
+                if all(new[k] in (old[k], lowered[k], finished[k]) for k in keys):
+                    new.update(finished)
                     if moves:
                         placements.setdefault(region, []).extend(moves)
         for k, v in sorted(new.items()):

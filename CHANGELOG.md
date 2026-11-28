@@ -114,6 +114,7 @@ page](obsidian-edition/RAVAGER.md) have the detail.
   what they wear, as on the map. The helper's signature goes to `DSCLOGvf` (a new header field, +1893).
 
 **Changed** (Wake of the Ravager)
+- Jugs and dishes on seven Forest dining tables and seven side tables keep their original shapes on the lowered wood. Three rear chairs sit where their backs can be seen above the settings.
 - The silver tables and stools in both Volcano levels sit lower. The two rear seats keep their original relationship to their tables. The 12 side-facing counters in the Volcano and Alliance rooms have shorter legs beneath the original goods.
 - The Volcano dining tables sit at the same height with or without a meal. Bowls, cups and counter jugs keep their shape, and the two barrels in the southern storeroom touch again. The books and glassware on four shelf designs retain their outlines. The torn red blanket in Volcano 1 and Tyr is continuous across both pieces.
 - The five stone worktables in Mines 3 sit five pixels lower. Their glassware retains its shape, including the bottle that spans two drawings.

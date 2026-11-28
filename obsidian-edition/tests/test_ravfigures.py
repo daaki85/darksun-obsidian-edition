@@ -153,7 +153,7 @@ class GameFileTests(unittest.TestCase):
         package = ravfigures.object_chunks(stock)
         grouped = [pic for _, pictures, _ in ravfigures.ASSEMBLIES for pic in pictures]
         for pic in (*ravfigures.FURNITURE, *grouped):
-            if pic in ravfigures.SHELF_SPACING:  # Occupied shelf boards have their own tests below.
+            if pic in ravfigures.SHELF_SPACING or pic in ravfigures.FOREST_SETTINGS:
                 continue
             key = ("BMP ", pic)
             percent = 82 if pic in (3172, 3173, 3174, 3558, 3795, 3796, 3797, 3798) else 66
@@ -172,6 +172,31 @@ class GameFileTests(unittest.TestCase):
                     offset = (100 * distance + percent // 2) // percent
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
+
+    def test_forest_place_settings_keep_their_pixels_on_the_lowered_wood(self):
+        with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        package = ravfigures.object_chunks(stock)
+        for picture, (empty, inset, _, settings) in ravfigures.FOREST_SETTINGS.items():
+            key = ("BMP ", picture)
+            original = sequelicons.decode(stock[key])
+            bare = sequelicons.decode(stock["BMP ", empty])
+            revised = sequelicons.decode(package[key])
+            plain = sequelicons.decode(ravfigures.lowered_furniture(stock[key]))
+            self.assertEqual(len(original), len(revised), picture)
+            self.assertEqual(len(original[0]), len(revised[0]), picture)
+            self.assertEqual(revised[-1], plain[-1], picture)
+            self.assertNotEqual(revised, plain, picture)
+            top = len(original) - len(bare)
+            for left, first, right, end, drop in settings:
+                for y in range(first, end):
+                    for x in range(left, right):
+                        grain = bare[y - top][x - inset] if y >= top else None
+                        if original[y][x] != grain:
+                            self.assertEqual(revised[y + drop][x], original[y][x], (picture, x, y))
+            if inset:
+                for a, b in zip(plain, revised):
+                    self.assertEqual((a[:inset], a[-inset:]), (b[:inset], b[-inset:]), picture)
 
     def test_set_tables_match_and_keep_their_place_settings(self):
         with open(os.path.join(WOTR, "OBJEX.GFF"), "rb") as f:
@@ -230,6 +255,16 @@ class GameFileTests(unittest.TestCase):
             expected = imported.copy()
             ravfigures._lower_mine_worktables(stock, imported)
             self.assertEqual(imported, expected)
+
+    def test_forest_rear_seats_stay_visible_above_the_place_settings(self):
+        with open(os.path.join(WOTR, "RGN001.GFF"), "rb") as f:
+            stock = gff.read_gff(f.read())
+        key = ("ETAB", 1)
+        original = list(struct.iter_unpack("<HHBBh", stock[key]))
+        revised = list(struct.iter_unpack("<HHBBh", ravfigures.region_chunks("RGN001.GFF", stock)[key]))
+        for x, y, obj, new_y in ((1166, 133, 9026, 138), (1234, 177, 9022, 183), (1897, 121, 9026, 127)):
+            index = next(i for i, r in enumerate(original) if r[:2] == (x, y) and r[4] == obj)
+            self.assertEqual(revised[index], (x, new_y, *original[index][2:]))
 
     def test_silver_seats_follow_their_own_table_depth(self):
         record = struct.Struct("<HHBBh")
