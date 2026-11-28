@@ -135,6 +135,7 @@ Every tool in `playtest/`, with the first sentence of its own header comment (`p
 | `ravknow.py SPELL [LEVEL]` | a test edit (never saved): Wake of the Ravager's first party member (Ar'anda in the opening party; |
 | `ravlevel.py` | the level cap by XP in the running sequel ($WORK/rav.pid; |
 | `ravload.sh NAME [FOLDER]` | Wake of the Ravager from the save in saves/NAME (SAVE01.SAV, CHARSAVE.GFF, DARKSAVE.GFF copied into FOLDER, default $WORK/rav, as slot 1), started as the Loader starts it (RAV_LOADER=1; |
+| `ravload_recomp.sh NAME [FOLDER]` | ravload.sh's run on Dark Sun Recompiled ($DSUN, its build/ds2o: Wake of the Ravager with the mod) instead of DOSBox, for comparing the two. |
 | `ravloot.py` | looting with T, selling with S and M/U/I in the running sequel ($WORK/rav.pid): DSCLOG2's LOOT_KEY and SELL_KEY fields (its header's +1846 to +1859, DSCLOG's), the shop loop's passes and OVERHEAD (from `nasm -l`'s... |
 | `ravprobe.py HEX` | a script probe for a test in Wake of the Ravager: Reyhan's talk (GPL 140 from +45, ravjump.py's place, in the Loader's obsidian-edition/dos/GPLDAT2.GFF) replaced by the script commands HEX, then return and exit. |
 | `ravquick.py` | the quick saves in the running sequel ($WORK/rav.pid): DSCLOG2's QUICK SAVES (its header's +1904 on, MAIN_TICKS at +260) and the game's words the Loader writes for them. |

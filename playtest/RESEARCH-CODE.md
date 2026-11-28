@@ -166,3 +166,40 @@ every tool; `DSUN` names the program, default `/home/user/darksun-recompiled/bui
   door square) opens the mod's Look box "Door" (INFO only); the arrow, the look click and the sword
   on the door square do nothing and log nothing; the sword on Kurzak (object 29, then at square
   99,31) does nothing either: no fight starts from a click on a friendly figure.
+
+### Wake of the Ravager on the recompiled program, beside DOSBox
+
+(2026-11-28, logs/2026-11-28-ravager-recompiled.md; the program's `build/ds2o`, the mod's sequel with DSCLOG2.)
+
+- **`ravload_recomp.sh NAME`** is `ravload.sh` for the program: a copy of `$WORK/rav` in `$WORK/ravr` (the
+  big files linked), the save as slot 1, the sheets widened, the program started as the Loader starts it
+  (`--game --build --cd <mod>/dos`), its window 320x240 at 0,0, its pid in `$WORK/dsun.pid`. It kills only
+  its own earlier program. The tools that read `$WORK/rav.pid` (ravdice.py, ravfight.py, ravlevel.py,
+  ravgo.py with no PID) need that file pointed at the program's pid for the run, then back; `ravclick.py`,
+  `ravgo.py` take a PID. The dice log: `RAV=$WORK/ravr ravdice.py` with rav.pid the program's.
+- **Two games on one display share one pointer**:
+  - Keep DOSBox's window off the program's (DOSBox at 360,260): a window over another makes that one's grab black.
+  - **DOSBox captures the mouse at its first click and then takes every move**, so `ravclick.py` on
+    the program moves DOSBox's pointer instead. Release DOSBox's capture with Ctrl+F10 before driving
+    the program. Put the X pointer over the program's window (`xdotool mousemove 160 120`) and keep it
+    there; the program's pointer follows the X pointer only while it is over its window.
+  - The pointer left at a window's edge scrolls that game's map, which shows as a view far from the party.
+  - **DOSBox takes clicks only with its window focused** (`xdotool windowfocus`): with the program's
+    window last focused, a level up's CHOOSE A SPELL ignored every click while the pointer still moved.
+- **The Loader's own lines need the dice log**: the inventory's AGE, the Grove Warden's AC and a
+  specialist's damage are written by it, so a program with no `ravdice.py` attached shows no AGE, AC 0
+  and the plain damage. Compare screens only with the dice log on both.
+- **What the program's dice log lacks**: every line told apart by the caller's address (each attack's
+  roll, "X's turn", initiative, the fight's summary, the level up's hit-point roll). The program's lifted
+  calls push a sentinel return address (the program's docs/DESIGN.md). Saves, hit points, XP, "gains a
+  level" and "is now a 6th level" are there.
+- **Computer Control from `fightcc`-style clicks** took on the program each time. In DOSBox, after the
+  first click had taken the mouse, it missed members, and their turns waited. Check each member's box
+  (its click shows COMPUTER CONTROL IS ON or OFF), or let `ravfight.py fight` take the waiting turns.
+- **Tyr's thieves from `ravager-after-ambush`**: `ravgo.py y 1224`, then `ravgo.py y 1232 x 1839` (twice
+  when a passer-by blocks the gap at x 1248) reaches the talk at (1825, 1269) in both. A level up for a
+  test there: `ravlevel.py set 0 45707 3 11,12,17 5,6,7` once the fight starts. Ar'Anda gains her 6th
+  preserver level at the first kill's XP and gets CHOOSE A SPELL on her next turn, in the fight.
+- **Where the sequel's memory is**: the program loads the game 66Eh paragraphs higher than DOSBox (DS
+  4FF0h, DOSBox 4982h), so a fixed address such as the known-spells bitset (3F3DCh in DOSBox) is that
+  much higher. Work it out from the data segment.
