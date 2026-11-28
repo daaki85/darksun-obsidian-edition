@@ -157,6 +157,7 @@ class GameFileTests(unittest.TestCase):
                 continue
             key = ("BMP ", pic)
             percent = 82 if pic in (3172, 3173, 3174, 3558, 3795, 3796, 3797, 3798) else 66
+            numerator, denominator = (39, 54) if pic == 2217 else (percent, 100)
             states = 2 if pic in ravfigures.OPENABLE else 1
             self.assertEqual(("SCMD", pic) in stock, states == 2, pic)
             self.assertNotIn(("SCMD", pic), package)
@@ -169,7 +170,7 @@ class GameFileTests(unittest.TestCase):
                 self.assertTrue(any(p is not None for row in actual for p in row), pic)
                 for distance, row in enumerate(reversed(actual)):
                     # Nearest source row measured upwards from the unchanged base.
-                    offset = (100 * distance + percent // 2) // percent
+                    offset = (denominator * distance + numerator // 2) // numerator
                     expected = original[h - 1 - offset] if offset < h else [None] * w
                     self.assertEqual(row, expected, (pic, distance))
 

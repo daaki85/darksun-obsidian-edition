@@ -725,7 +725,7 @@ Ours: restyled.
 
 ![Original and approved Sultan in the reconstructed Jann tent, alongside the Shattered Lands seated drummer and party](img/1247-sultan-comparison.gif)
 
-The idle sequence holds the first pose for 0.90 seconds and the slight head turn for 0.45 seconds. The separate empty-cushion state matches the original pixel for pixel. All three frames decoded at their original dimensions in a test copy of OBJEX.GFF with the original script and placement anchor. A live in-game check is pending. [Game-size animation](img/1247-sultan-native.gif) · [Empty seat in the tent](img/1247-sultan-empty.png) · [Approved picture resource](proposals/1247-sultan.zip) · [Earlier batch comparison](merchant-batch.md#figures-with-scenery).
+The idle sequence holds the first pose for 0.90 seconds and the slight head turn for 0.45 seconds. The separate empty-cushion state matches the original pixel for pixel. All three frames decoded at their original dimensions in a test copy of OBJEX.GFF with the original script and placement anchor. The occupied seat, staged head turn and empty cushion were verified at the tent placement in DOSBox. [Jann gameplay comparison](../../ravager-furniture/jann-wagon-and-figures.png) [Game-size animation](img/1247-sultan-native.gif) · [Empty seat in the tent](img/1247-sultan-empty.png) · [Approved picture resource](proposals/1247-sultan.zip) · [Earlier batch comparison](merchant-batch.md#figures-with-scenery).
 
 ## 1249: Heroga
 
@@ -743,7 +743,7 @@ Object 471 leaves race unspecified. Heroga identifies himself in dialogue (GPL 6
 
 ![Original, earlier pass and revised Heroga at the recorded Jann camp placement, with the SL seated drummer and party at the same pixel scale](img/1249-heroga-storyteller.png)
 
-The idle plays five poses in 2.55 seconds. The two wide gestures use the original five-pixel horizontal anchor adjustment. All five frames decoded in a test archive with the original script. The preview reconstructs the RGN03B placement. [Game-size animation](img/1249-heroga-storyteller-game-size.gif) · [Enlarged animation](img/1249-heroga-storyteller-enlarged.gif) · [Approved artwork and original script](proposals/1249-heroga-storyteller.zip)
+The idle plays five poses in 2.55 seconds. The two wide gestures use the original five-pixel horizontal anchor adjustment. All five frames decoded in a test archive with the original script. All five poses were checked at the camp placement in DOSBox, with the wider gestures staged. [Jann playtest](../../../playtest/logs/2026-11-28-ravager-jann-baskets-and-wagon.md) · [Game-size animation](img/1249-heroga-storyteller-game-size.gif) · [Enlarged animation](img/1249-heroga-storyteller-enlarged.gif) · [Approved artwork and original script](proposals/1249-heroga-storyteller.zip)
 
 ## 1268: beast-headed giant, crouched
 
@@ -2478,7 +2478,7 @@ Ours: restyled.
 
 ![Original and approved mine-opening animation beside the Shattered Lands party and worker](img/2479-miner-comparison.gif)
 
-Both poses decoded from a test copy of OBJEX.GFF at their original dimensions. The placement anchor, script, transparency and surrounding rock pixels are preserved. A live in-game check is pending. [Game-size animation](img/2479-miner-native.gif) · [Second placement at game size](img/2479-miner-second-placement.gif) · [Approved picture resource](proposals/2479-miner.zip)
+Both poses decoded from a test copy of OBJEX.GFF at their original dimensions. The placement anchor, script, transparency and surrounding rock pixels are preserved. Both miners were checked at the tunnel openings in DOSBox. [Matched stock and redrawn poses](../../ravager-furniture/mines2-storage-and-miners.png) [Game-size animation](img/2479-miner-native.gif) · [Second placement at game size](img/2479-miner-second-placement.gif) · [Approved picture resource](proposals/2479-miner.zip)
 
 ![2479 playing](img/2479.gif)
 
@@ -2821,7 +2821,7 @@ Ours: restyled.
 
 ![Original and revised weaving animation in the tent with the Shattered Lands party and human woman](img/2572-utella-revised-comparison.gif)
 
-Utella stands 26 pixels tall in the redraw. The loom is about 82% of its original size and rests on the original baseline. Both hands meet the textile in each pose. The two frames passed a decode check in a test copy of OBJEX.GFF at their original dimensions, with the original script and placement anchor. A live in-game check is pending. [Revised game-size animation](img/2572-utella-revised-native.gif) · [Approved picture resource](proposals/2572-utella-revised.zip) · [Previous proposal](img/2572-utella-comparison.gif) · [Previous picture resource](proposals/2572-utella.zip)
+Utella stands 26 pixels tall in the redraw. The loom is about 82% of its original size and rests on the original baseline. Both hands meet the textile in each pose. The two frames passed a decode check in a test copy of OBJEX.GFF at their original dimensions, with the original script and placement anchor. Both weaving frames were verified at the loom in DOSBox. [Jann gameplay comparison](../../ravager-furniture/jann-wagon-and-figures.png) [Revised game-size animation](img/2572-utella-revised-native.gif) · [Approved picture resource](proposals/2572-utella-revised.zip) · [Previous proposal](img/2572-utella-comparison.gif) · [Previous picture resource](proposals/2572-utella.zip)
 
 ![2572 playing](img/2572.gif)
 
@@ -3653,7 +3653,7 @@ Both placements are shown with the project’s furniture treatment. All four pic
 
 ## 3613: miner with pick
 
-**Half-giant scale check.** The approved miner uses the SL half-giant body as its art reference. Object 288 has no race field. [Giant figure index](giant-figures.md)
+**Half-giant scale check.** The approved miner uses the SL half-giant body as its art reference. Object 288 has no race field. Both pick poses were verified against the installed picture in DOSBox. [Mines 2 comparison](../../ravager-furniture/mines2-storage-and-miners.png) · [Giant figure index](giant-figures.md)
 
 Ours: dressed. Shattered Lands row: dressed on this Shattered Lands body (SL 32000).
 

@@ -233,6 +233,8 @@ map position. Nothing is built for it yet.
 - The arena (2Ah): no water, jug or waterskin seen on the platform or on the champions' bodies
   (2026-11-18).
 - Wake of the Ravager, Forest (01h): The Hero Flask holds water from the Pool of Heroism. Using one dose on Cleave revives him. The two western plants offer acorns and grapes. [Forest playtest](logs/2026-11-27-ravager-forest-plants-and-sickbeds.md) The northern tables carry jugs and cups. Their presence did not establish a refill action. [Forest dining rooms](logs/2026-11-27-ravager-forest-dining.md)
+- Wake of the Ravager, Silt Sea Giants (41h). Velden’s workshop has blue troughs beside him and the anvil. Their use as drinking water was untested. [Workshop visit](logs/2026-11-28-ravager-silt-sea-giants.md)
+- Wake of the Ravager, Volcano Core (3Fh). The orange channels at the spires are lava. No drinking-water source was identified on these visits. [Volcano Core playtest](logs/2026-11-28-ravager-volcano-core-spires.md)
 - Wake of the Ravager, Forest (01h): the Roost test jump and overhead-map check did not establish a water source (2026-11-27).
 - Wake of the Ravager, Veiled Alliance HQ (33h), Forest dining room and Mines 3 throne room: no water seen in the rooms looked at (2026-11-27, logs/2026-11-27-ravager-furniture-review.md).
 - Wake of the Ravager, El’s Temple throne aisle and Ikibod’s workroom in Mosaic. No water source identified in these two rooms during the [furniture check](logs/2026-11-27-ravager-throne-and-workshop.md).
@@ -245,6 +247,9 @@ map position. Nothing is built for it yet.
 - Wake of the Ravager, Mines 3 dining room and Elderbrain chamber. No rest-water source identified during the [encounter checks](logs/2026-11-27-ravager-mines-diners-and-elderbrain.md).
 - Wake of the Ravager, El’s Temple scribe’s desk and the Mines 3 chest chamber. No water source identified in either room during the [basin and chest playtest](logs/2026-11-27-ravager-basin-and-chests.md).
 - Wake of the Ravager, Mines 1 (38h), bedroom beside the worktable. No water source identified during the [bed placement check](logs/2026-11-27-ravager-furniture-joins.md).
+- Wake of the Ravager, Jann camp. Two gold jugs and five goblets stand around the tray and cushions in the Sultan’s tent. Their use as a drinking-water source is unverified. [Jann playtest](logs/2026-11-28-ravager-jann-baskets-and-wagon.md)
+- Wake of the Ravager, Mines 2. The western storeroom contains barrels, sacks and jars. No usable drinking-water source was identified there. [Storage room and railheads](logs/2026-11-28-ravager-mines2-rail-and-storage.md)
+- Wake of the Ravager, Mines 1 and Under Tyr. The furniture rooms contain barrels, storage jars and a small vase. These room checks identified no usable drinking-water source. [Maps and DOSBox checks](logs/2026-11-28-ravager-mines1-and-under-tyr.md)
 - Wake of the Ravager, Mosaic (3Ch), museum display room and Fletch’s bookcase. No water source identified during the [bust puzzle visit](logs/2026-11-27-ravager-mosaic-museum.md).
 - Wake of the Ravager, the first scene in Tyr (the street at the start): a red pot and a jug on the
   table of the room to the west; not looked at (2026-11-22, logs/2026-11-22-ravager-transfer-items.md).
@@ -255,4 +260,4 @@ map position. Nothing is built for it yet.
 - Wake of the Ravager, the Draxans' ambush street in Tyr (2026-11-25, logs/2026-11-25-ravager-fight-keys.md):
   no water, jug or waterskin among Alt's marks there (a scroll, sandals, the bodies).
 - Wake of the Ravager, the Pyramid (RGN034, by a jump, 2026-11-27, logs/2026-11-27-ravager-defiler-scrolls.md):
-  no water, jug or waterskin on the screens seen during the Defilers' fight.
+  no water, jug or waterskin on the screens seen during the Defilers' fight. The furniture survey also found no drinking-water source among the listed pieces. [Pyramid rooms and cabinet passage](logs/2026-11-28-ravager-pyramid-furniture.md)

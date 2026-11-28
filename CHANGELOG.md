@@ -59,6 +59,8 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Jann camp baskets in Wake of the Ravager.** Three produce baskets and Utella’s weaving basket now sit lower beside the empty baskets. Both handles and the tools over the rim remain visible. [DOSBox comparisons](reports/ravager-furniture/jann-filled-baskets.png)
+
 **Fixed: Wake of the Ravager, Terrannus's hands in a game under way** (branch `claude/shield-hand-fix-2`). The swap
 of his shield and long sword (above) now also runs once each time a game is loaded, so a game begun before the fix
 is mended without a swap by hand. Gerakis's, Thy'rokh's and Terrannus's Effects panels seen in play.

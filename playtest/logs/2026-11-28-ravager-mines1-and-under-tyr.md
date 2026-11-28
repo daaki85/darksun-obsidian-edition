@@ -1,0 +1,18 @@
+# Mines 1 and Under Tyr furniture
+
+## Two changes
+
+The northern Mines 1 barrels touch in stock Ravager. Shortening each barrel against its own floor line had exposed three full rows of mine floor between them. Kept the front barrel at (698, 179) and moved the upper barrel, object 9966, from (698, 159) to (698, 166). The two revised silhouettes overlap again. Object 9966 also appears in the sickroom's four-barrel group. Those four already overlap in the current mod and keep their positions.
+
+The four empty cots in Mines 1 and two Under Tyr all use picture 2217. The previous mod drew them 37 pixels wide and 54 tall. Sicky and the three patients Under Tyr already had 37 × 39 cots. The revised empty cot keeps its own pillow and blanket, its width and its bottom row. The top drops by 15 pixels. The catalogue’s occupied figures retain all their frames and scripts.
+
+[Mines 1 whole maps beside the Upper Castle](../../reports/ravager-furniture/mines1-revised-whole-maps.png) · [Original, previous pass and revised DOSBox views](../../reports/ravager-furniture/mines1-barrels-and-cots.png) · [Under Tyr whole maps, patient beds and storage](../../reports/ravager-furniture/under-tyr-cots-and-storage.png) · [Per-placement measurements](../../reports/ravager-furniture/mines1-under-tyr-placements.csv)
+
+## What was checked
+
+Started private DOSBox instances with the Loader and the Roost save, with autosave and quick save disabled. The stock control restored the game's figure art and placements. The previous build used the earlier furniture pass and approved figure pack. The revised build used the new figure pack and rebuilt DSCLOG2. For the room census, a throwaway copy of each region script held the camera and suppressed unrelated encounters. All objects stayed at their installed positions. Map panels and the Shattered Lands reference are renders. Ravager room panels are native captures.
+
+- **Mines 1, 23 placements.** Checked the six furnishings in the northern room, the four barrels by the sickroom, both sack piles across the region, Sicky, the empty cots, the isolated crate, the wide worktable and storage behind it, and the neighboring chair, vase and two-piece red bed. The red blanket still joins across the two objects. All three stored poses of Sicky retain the same 37 × 39 bounds. From (123, 37), Look at Sicky in the bed for his plea to get back. The same click from (120, 38) gave “NO LINE OF SIGHT.” The dialogue replay kept his original handler.
+- **Under Tyr, 26 placements.** Checked the loose seats and tables, barrels, crates, both redrawn storage piles, the shorter empty cots and all four occupied beds. In matched stock and revised captures, the three neighboring patients used frames 2, 2 and 1 in left-to-right order, counting from zero. Comparing only the first frame understates the match. The fourth patient at (1640, 704) is Shandel. His original talk handler played in a room visit from (103, 44). Asking who he was identified him as the leader of the people in the Sorrows.
+- **Verification.** The CSV records the camera, matched pixels and visible reference pixels for each placement in the original and revised games. It accounts for foreground scenery and the patient poses. A party member or pointer can obscure part of the reference. No usable drinking-water source was identified among the furnishings.
+- **Build.** Repacking changed only the empty-cot bitmap and the single Mines 1 placement. The DOS file-open hook now recognizes the optional Mines 1 region copy. The full test suite with both games installed passed 3,562 tests, with 33 skipped. This playtest used DOSBox. Dark Sun Recompiled builds that embed DSCLOG2 need the rebuilt helper for the new region redirect.
