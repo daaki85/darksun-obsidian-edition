@@ -10,7 +10,9 @@ the person has stood still for STILL_FOR game seconds with it, out of fights; th
 sends them on, as it would have.
 
 The table (DSUN's 3972:08AAh, a 13h-byte entry for each of the first 48 objects: +00h the order,
-+04h the script's address, +08h its file) is the game's per-creature scripts'."""
++04h the script's address, +08h its file) is the game's per-creature scripts'. Wake of the Ravager's is
+at 3F49:08A7h, the same entries (its walk order stored at 1E194h as SL's at 1B047h; ravlog.rav_items
+rebinds TABLE_SEG, TABLE_OFF and the map things' places)."""
 
 import struct
 from typing import Dict, List, Tuple
@@ -23,6 +25,7 @@ WALK = 15  # the order a walk is
 PARTY = 4  # (objects 0-3: the party, never theirs)
 THING_CREATURE = 2  # (a thing's kind: a creature)
 STILL_FOR = 30  # game seconds (about 20 s): a walk not moved on in that long has stopped
+POSITIONS, POSITION_SIZE = ring.POSITIONS, ring.POSITION_SIZE  # (DS: each map thing's x, y first)
 
 
 class StuckWalkers:
@@ -40,7 +43,7 @@ class StuckWalkers:
             return []
         base = (gd.load_seg + TABLE_SEG) * 16 + TABLE_OFF
         table = gd.guest.read(base, PEOPLE * ENTRY)
-        places = gd.guest.read(gd.ds * 16 + ring.POSITIONS, PEOPLE * ring.POSITION_SIZE)
+        places = gd.guest.read(gd.ds * 16 + POSITIONS, PEOPLE * POSITION_SIZE)
         it = ring.Items(gd)
         out = []
         for thing in range(PARTY, PEOPLE):
@@ -51,7 +54,7 @@ class StuckWalkers:
             if order != WALK or not script or kind != THING_CREATURE:
                 self._still.pop(thing, None)
                 continue
-            place = struct.unpack_from("<HH", places, thing * ring.POSITION_SIZE)
+            place = struct.unpack_from("<HH", places, thing * POSITION_SIZE)
             was = self._still.get(thing)
             if was is None or was[0] != place or now < was[1]:
                 self._still[thing] = (place, now)

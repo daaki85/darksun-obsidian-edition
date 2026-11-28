@@ -1,7 +1,8 @@
 """Shattered Lands' engine fixes found missing in Wake of the Ravager by the engine fixes' audit (2026-11-28,
 GAME-BUGS.md): the Loader's patches at the sequel's addresses (with DSUN_WOTR, its DSUN.EXE's bytes) and
 DSCLOG2's sites run in an emulated CPU (needs nasm and unicorn, else skipped): a natural 20 and "can't save"
-(SAVE_SUM, SAVE_NAT, sites 220-221) and the quiver's last arrow (AMMO_CAP, AMMO_TURN, AMMO_OKAY, 217-219)."""
+(SAVE_SUM, SAVE_NAT, sites 220-221), the quiver's last arrow (AMMO_CAP, AMMO_TURN, AMMO_OKAY, 217-219) and Hasted
+and Slowed in the DAM lines (SPEED_HALVES: the sequel's speed routine's effects, as ravlog's SPEED_EFFECTS)."""
 
 import os
 import shutil
@@ -12,7 +13,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from dsloader import gamepatch, ravager  # noqa: E402
+from dsloader import gamepatch, ravager, ravlog  # noqa: E402
 import test_ravkits  # noqa: E402
 
 try:
@@ -157,6 +158,40 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(self.word("ammo_out"), -1)
         self.assertFalse(self.okay(1, 2))  # (a fallen target: the game's answer, fallen)
         self.assertTrue(self.okay(1, 0))  # (New counts as Okay)
+
+    def speed(self, halves, *effects, who=2):
+        """SPEED_HALVES for thing WHO with EFFECTS on it (and Bless on another): its halves."""
+        base = (SS - (0x47E0 - 0x3E71)) * 16 + 0x24D
+        records = [(who, e) for e in effects] + [(1, 42), (who + 1, 91)]
+        for n, (owner, eid) in enumerate(records):
+            self.mu.mem_write(base + n * 10, struct.pack("<H", owner) + bytes(4) + bytes((eid,)) + bytes(3))
+        self.mu.mem_write(SS * 16 + 0x2100, struct.pack("<H", len(records)))
+        sp = BP - 0x40
+        self.mu.mem_write(SS * 16 + sp, struct.pack("<H", HALT))
+        for name, value in dict(cs=TSR, ds=SS, es=SS, ss=SS, esp=sp, eax=halves, edx=who).items():
+            self.mu.reg_write(getattr(r, "UC_X86_REG_" + name.upper()), value)
+        self.mu.emu_start(TSR * 16 + self.sym["speed_halves"], TSR * 16 + HALT, count=2000)
+        self.assertEqual(self.mu.reg_read(r.UC_X86_REG_DX), who)
+        return self.mu.reg_read(r.UC_X86_REG_AX)
+
+    def test_hasted_and_slowed(self):
+        self.assertEqual(self.speed(3), 3)  # (neither: another's effects are not its own)
+        self.assertEqual(self.speed(3, 42), 6)
+        self.assertEqual(self.speed(3, 51), 6)
+        self.assertEqual(self.speed(3, 91), 1)  # (rounded down, as the attack's)
+        self.assertEqual(self.speed(4, 50), 2)  # (Impeded)
+        self.assertEqual(self.speed(4, 52), 2)
+        self.assertEqual(self.speed(4, 42, 91), 2)  # (Slowed before Hasted, as the speed routine asks)
+        self.assertEqual(self.speed(4, 52, 42), 8)  # (Hasted before the other Slowed)
+        self.assertEqual(self.speed(4, 69, 42), 4)  # (Paralyzed: a speed that changes nothing)
+
+    def test_the_logs_rule_is_the_helpers(self):
+        """ravlog's SPEED_EFFECTS (the Characters tab's weapon_hits) and DSCLOG2's table: one order."""
+        table = bytes(self.mu.mem_read(TSR * 16 + self.sym["speed_table"], 18))
+        how = {0: None, 1: "/2", 2: "x2"}
+        pairs = [(table[i], how[table[i + 1]]) for i in range(0, 16, 2)]
+        self.assertEqual(table[16], 0xFF)
+        self.assertEqual(pairs, [(e, h) for these, h in ravlog.EFFECTS["SPEED_EFFECTS"] for e in these])
 
 
 if __name__ == "__main__":

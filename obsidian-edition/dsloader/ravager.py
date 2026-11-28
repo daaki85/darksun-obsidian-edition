@@ -1195,6 +1195,17 @@ PATCHES: Tuple[Patch, ...] = (
     # its size, made gamepatch.SCRIPT_BUFFER. The sequel's largest script is 9985 bytes (GPL 202): one mended
     # past 10000 would end with "BAD GPL EXIT"
     _sl("script_buffer", 0x73318),
+    # ... and the least each score may be at creation (6F12Dh, overlay code; SL's least_scores at 67399h, the same
+    # routine at the sequel's addresses): the manual's requirements, the highest of a character's classes', not a
+    # prime requisite raised to 17. dos/rav_least_scores.asm (SL's least_scores.asm with the sequel's sheet, class
+    # byte and table segment), its two "mov dx,360h" kept at +1Fh and +44h for the overlay manager's fix-ups
+    Patch("least_scores", 0x6F12D, bytes.fromhex(
+        "558bec56578b7e0633f633c93bcf7d54c41e291403d9268a471bb4006bc003ba60038bd88ec2268b8753013b46087505ba1100"
+        "eb24c41e291403d9268a471bb4006bc003ba6003bb530183c30203c38bd88ec2268a07988bd03bd67e028bf2413bcf7cac8bc6"
+        "5f5e5dcb"), bytes.fromhex(
+        "5589e5568a4e08c0e102b5038b6e06e800005e4d7826c41e291401eb909090ba6003268a471b986bd8032e668b403266d3e824"
+        "0f38e876db88c5ebd788e8985e5dcb9090ba60030000090000fc090000cd0f0000900000cb0fdd0e0e900000909090909090"
+        "9090909090")),
     # A new character's weapon in the weapon hand (GEAR_HANDS, below): the starting gear's table, its slots
     # changed (data, no helper code)
     Patch("gear_hands", GEAR_TABLE_AT, GEAR_TABLE, gear_table_fixed()),

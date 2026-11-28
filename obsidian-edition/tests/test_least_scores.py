@@ -1,7 +1,8 @@
 """The least each score may be at creation (gamepatch's least_scores, DSUN.EXE 67399h): the
 manual's requirements for each class, the highest of a character's classes, 3 for none; run in
 the emulator. The patch's bytes are dos/least_scores.asm's, and the overlay manager's two
-"mov dx,338h" stay where the game has them."""
+"mov dx,338h" stay where the game has them. Wake of the Ravager's copy (ravager's least_scores, 6F12Dh:
+dos/rav_least_scores.asm) the same, at the sequel's addresses."""
 
 import os
 import shutil
@@ -13,7 +14,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dsloader import game, gamepatch  # noqa: E402
+from dsloader import game, gamepatch, ravager  # noqa: E402
 
 try:
     import unicorn
@@ -23,6 +24,7 @@ except ImportError:  # (DSCLOG's tests need it too)
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATCH = next(p for p in gamepatch.PATCHES if p.name == "least_scores")
+RAV_PATCH = next(p for p in ravager.PATCHES if p.name == "least_scores")
 CODE, DS, SHEET, SS = 0x2000, 0x3000, 0x4000, 0x5000
 SP = 0x0F00
 STR, DEX, CON, INT, WIS, CHA = range(6)
@@ -46,17 +48,35 @@ class BytesTests(unittest.TestCase):
             with open(out, "rb") as f:
                 self.assertEqual(f.read(), PATCH.replacement)
 
+    def test_the_sequels_bytes(self):
+        """106 bytes, as the sequel's routine; "mov dx,360h" at +1Fh and +44h in both."""
+        self.assertEqual(len(RAV_PATCH.replacement), len(RAV_PATCH.original))
+        for at in (0x1F, 0x44):
+            self.assertEqual(RAV_PATCH.original[at:at + 3], bytes.fromhex("ba6003"))
+            self.assertEqual(RAV_PATCH.replacement[at:at + 3], bytes.fromhex("ba6003"))
+
+    @unittest.skipUnless(shutil.which("nasm"), "needs nasm")
+    def test_the_sequels_built_from_the_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = os.path.join(tmp, "least.bin")
+            subprocess.run(["nasm", "-f", "bin", "-o", out, "rav_least_scores.asm"], check=True,
+                           cwd=os.path.join(HERE, "dos"))
+            with open(out, "rb") as f:
+                self.assertEqual(f.read(), RAV_PATCH.replacement)
+
 
 @unittest.skipIf(unicorn is None, "needs unicorn")
 class LeastTests(unittest.TestCase):
+    patch, sheet_ptr, class_at = PATCH, 0x119C, 0x21
+
     def least(self, classes, ability):
         mu = unicorn.Uc(unicorn.UC_ARCH_X86, unicorn.UC_MODE_16)
         mu.mem_map(0, 0x100000)
-        mu.mem_write(CODE * 16, PATCH.replacement)
+        mu.mem_write(CODE * 16, self.patch.replacement)
         mu.mem_write(CODE * 16 + 0x100, b"\x90")  # (where the RETF goes)
-        mu.mem_write(DS * 16 + 0x119C, struct.pack("<HH", 0, SHEET))
+        mu.mem_write(DS * 16 + self.sheet_ptr, struct.pack("<HH", 0, SHEET))
         sheet = bytearray(0x47)
-        sheet[0x21:0x21 + len(classes)] = bytes(classes)
+        sheet[self.class_at:self.class_at + len(classes)] = bytes(classes)
         mu.mem_write(SHEET * 16, bytes(sheet))
         # far return to CODE:0100h, then the classes and the ability (as 6490Dh pushes them)
         mu.mem_write(SS * 16 + SP, struct.pack("<HHHH", 0x100, CODE, len(classes), ability))
@@ -90,6 +110,11 @@ class LeastTests(unittest.TestCase):
 
     def test_no_class(self):
         self.assertEqual(self.least([], STR), 3)
+
+
+class RavagerLeastTests(LeastTests):
+    """The sequel's copy: its creation sheet at DS:1429h, the classes at +1Bh (1-8, as Shattered Lands')."""
+    patch, sheet_ptr, class_at = RAV_PATCH, 0x1429, 0x1B
 
 
 if __name__ == "__main__":

@@ -968,6 +968,10 @@ def party_records(guest: GuestMemory, ds: int) -> List[Tuple[Optional[int], Opti
 # Effects that change initiative (effect id -> adjustment), from the game's code
 INITIATIVE_EFFECTS = {8: -2, 22: 2, 47: -2}  # Blind, Hasted, Slowed
 HASTED_EFFECT, SLOWED_EFFECT = 22, 47  # (twice the attacks a round, and half: weapon_hits)
+# The attack's speed from the attacker's effects, the first set it has deciding (its halves doubled "x2",
+# halved "/2", or kept None): Shattered Lands' Hasted twice, Slowed half (5883Ah). The sequel's speed
+# routine has more (ravlog's SPEED_EFFECTS)
+SPEED_EFFECTS = (((HASTED_EFFECT,), "x2"), ((SLOWED_EFFECT,), "/2"))
 
 
 # A saving throw's modifiers, as the game's routine (79D3Ch in DSUN.EXE) adds them to the d20:
@@ -2503,11 +2507,12 @@ class GameData:
                 have = self.sheet(creature)[SHEET_ATTACKS] if halves is None else halves
                 if have > 2:
                     halves = 2
-            if HASTED_EFFECT in ids or SLOWED_EFFECT in ids:
+            speed = next((how for these, how in SPEED_EFFECTS if ids.intersection(these)), None)
+            if speed:
                 # (the game's attack, after all the rest: Hasted twice the attacks, Slowed half,
-                # rounded down, at 5883Ah; its speed from these effects)
+                # rounded down, at 5883Ah; its speed from these effects: SPEED_EFFECTS)
                 have = (typ[0x0B] if missile else self.sheet(creature)[SHEET_ATTACKS]) if halves is None else halves
-                halves = have * 2 if HASTED_EFFECT in ids else have // 2
+                halves = have * 2 if speed == "x2" else have // 2
             parts = [(why, n) for why, n in parts if n]
             out.append(WeaponHit(index, slot, self.item_label(item, typ), base - sum(n for _, n in parts), parts,
                                  skill, halves, struct.unpack_from("<H", item, ITEM_TYPE)[0],

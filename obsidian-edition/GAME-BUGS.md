@@ -235,10 +235,10 @@ to be read for it.
 | The game's **people's weapons and armour** | Not needed: the sequel puts them on as they come |
 | **Random monsters** | Fixed there too |
 | A fight's **music** | Not yet: the sequel's region levels are read by other code, still to be found (its music is the CD's) |
-| A person's **scripted walk** stopped for good after a load (the Trustee's rounds) | Not yet: the sequel's table of creatures' own scripts is still to be found |
+| A person's **scripted walk** stopped for good after a load (the Trustee's rounds) | Fixed there too (2026-11-28; played: Tyr's pedestrians, one left standing with a walk set walking on) |
 | **Resting while poisoned** | Fixed there too (played) |
 | **DELETE** in the roster | Fixed there too; not yet seen in play (it needs more than 10 characters) |
-| The **creation screen's least scores** | Not yet: the sequel keeps the game's (the dice log says so) |
+| The **creation screen's least scores** | Fixed there too (2026-11-28; played: a 7th-level fighter's STR down to 15, its least 9 where the game held 17) |
 | **XP for high prime requisites** | Fixed there too |
 | A **New** character's thief skills | Fixed there too (2026-11-28): 23 of Shattered Lands' 24 tests (the 24th's code isn't in the sequel) |
 | **Thief skills**' equipment penalty | Fixed there too |
@@ -247,7 +247,7 @@ to be read for it.
 | The **gladiator's armour optimisation** | Fixed there too (played: Gerakis with his armour in the pack got none) |
 | The **air cleric's daggers** | Fixed there too |
 | **View Character's DAM line** with a weaker material | Fixed there too |
-| The **DAM lines** of a **hasted** or **slowed** character | Partly: the inventory's line of a slowed character is fixed; the Hasted and Slowed attacks in the mod's own DAM lines not yet |
+| The **DAM lines** of a **hasted** or **slowed** character | Fixed there too (2026-11-28), by the sequel's own rule: Slowed or Impeded half, Hasted twice, Slowed first where both; not yet seen in play |
 | **What a scroll says** | Fixed there too, with the sequel's own message box (below) |
 | An archer's **pointer** after a shot | Fixed there too; not yet seen in play |
 | A magic item's power on the **Effects screen** | Fixed there too, with the charges lines (played: Armor's "(14 CHARGES)", Inertial Barrier's stray 15 not shown) |

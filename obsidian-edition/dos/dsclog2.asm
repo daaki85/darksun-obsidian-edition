@@ -8736,12 +8736,14 @@ thief_adnd:
         push bx
         push cx
         push si
+        push fs                 ; (THIEF_TABLE and DEX_TABLE: the tail's)
+        call tail_fs
         cmp si, THIEF_LEVELS
         jbe .level
         mov si, THIEF_LEVELS
 .level: imul ax, bx, THIEF_LEVELS
         add si, ax
-        movzx ax, byte [cs:thief_table + si - 1]
+        movzx ax, byte [fs:thief_table + si - 1]
         cmp bx, 5
         jae .out
         cmp cx, 9
@@ -8752,12 +8754,14 @@ thief_adnd:
         mov cx, 22
 .high:  imul cx, cx, 5
         add bx, cx
-        movsx cx, byte [cs:dex_table + bx - 9 * 5]
+        movsx cx, byte [fs:dex_table + bx - 9 * 5]
         add ax, cx
-.out:   pop si
+.out:   pop fs
+        pop si
         pop cx
         pop bx
         ret
+section tail                    ; (the tables in the tail: room in the segment, 2026-11-28)
 ; AD&D's average thief skills, levels 1-17, a row per skill (game.AD_D_THIEF: the owner's table, 2026-11-25,
 ; the same as SL's to 13th; flat past 17th)
 thief_table:
@@ -8783,6 +8787,7 @@ dex_table:
         db 20, 25, 12, 20, 17
         db 25, 27, 15, 25, 20
         db 27, 30, 17, 30, 22
+section image
 ; STAB_FIRST (SL's, called from MISSILE_REAR: SI the attacker, DS the game's): with the rule, only a party
 ; member's first attack of a round is a backstab, as in AD&D. The game's own test (5D10Ch) lets two through
 ; and the round's count STAB_TIMES reads ([BP-16h] in the hit routine) leaves the off-hand swing out (two
@@ -11742,8 +11747,9 @@ die_sizes_end:
 ; pushes the damage bonus, the dice's sides and their count, then the attacks a round (halves) it reads
 ; for the line's routine (7B1D9h): those three are under the site's return frame (+6 count, +8 sides, +0Ah
 ; bonus from SP at entry). The kits' as the attack has them: KIT_MELEE's damage and a kit's expertise
-; (DAM_KIT_MELEE, DAM_EXPERT). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS, not ported), Hasted and Slowed (FRAME_SPEED: the sequel's speed is its
-; own, 628h:5Ch, not SL's effects).
+; (DAM_KIT_MELEE, DAM_EXPERT), and last Hasted and Slowed as the attack has them (FRAME_SPEED, SPEED_HALVES:
+; the sequel's speed routine's effects). What SL's add and these don't: a thri-kreen's chatkcha (OWN_THROWS,
+; not ported).
 ; DAM_LINE (site 70 at 7B19Eh, "mov al,es:[bx+24h]", SL's 72A77h): the melee branch, ES:BX the sheet; AL
 ; the attacks a round (the game's "mov ah,0" follows).
 dam_line:
@@ -11777,6 +11783,7 @@ dam_line:
         push ax
         movzx ax, al
         call dam_hand
+        call frame_speed        ; (Hasted twice, Slowed half: the game's attack's last step)
         mov [cs:dam_halves], al
         pop ax
         mov al, [cs:dam_halves]
@@ -11828,6 +11835,55 @@ dam_hand:
 .out:   pop es
         pop bx
         ret
+; FRAME_SPEED (SL's): AX the attacks a round (halves) for the creature the line routine's [BP-6] points at
+; (its record, far; 0 for none) as SPEED_HALVES gives them. DS the game's; others kept.
+frame_speed:
+        cmp dword [bp - 6], 0
+        je .ret
+        push bx
+        push dx
+        push ax
+        mov ax, [bp - 6]
+        sub ax, [CREATURES_PTR]
+        xor dx, dx
+        mov bx, CREATURE_SIZE
+        div bx
+        mov dx, ax              ; the creature (a party member's combatant number is its own)
+        pop ax
+        call speed_halves
+        pop dx
+        pop bx
+.ret:   ret
+; SPEED_HALVES: AX the attacks a round (halves) of thing DX as the attack has them after all the rest
+; (5CF93h: the speed routine 628h:5Ch, 85899h, its 4 doubling them, its 1 halving them), the first of
+; SPEED_TABLE's effects it has deciding: Paralyzed (69) and the effects 66 and 56 give speeds that change
+; nothing, then Slowed (91) or Impeded (50) half, Hasted (42, 51) twice, the other Slowed (52) half (ravlog's
+; SPEED_EFFECTS). DS the game's; others kept.
+speed_halves:
+        push bx
+        push cx
+        push si
+        mov bx, ax
+        mov si, speed_table
+.next:  mov cx, [cs:si]         ; CL the effect, CH what it does: 0 nothing, 1 half, 2 twice
+        add si, 2
+        cmp cl, 0xFF
+        je .out
+        mov ax, dx
+        call has_effect
+        jne .next
+        cmp ch, 1
+        jb .out
+        ja .twice
+        shr bx, 1
+        jmp short .out
+.twice: shl bx, 1
+.out:   mov ax, bx
+        pop si
+        pop cx
+        pop bx
+        ret
+speed_table db 69, 0, 66, 0, 56, 0, 91, 1, 50, 1, 42, 2, 51, 2, 52, 1, 0xFF, 0
 dam_halves db 0
 dam_count  dw 0                 ; (the DAM lines made so, for a look in play)
 ; DAM_KIT_MELEE: AX what the kits of sheet ES:BX add to damage with item type SI on a DAM line, as the
@@ -11869,7 +11925,7 @@ missile_line:
         mov al, 2
 .ret:   iret
 .held:  test word [cs:rules], RULE_SPECIALIZE
-        jz .ret
+        jz .speed
         push bp
         mov bp, sp              ; BP+8 the count, +0Ah the sides, +0Ch the bonus
         push bx
@@ -11897,6 +11953,8 @@ missile_line:
         pop dx
         pop bx
         pop bp
+.speed: movzx ax, al
+        call frame_speed        ; (Hasted twice, Slowed half, whatever the rules: the attack's last step)
         iret
 ; VIEW_DAM (site 72 at 6CAC9h, "mov [bp-0Eh],dx", SL's 64EB6h PROBE_VIEW_DAM): View Character's line, DX the
 ; damage bonus it stores; its [BP-6] the attacks a round (halves, the sheet's +24h), [BP-2] the dice's
@@ -11964,6 +12022,13 @@ view_dam:
         call next_die
         mov [bp - 4], ax
 .done:  call view_material      ; (a weak material's damage, as the game's attack and the inventory's line have it)
+        mov ax, ds              ; (Hasted twice, Slowed half, as the attack: whatever the rules, a missile
+        add ax, USE_WHO_SEG     ;  weapon too)
+        mov es, ax
+        mov dx, [es:USE_WHO_OFF]
+        mov ax, [bp - 6]
+        call speed_halves
+        mov [bp - 6], ax
         inc word [cs:dam_count]
 .out:   pop es
         popa

@@ -106,5 +106,20 @@ class StuckWalkerTests(unittest.TestCase):
         self.assertEqual(self.w.check(self.gd), ["Trustee"])
 
 
+class RavagerTests(unittest.TestCase):
+    def test_the_sequels_table(self):
+        """The sequel's dice log rebinds the table (3F49:08A7h, its walk order's store at 1E194h) and the map
+        things' places; its pass list runs it."""
+        from dsloader import ravlog
+        names = ravlog.rav_items()[stuckwalk]
+        self.assertEqual((names["TABLE_SEG"], names["TABLE_OFF"]), (0x3F49, 0x08A7))
+        self.assertEqual((names["POSITIONS"], names["POSITION_SIZE"]), (ravlog.RAV_POSITIONS, ravlog.RAV_POSITION_SIZE))
+        wotr = os.environ.get("DSUN_WOTR")
+        if wotr:
+            with open(os.path.join(wotr, "DSUN.EXE"), "rb") as f:
+                exe = f.read()
+            self.assertEqual(exe[0x1E18C:0x1E19B], bytes.fromhex("6bdb13b8493f8ec026c787a7080f00"))
+
+
 if __name__ == "__main__":
     unittest.main()
