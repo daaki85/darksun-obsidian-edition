@@ -25,7 +25,7 @@ import sys
 from contextlib import contextmanager
 from typing import Dict, Iterator, List, Optional, Tuple
 
-from . import aging, combatlog, defilerscrolls, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
+from . import aging, combatlog, savemend, defilerscrolls, dicelog, dust, ghost, shopstock, startgear, game, hitchance, hover, itemgate, journal, kitpages, kits, \
     keywatch, labels, locks, loot, monsters, moveback, psiblast, quicksave, ravager, ravfirstweapon, ravkitstart, ravspells, ring, rings, \
     gff, shadows, sizes, spellarrows, squares, stealth, pickpocket, targeting, textlog, usable, weaponchoice
 
@@ -2348,6 +2348,14 @@ class RavDiceLog(dicelog.DiceLog):
     _aging_at: Optional[Tuple[bytes, Optional[int]]] = None  # (the party and the clock the last look found)
     _hastes: Optional[set] = None  # (the Hasted effects' records the last steady look found)
 
+    def _mend_saves(self) -> List[str]:
+        """SL's, the party's sheets' saves made writable first."""
+        if self.game is None:
+            return []
+        self.guest.writable = self.guest.writable + [r for r in savemend.save_ranges(self.game)
+                                                     if r not in self.guest.writable]
+        return super()._mend_saves()
+
     def _aging_writable(self, creatures) -> None:
         """The bytes aging.py writes made writable: for each of CREATURES (numbers) its hit points,
         status and abilities, and for a party member its sheet's abilities, SHEET_AGE and the packed
@@ -2610,6 +2618,7 @@ RavDiceLog.PASS = (
     _own("own_party", lambda log, now, loading: log._party_pass(), dicelog.EFFECTS),  # (its weapon specs and features)
     _take("loading"),
     _own("item_watches", lambda log, now, loading: log._item_watches_pass(), dicelog.LOADED),  # (defilers' scrolls)
+    _take("mend_saves"),  # (a loaded party's saves as the game's routine puts them: savemend)
     _take("itemwatch"),  # (an item gone from the party with nothing ordinary to show for it: the item report)
     _take("quick_saves"),  # (F5, F9, the autosaves: DSCLOG2's QUICK SAVES)
     _take("journal_sync"),  # (the Journal tab: the sequel's own chain)

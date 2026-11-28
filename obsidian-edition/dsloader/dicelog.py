@@ -28,7 +28,7 @@ from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Callable, Deque, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple
 
-from . import aging, creationfigure, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
+from . import aging, creationfigure, keywatch, moveback, usable, hover, quests, quicksave, hitchance, journal, cahulaks, sizes, fighttally, bowyer, ghost, people, pehtuclchest, buyback, champions, gamepatch, itemgate, combatlog, labels, dance, wheel, wild, psiblast, quiver, defaultparty, defilerscrolls, dust, game, kits, rings, targeting, icons, kalzith, kurzak, kurzakdoor, locks, loot, monsters, sell, names, pickpocket, ring, savemend, scrolling, scriptchecks, searches, semyon, shadows, sounds, specialize, spellarrows, sprites, squares, startgear, stealth, tools, vulture, stuckwalk, heapcheck, weaponchoice, worldgear
 from .game import (CONVENTIONAL_AND_UPPER, EFFECT_NAMES,
                    MATERIAL_DAMAGE, MATERIAL_TO_HIT, MATERIALS, SAVE_NAMES, GameData)
 from .guestmem import GuestMemory, WriteRefused
@@ -702,6 +702,7 @@ class DiceLog:
         self.journal: Optional[journal.Journal] = None  # (the Loader's journal, if it keeps one: journal.py)
         self.quest_state: Optional[quests.State] = None  # (the game's flags and numbers as last read: _quest_look)
         self._party_changed_at = 0.0
+        self._saves_mended_at: Optional[float] = None  # (the load whose party's saves _mend_saves has put)
         self._party_clock: Optional[int] = None  # (the game's clock at _party_check's last look: back means a game loaded)
         self._aging_at: Optional[Tuple[bytes, int, tuple]] = None  # (natural aging: the last look's party, clock, count and years)
         self._next_effect_check = 0.0
@@ -2744,6 +2745,18 @@ class DiceLog:
         if last is None or last[0] != party or not 0 <= clock - last[1] <= NATURAL_JUMP or last[2] != due:
             return []
         return aging.natural_years_due(self.game, due[1])
+
+    def _mend_saves(self) -> List[str]:
+        """Once a game is loaded (RULE_ADND_TABLES): the party's saves as the game's routine would put
+        them now (savemend.py), a line for each member whose saves changed. Not on the creation screen
+        (its own) or in a fight; a load waits for the next pass that is neither."""
+        gd = self.game
+        if not gd.rules & game.RULE_ADND_TABLES or self._saves_mended_at == self._party_changed_at:
+            return []
+        if aging._creating(gd) or gd.in_combat():
+            return []
+        self._saves_mended_at = self._party_changed_at
+        return savemend.mend(gd)
 
     def _party_check(self, now: float) -> bool:
         """True for a while after the party changes (a game was loaded): what's there is not news."""
@@ -4967,6 +4980,7 @@ DiceLog.PASS = (
     PassStep("quick_saves", lambda log, now, loading: log._quick_pass(loading, now), AFTER_CHECK),
     PassStep("tracker", lambda log, now, loading: log.tracker.check(now), LOADED),
     PassStep("item_watches", lambda log, now, loading: log._item_watches(), LOADED),
+    PassStep("mend_saves", lambda log, now, loading: log._mend_saves(), LOADED),  # (a loaded party's saves: savemend)
     PassStep("arena_ring", lambda log, now, loading: log._arena_ring(now), LOADED),
     PassStep("drawn", lambda log, now, loading: log._drawn(now), LOADED),
     PassStep("kalzith_sold_out", lambda log, now, loading: log._kalzith_sold_out(), LOADED, says=False),

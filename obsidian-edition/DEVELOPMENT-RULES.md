@@ -318,7 +318,8 @@ And the game puts psionicists with thieves (group 3), at the best level of eithe
 `SAVE_BASE` (site `SAVE_BASE_SITE`, NS_IMAGE + 123, gamepatch `save_table`) replaces its `mov
 al,es:[bx+6Ch]` (878F7h, 5 bytes) before `cbw / sub ax,[bp-2]`: with `RULE_HI_TABLES` AL is the
 Player's Handbook's save (Table 60) plus the game's improvement worked out again, so the game's sum is
-the Handbook's less the race's bonus; for group 3 the sheet's classes (DI the creature: DS:1661h + DI
+the Handbook's less the race's bonus, but 2 at least (`SAVE_LEAST`: the bonus took a high-level dwarf or
+halfling warrior's save under 0, a byte of 254 no roll makes, until 2026-11-28); for group 3 the sheet's classes (DI the creature: DS:1661h + DI
 x 47h, classes +21h, levels +24h) give a thief level and a psionicist level, and AL is the better of the
 thief's save at the one and the psionicist's (Dark Sun's Table 8) at the other; without the rule, the
 game's byte. The code and the bands (`SAVE_BANDS`, 33 of a first level and five saves: the four
@@ -326,7 +327,15 @@ groups', then the psionicists', `tables.RAV_SAVE_BANDS`, `class_saves`) are `dos
 macros, `SAVE_BASE_CODE` and `SAVE_BANDS_DATA` (the bands in DSCLOG's tail), shared with Wake of the
 Ravager's DSCLOG2, whose routine (954D2h) is the same (its site 116; the sheets at `SHEETS_PTR`, 48h
 bytes, classes +1Bh, levels +1Eh). Levels past a set's last band (21st) use it. `test_slsaves`,
-`test_ravlevelcap`.
+`test_ravlevelcap`; `test_tail_reads` holds both helpers' bands in the tail (SAVE_BASE reads them through
+`TAIL_SEG`) and every table read through its own segment.
+
+The games work the saves out only at a level up and on the creation screen, so a loaded party keeps what
+its sheets had (the game's own old table, or Wake of the Ravager's nonsense of 2026-11-27 to 28, its bands
+read from the wrong segment). The dice log (`savemend.py`, the pass's `mend_saves`, both games) puts each
+member's saves as the routine would now, once each time a game is loaded (not on the creation screen or
+in a fight), with a line for each member changed ("Kel's saving throws worked out again: PPD 81 to 10,
+..."); `test_savemend` (the numbers plays saw the game put).
 
 In Wake of the Ravager (`RULE_ADND_TABLES` in `RULES_PORTED`) the table is RESOURCE.GFF's DATA 1000,
 read through 5C8:20 (the resource, the row 0-7, the index) at eight places (6C3E4h, 6C48Ah, 6C4CCh,
