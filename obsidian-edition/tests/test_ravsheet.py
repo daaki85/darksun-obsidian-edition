@@ -350,19 +350,20 @@ class WidenTests(unittest.TestCase):
 
     @unittest.skipUnless(WOTR, "DSUN_WOTR: the player's Wake of the Ravager folder")
     def test_the_games_files(self):
-        """The install's roster (19 sheets) and its save widened in a copy and narrowed back: the same
-        chunks as the game's."""
+        """The install's roster (19 sheets) and its saves, widened in a copy and narrowed back: the same
+        chunks as the game's. The copies are narrowed first, so a folder the Loader has already widened
+        (one that has been played) tests the same as a stock one."""
         with tempfile.TemporaryDirectory() as d:
             names = [n for n in os.listdir(WOTR) if n.upper() == "CHARSAVE.GFF" or n.upper().endswith(".SAV")]
             for n in names:
                 shutil.copyfile(os.path.join(WOTR, n), os.path.join(d, n))
+            ravager.widen_files(d, ravager.GAME_SHEET_SIZE)
+            own = {n: gff.read_gff(open(os.path.join(d, n), "rb").read()) for n in names}
             self.assertEqual(sorted(ravager.widen_files(d)), sorted(names))
+            self.assertEqual(ravager.widen_files(d), [])
+            ravager.widen_files(d, ravager.GAME_SHEET_SIZE)
             for n in names:
-                own = gff.read_gff(open(os.path.join(WOTR, n), "rb").read())
-                ravager.widen_files(d, ravager.GAME_SHEET_SIZE)
-                back = gff.read_gff(open(os.path.join(d, n), "rb").read())
-                self.assertEqual(back, own)
-
+                self.assertEqual(gff.read_gff(open(os.path.join(d, n), "rb").read()), own[n], n)
 
 if __name__ == "__main__":
     unittest.main()
