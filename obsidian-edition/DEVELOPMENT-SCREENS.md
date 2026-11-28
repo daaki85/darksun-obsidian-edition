@@ -472,7 +472,10 @@ dice log running:
 
 - **The quiver's count.** After each party shot the dice log floats "Arrows: N left" (the quiver's
   count) or "Out of arrows" over the archer (`quiver.py` through `labels.py`, in the charges' blue
-  and priority; none with names over figures off). The turn kept when the quiver runs dry: [An
+  and priority; none with names over figures off), for a missile weapon whose type's first word has
+  bit 3 set (`SHOOTS_AMMO`: what both games' count of a shot's ammunition asks, SL's 58C97h, the
+  sequel's 5D3BAh; a chatkcha has none, and the sequel's sling neither). The sequel's attack routine
+  logs its d20 at the same code (5D05Ch, SL's 589C0h) with SL's frame, so the same step serves it. The turn kept when the quiver runs dry: [An
   archer's last arrow](DEVELOPMENT-CONTENT.md#an-archers-last-arrow-and-a-dry-quiver).
 - **What starts one.** A spell's cast: `CAST_SITE` (INT 98h and its site
   number over `mov cx,[bp+6]` at 772AAh, the start of the routine at 772A5h
@@ -571,6 +574,9 @@ whose pace may hang on it. Measured with a save (Zulak's inventory,
 (85 on average) before, 42-45 putting an item down and 63-67 picking one up
 after; skipping every retrace wait saves no more, and the rest is the game's
 own drawing (a faster game speed shortens it). Nothing else in the game changes.
+In Wake of the Ravager the flip is the same code (its call to the wait at 1698Fh, the wait at 13BA4h):
+DSCLOG2's `FLIP_WAIT` (site 237, `flip_wait`) does the same, `SCREEN_IS` at `DS:0DABh` (seen: 2 with the
+inventory up, the flips there counted in `flip_quick`, the map's waiting as before).
 
 Which class levels up next, on View Character: the game looks up the XP for
 each class's next level in its tables and shows the lowest. Where it adds the

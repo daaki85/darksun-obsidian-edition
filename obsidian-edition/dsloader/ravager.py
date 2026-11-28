@@ -927,8 +927,14 @@ PATCHES: Tuple[Patch, ...] = (
     Patch("cr_thac0_box", DS_FILE + 0x1228, struct.pack("<h", 140), struct.pack("<h", 243)),
     Patch("cr_thac0_hp", 0x6B84C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
     Patch("cr_thac0_hp2", 0x6BC62, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
-    Patch("cr_thac0_psp", 0x6D6AE, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
-    Patch("cr_thac0_con", 0x6B79C, bytes.fromhex("83c410"), gamepatch._interrupt(VEC_CR_HP, 3)),
+    # The two after PSP are DSCLOG2's sites 235 and 236 (CR_AGE_NEW, CR_AGE_CON: SL's CR_AGE), which go on
+    # to PROBE_CR_HP and then draw "AGE: 23" on PSP's line, its box (the 8th, DS:122Ch) wider to x 200.
+    Patch("cr_thac0_psp", 0x6D6AE, bytes.fromhex("83c410"), _site(235, 3)),
+    Patch("cr_thac0_con", 0x6B79C, bytes.fromhex("83c410"), _site(236, 3)),
+    Patch("cr_age_box", DS_FILE + 0x1230, struct.pack("<h", 140), struct.pack("<h", 200)),
+    # The page flip's wait for the vertical retrace (1698Fh, "push cs / call 3BA4h"; SL's 1445Fh), none with
+    # a full screen up: DSCLOG2's FLIP_WAIT (site 237; DSCLOG's PROBE_FLIP).
+    Patch("flip_wait", 0x1698F, bytes.fromhex("0ee811d2"), _site(237, 4)),
     Patch("inventory", 0x91286, bytes.fromhex("83c40e"), gamepatch._interrupt(VEC_CHAR, 3)),
     # Names over figures (SL's labels.py, DSCLOG's LABELS): a spell cast recorded (80585h, SL's 772AAh:
     # "mov cx,[bp+6]", the caster), the map's main loop asking where the pointer is (20230h, SL's

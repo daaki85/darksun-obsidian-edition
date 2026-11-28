@@ -952,7 +952,8 @@ class RavGameData(game.GameData):
 
     def creating(self) -> bool:
         """Never (SL's test reads its creation screen's pointers, not the sequel's): the sequel's screen
-        rolls no age, so the character being made may have one given at once (aging.give_ages)."""
+        keeps the character being made apart from the party (DS:1429h, not a party slot), so give_ages
+        never reaches it; DSCLOG2's CR_AGE puts the age it shows in that sheet, and DONE brings it over."""
         return False
 
     def spell_level(self, spell: int) -> int:

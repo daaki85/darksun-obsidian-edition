@@ -3133,7 +3133,11 @@ probe_cr_hp:
         push cs
         push word cr_thac0_text
         call c_draw_line
-        pop es
+        cmp byte [cs:cr_age_mode], 0
+        je .aged
+        call cr_age_show                ; (PSP drawn: the age beside it, CR_AGE)
+        mov byte [cs:cr_age_mode], 0
+.aged:  pop es
         popad
         push word [cs:t_fl]
         push word [cs:t_cs]
@@ -3152,6 +3156,124 @@ cr_less:                        ; at CS:DI, CL less DS:SI's entry for score DL (
 .put:   jmp c_itoa
 cr_thac0_text db 'THAC0: M', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 cr_count dw 0                   ; THAC0s drawn (for a look in play)
+;
+; THE CREATION SCREEN'S AGE: DSCLOG's CR_AGE (RULE_HI_AGING). CR_AGE_NEW (site 235, "cr_thac0_psp": PSP drawn
+; at the die, a choice and the screen opening, 6D6AEh) and CR_AGE_CON (site 236, "cr_thac0_con": a click on
+; CON, 6B79Ch) replace those two INTs of PROBE_CR_HP, which they go on to, and which then draws "AGE: 23"
+; on PSP's line at CR_THAC0_X (the PSP box's saved background widened to x 200: ravager.py's "cr_age_box").
+; The age is the one the character will have, kept in the sheet being made at SHEET_AGE (+41h, the last
+; byte of the game's 42h sheet, which DONE copies with the rest; the creature follows at +42h, so the roll
+; has no room there: the Loader's aging.give_ages works it out from the age). A new roll of Table 7's dice
+; (AGE_DICE) at the die, a choice and the screen's opening; a click on CON, a RECALL (CR_AGE_HOLD, with the
+; byte among STORE's fields) and EDIT's member keep the age the sheet has. Others kept.
+CR_PSP_BOX  equ 0x122C          ; DS: the PSP box: x1, y1, x2, y2 (SL's F9Ah)
+cr_age_new:
+        mov byte [cs:cr_age_mode], 1
+        jmp probe_cr_hp
+cr_age_con:
+        mov byte [cs:cr_age_mode], 2
+        jmp probe_cr_hp
+; CR_AGE_SHOW: the age put in the sheet being made (rolled, or kept) and drawn (DS the game's, C_DRAW and
+; C_WINPTR set). Changes all but DS.
+cr_age_show:
+        test word [cs:rules_hi], RULE_HI_AGING
+        jz .ret
+        les bx, [WP_CREATION]
+        movzx si, byte [es:bx + SHEET_RACE]
+        dec si
+        cmp si, AGE_RACES
+        jae .ret                        ; (no race yet)
+        mov al, [es:bx + SHEET_AGE]
+        or al, al
+        jz .roll                        ; (none yet: one rolled)
+        cmp word [CR_EDITING], -1
+        jne .show                       ; (EDIT: the member's own)
+        cmp byte [cs:cr_age_mode], 2
+        je .show                        ; (CON: the roll kept)
+        cmp byte [cs:cr_age_hold], 0
+        jne .show                       ; (RECALL: the stored one)
+.roll:  shl si, 1
+        movzx cx, byte [cs:si + age_dice]
+        mov dl, cl
+        inc dl                          ; (the byte: the dice's count + their roll less it + 1)
+        jcxz .put
+.die:   call age_rand
+        shr ax, 8
+        push dx
+        xor dx, dx
+        movzx di, byte [cs:si + age_dice + 1]
+        div di
+        mov al, dl
+        pop dx
+        add dl, al
+        loop .die
+.put:   mov [es:bx + SHEET_AGE], dl
+        shr si, 1
+        mov al, dl
+.show:  movzx ax, al
+        movzx dx, byte [cs:age_bases + si]
+        add ax, dx
+        dec ax                          ; (the race's base, + the byte - 1)
+        mov di, c_age_n
+        call c_wtoa
+        mov ax, [CR_PSP_BOX + 2]
+        sub ax, 2
+        push ax
+        push word CR_THAC0_X
+        push cs
+        push word c_age
+        call c_draw_line
+        inc word [cs:cr_ages]
+.ret:   ret
+; AGE_RAND: AX a random word (DSCLOG's: AGE_SEED, h * 25173 + 13849, mixed with the BIOS's tick count).
+        SHARED_age_rand
+age_dice db 1, 8,  4, 6,  3, 4,  2, 4,  5, 4,  3, 6,  1, 6,  0, 1  ; Table 7's dice by race (aging.RACES)
+age_seed dw 0x5A17
+cr_age_mode db 0                ; (1: PSP drawn anew, 2: CON clicked; 0: no age to draw)
+cr_age_hold db 0                ; (1: a RECALL's redraw: the stored age kept)
+cr_ages  dw 0                   ; ages drawn (for a look in play)
+;
+; FLIP_WAIT (site 237, "flip_wait"): DSCLOG's PROBE_FLIP. "push cs / call 3BA4h" (1698Fh; 4 bytes: the INT,
+; the site's number, a NOP) in the game's page flip (the CRT controller's start address set to the other
+; page, then a wait for the next vertical retrace, 13BA4h, as SL's 11674h). With a full screen up
+; (SCREEN_IS 2: the inventory, View Character, USE, a talk) no wait: the game redraws its screen after each
+; item picked up or put down, flipping as it goes, and the pointer stands still meanwhile. Elsewhere the
+; wait as the game's (the map's pace may hang on it), with interrupts on if the game had them on. All kept.
+flip_wait:
+        inc word [cs:flip_waits]
+        push bp
+        mov bp, sp
+        test byte [bp + 7], 2           ; (the caller's flags' IF)
+        jz .quiet
+        sti
+.quiet: push ax
+        push dx
+        push es
+        mov ax, [cs:pointer_ds]
+        or ax, ax
+        jz .wait                        ; (not known yet)
+        mov es, ax
+        cmp word [es:SCREEN_IS], 2
+        jne .wait
+        inc word [cs:flip_quick]
+        jmp .out
+.wait:  mov ax, 0x40                    ; as the game's 13BA4h: out of any retrace, then into the next
+        mov es, ax
+        mov dx, [es:0x63]               ; (the CRT controller's port: 3D4h, its status 3DAh)
+        add dl, 6
+.in:    in al, dx
+        test al, 8
+        jnz .in
+.next:  in al, dx
+        test al, 8
+        jz .next
+.out:   pop es
+        pop dx
+        pop ax
+        pop bp
+        iret
+flip_waits dw 0                 ; page flips (for a look in play)
+flip_quick dw 0                 ; ... of them with no wait
 ; CR_KIT_THAC0: CL (the creature's THAC0) with the kit chosen for a new character (KIT_MADE): a Scholar's 1
 ; worse (kits.thac0, DSCLOG's CR_THAC0_BASE; a warrior THAC0 kit's is the chosen weapon's alone, WAR_HIT, so
 ; not here). The game works the creature's THAC0 out again at a roll, through SCHOLAR_THAC0, which notes
@@ -4968,6 +5090,9 @@ site_table:
         dw party_gather                     ; 232 SITE_PARTY_GATHER (6A823h: the party put in one figure: after a fight, spread out again)
         dw pace_pass                        ; 233 SITE_PACE_PASS (21AB6h: the map's step for everything: STEADY PACE's count)
         dw pace_draw                        ; 234 SITE_PACE_DRAW (21AFAh: the drawing of what moved and the flip: STEADY PACE)
+        dw cr_age_new                       ; 235 SITE_CR_AGE_NEW (6D6AEh: PSP drawn anew on the creation screen)
+        dw cr_age_con                       ; 236 SITE_CR_AGE_CON (6B79Ch: PSP drawn after a click on CON)
+        dw flip_wait                        ; 237 SITE_FLIP_WAIT (1698Fh: the page flip's wait for the retrace: none with a full screen up)
         times 240 - ($ - site_table) / 2 dw site_none
         dw pp_close                         ; 240 SITE_PP_CLOSE (9659Eh: the USE screen closing lets go of Turn Undead's icon: the arrows' too)
         dw lock_site                        ; 241 SITE_LOCK (8C7E6h: a thief skill check's chance: a lock failed at this thief level barred)
@@ -22339,6 +22464,7 @@ rs_click:
         or dl, dl
         jz .stored
         inc word [cs:rs_recalls]
+        mov byte [cs:cr_age_hold], 1        ; (the stored age shown, not rolled again: CR_AGE)
         mov word [cs:wp_far], RS_SCORES
         mov ax, ds
         add ax, WP_STUB
@@ -22347,6 +22473,7 @@ rs_click:
         mov word [cs:wp_far], .tail
         mov [cs:wp_far + 2], cs
         call rs_framed                      ; (the die's routine from where it rolled the hit points)
+        mov byte [cs:cr_age_hold], 0
         jmp .done
 .tail:  mov [cs:rs_tail + 2], dx            ; (DX: the overlay's segment, the site's way back)
         push word 1                         ; (its byte argument: a roll)
@@ -22434,8 +22561,8 @@ rs_xfer:
 ; (sheet 0 / creature 1, offset, bytes): the sheet's race, sex, classes, kit (the key), hit points, rolled
 ; and most PSP; the creature's hit points and PSP, and its six scores
 rs_fields db 0, 0x12, 1, 0, 0x13, 1, 0, 0x1B, 3, 0, 0x3D, 1
-          db 0, 0x08, 6, 1, 0x00, 4, 1, 0x19, 6, 0xFF
-rs_buf    times 6 + 6 + 4 + 6 + 4 + 2 db 0
+          db 0, 0x08, 6, 1, 0x00, 4, 1, 0x19, 6, 0, SHEET_AGE, 1, 0xFF
+rs_buf    times 6 + 6 + 4 + 6 + 1 + 4 + 2 db 0
 rs_have   db 0
 rs_tail   dw RS_TAIL, 0
 rs_stores  dw 0                 ; (STOREs and RECALLs taken, for a look in play)
