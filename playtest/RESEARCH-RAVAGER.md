@@ -418,3 +418,10 @@ scrolls the view to that creature in steps of 32 (21341h): not drift. Steady pac
 `pace_lost`, `pace_skipped` are in DSCLOG2's segment (INT F5h's vector's), offsets from `nasm -l`. **Restart
 `ravdice.py` after every `ravload.sh`**: it dies with the DOSBox it was attached to, and without it Tab does
 nothing (a `ravfight.py tabfight` then never attacks and the party loses).
+
+**The creation screen's sheet** (2026-11-28, logs/2026-11-28-ravager-creation-age.md): the sheet being made
+(DS:1429h) is the game's 42h bytes with the creature being made straight after it (DS:142Dh = sheet + 42h): write
+nothing past its +41h. DONE copies it into the party's 48h sheet. The boxes: hit points DS:1224h, PSP DS:122Ch
+(x1, y1, x2, y2). STORE (112,230), RECALL (172,230), DONE (271,217) in game coordinates. **Which missile weapons
+use ammunition**: bit 3 of the type's first byte (the game's count at 5D3BAh); the sequel's sling and chatkcha
+have none.

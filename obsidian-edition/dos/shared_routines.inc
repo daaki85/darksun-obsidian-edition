@@ -1666,3 +1666,19 @@ mouse_ratio:                            ; (the driver's 16 mickeys for 8 pixels 
         int 0x33
         ret
 %endmacro
+
+; AGE_RAND: AX a random word (AGE_SEED, h * 25173 + 13849, mixed with the BIOS's tick count). The caller
+; keeps AGE_SEED (a word) beside it.
+%macro SHARED_age_rand 0
+age_rand:
+        push es
+        push word 0x40
+        pop es
+        mov ax, [es:0x6C]
+        pop es
+        xor ax, [cs:age_seed]
+        imul ax, ax, 25173
+        add ax, 13849
+        mov [cs:age_seed], ax
+        ret
+%endmacro

@@ -566,8 +566,15 @@ None is counted twice: the age is saved with the sheet (seen: saved and loaded a
 came back the same, and the dice log gave none again), and a load's first look only records. Dead is the sequel's status 7 (`RAV_DEAD_STATUS`, bound to `kalzith.DEAD_STATUS`
 by `apply_layout`). DSCLOG2's `PROBE_CHAR` writes `AGE: 23` between SP and STR (`AGE_Y` 2Dh) from the
 sheet and the races' bases (`age_bases`), with RULE_HI_AGING. Not ported: Restore Youth (the mod's own
-spell, not in the sequel), the creation screen's roll (a new character gets its age when it joins), the Characters
-tab's other numbers from STATS. A character brought over by CHARTRAN gets a new age (its SL age was
+spell, not in the sequel), the Characters tab's other numbers from STATS. The creation screen's age (2026-11-28):
+DSCLOG2's sites 235 and 236 (`CR_AGE_NEW`, `CR_AGE_CON`, in place of PROBE_CR_HP's INTs after PSP is drawn, 6D6AEh
+and 6B79Ch, which they go on to) draw `AGE: 23` at x 146 on PSP's line, the PSP box (the 8th, `DS:122Ch`) widened to
+x 200 (`cr_age_box`). The sheet being made (`DS:1429h`) is the game's 42h bytes with the creature straight after it,
+so the age goes in its +41h alone (the byte: the dice's count, their roll less it, and 1) and DONE brings it over
+with the sheet; `aging.screen_roll` works the roll out from it when `give_ages` first sees the new member, and
+puts it beside the weapon specs as for anyone else. A new roll at the die, a choice and the screen's opening; a
+click on CON, a RECALL (`CR_AGE_HOLD`; the byte is one of STORE's fields) and EDIT's member keep the sheet's age.
+Seen in the sequel: ages of 19 to 23 for a human, CON and RECALL keeping it, DONE's member with the same byte. A character brought over by CHARTRAN gets a new age (its SL age was
 beside the weapon specs, which the transfer leaves behind).
 
 ## Two weapons

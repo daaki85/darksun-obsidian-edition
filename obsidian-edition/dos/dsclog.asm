@@ -9301,17 +9301,7 @@ age_dice:
         ret
 
 ; AGE_RAND: AX a random word (AGE_SEED, h * 25173 + 13849, mixed with the BIOS's tick count).
-age_rand:
-        push es
-        push word 0x40
-        pop es
-        mov ax, [es:0x6C]
-        pop es
-        xor ax, [cs:age_seed]
-        imul ax, ax, 25173
-        add ax, 13849
-        mov [cs:age_seed], ax
-        ret
+        SHARED_age_rand
 
 ; AGE_PUT (DONE's, CR_WEAPONS): the new member's sheet at ES:BX, +14h..+17h: no specs, the creation
 ; screen's roll (for its race: rolled now if it wasn't) and the age it gives (+17h: the age less the

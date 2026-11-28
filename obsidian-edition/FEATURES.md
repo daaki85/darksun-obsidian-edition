@@ -131,7 +131,7 @@ missed, a used charge ("Armor: 7 left") over its owner, and the arrows left over
 after each shot*. How it works:
 [DEVELOPMENT-SCREENS.md](https://github.com/daaki85/darksun-obsidian-edition/blob/main/obsidian-edition/DEVELOPMENT-SCREENS.md#names-over-figures).
 
-**In Wake of the Ravager:** yes, but not yet the arrows left after an archer's shot ([the sequel's gaps](RAVAGER.md#not-in-the-sequel-yet)).
+**In Wake of the Ravager:** yes. In both games the arrows left show only for a missile weapon that shoots ammunition (a bow or a crossbow; a sling too in Shattered Lands, where it takes stones): a thrown chatkcha was "Out of arrows" after every throw.
 
 ### The chance to hit before the swing
 

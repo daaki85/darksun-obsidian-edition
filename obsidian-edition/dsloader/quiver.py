@@ -20,9 +20,17 @@ def quiver(gd: game.GameData, member: int) -> Optional[Item]:
                  if item[game.ITEM_SLOT] == weaponchoice.AMMO_SLOT), None)
 
 
+# An item type's first word: bit 3 set for a missile weapon that shoots ammunition (a bow, a crossbow):
+# the games' count of a shot's ammunition (SL's 58C97h, the sequel's 5D3BAh) gives one without it (a
+# chatkcha, a sling there) no end of shots, so no arrows to count
+TYPE_FLAGS, SHOOTS_AMMO = 0, 0x08
+
+
 def shooter(gd: game.GameData, member: int) -> bool:
-    """Whether the member has a missile weapon in its missile slot."""
-    return any(item[game.ITEM_SLOT] == weaponchoice.MISSILE_SLOT for _, item, _ in gd._worn(member))
+    """Whether the member has a missile weapon that shoots ammunition in its missile slot (a thrown
+    chatkcha is no archer's: it was "Out of arrows" after every throw)."""
+    return any(item[game.ITEM_SLOT] == weaponchoice.MISSILE_SLOT
+               and gd.item_type_record(item)[TYPE_FLAGS] & SHOOTS_AMMO for _, item, _ in gd._worn(member))
 
 
 def word(gd: game.GameData, stack: bytes) -> str:

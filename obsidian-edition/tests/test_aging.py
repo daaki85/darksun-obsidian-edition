@@ -53,6 +53,18 @@ class TableTests(unittest.TestCase):
         self.assertTrue(26 <= most <= 35)
         self.assertEqual(aging.most_age("K'ratchek", THRI_KREEN), most)
 
+    def test_screen_roll(self):
+        """The sequel's creation screen keeps only the age byte (DSCLOG2's CR_AGE: count + roll + 1): the
+        roll comes back from it, none for a byte the dice can't give."""
+        for roll in range(0, 21):                       # a dwarf's 4d6, less 4
+            self.assertEqual(aging.screen_roll(DWARF, 4 + roll + 1), roll)
+            self.assertEqual(aging.RACES[DWARF].start + 4 + roll,
+                             aging.RACES[DWARF].start + aging.stored(DWARF, 25 + 4 + roll) - 1)
+        self.assertIsNone(aging.screen_roll(DWARF, 4))
+        self.assertIsNone(aging.screen_roll(DWARF, 4 + 21 + 1))
+        self.assertEqual(aging.screen_roll(THRI_KREEN, 1), 0)
+        self.assertIsNone(aging.screen_roll(THRI_KREEN, 2))
+
     def test_stored(self):
         """+17h: the age less the race's base, plus 1 (0 none); a dwarf's most fits."""
         self.assertEqual(aging.stored(THRI_KREEN, 6), 1)

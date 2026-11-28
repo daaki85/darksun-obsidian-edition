@@ -396,7 +396,6 @@ and the sequel does not yet, each checked against the Loader's code (2026-11-27)
 - **[More saves](FEATURES.md#more-saves)**: the sequel's window keeps its own ten saves, with no pages 2 to 4
   and no QUICK page (F9 opens its quick saves: [saves in the sequel](#saves-in-the-sequel)).
 - **[More characters](FEATURES.md#more-characters)**: the sequel's roster keeps its own limit, not 29.
-- **[Names over figures](FEATURES.md#names-over-figures)**: the arrows left after a party archer's shot.
 - **The [cahulaks](FEATURES.md#cahulaks)' tangle** goes by size alone: Shattered Lands spares the shapeless (a
   shadow, a dust devil, an elemental) and a few creatures by name, the sequel only the half-giants and the
   large ([its creatures](CREATURES.md#wake-of-the-ravager)).
