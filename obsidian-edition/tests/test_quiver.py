@@ -19,6 +19,7 @@ def stack(slot: int, count: int, kind: int = ARROWS, name: int = 0x36, plus: int
 
 
 BOW = stack(weaponchoice.MISSILE_SLOT, 0, kind=1, name=1)
+CHATKCHA = stack(weaponchoice.MISSILE_SLOT, 0, kind=2, name=2)  # (thrown: no ammunition)
 
 
 class FakeGd:
@@ -34,7 +35,9 @@ class FakeGd:
         return "Ester"
 
     def item_type_record(self, rec):
-        return b""
+        """The type's first word: SHOOTS_AMMO for the bow alone."""
+        kind = struct.unpack_from("<H", rec, game.ITEM_TYPE)[0]
+        return bytes([quiver.SHOOTS_AMMO if kind == 1 else 0x02, 0])
 
     def item_label(self, rec, typ):
         return "Wooden Arrows" if struct.unpack_from("<H", rec, game.ITEM_TYPE)[0] == ARROWS else "Sling Stones"
@@ -54,6 +57,7 @@ class LabelTests(unittest.TestCase):
         self.assertEqual(quiver.left_label(gd, 2, bytes(stack(weaponchoice.AMMO_SLOT, 0, kind=STONES))), "Out of stones")
         self.assertIsNone(quiver.left_label(FakeGd({18: stack(weaponchoice.AMMO_SLOT, 3)}), 2))  # (no bow)
         self.assertIsNone(quiver.left_label(gd, 7))  # (a monster)
+        self.assertIsNone(quiver.left_label(FakeGd({10: CHATKCHA}), 2))  # (thrown: not "Out of arrows")
 
 
 if __name__ == "__main__":

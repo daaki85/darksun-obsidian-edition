@@ -419,9 +419,10 @@ class HelperTests(unittest.TestCase):
         table = self.sym["site_table"]
         word = lambda n: struct.unpack_from("<H", self.image, table + 2 * n)[0]
         self.assertEqual(word(240), self.sym["pp_close"])
-        for n in list(range(216, 240)) + list(range(241, 260)):
-            if table + 2 * n < self.sym["site_table"] + 2 * 241:
-                self.assertEqual(word(n), self.sym["site_none"], n)
+        for n, name in zip(range(230, 238), ("camera_walk", "party_load", "party_gather", "pace_pass", "pace_draw", "cr_age_new", "cr_age_con", "flip_wait")):
+            self.assertEqual(word(n), self.sym[name], n)  # (the view in fights, the whole party, steady pace, the age, the flip)
+        for n in list(range(216, 230)) + list(range(238, 240)):
+            self.assertEqual(word(n), self.sym["site_none"], n)
         self.assertLess(self.sym["pp_icons2"], self.sym["resident_end"])
 
     def setUp(self):

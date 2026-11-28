@@ -69,6 +69,20 @@ the Loader's copy holds each party picture as the Loader's own Shattered Lands f
 and the dice log writes each member's outfit into it and has the game load it again (`ravdress`). Worn gear,
 a second member with the same figure, the creation preview and the small figures are still to come.
 
+**New: Wake of the Ravager, the view in fights, the whole party in view and steady pace** (branch
+`claude/ravager-view-and-pace`). Three of Shattered Lands' controls the sequel lacked: in a fight the view
+stays put while a walker is on the screen, the party is spread out after a load and after a fight (6 still
+gathers it), and the steady pace switch now works there. DSCLOG2's sites 230-234, from Codex's unmerged
+`codex/ravager-map-controls` branch, reviewed and played (`playtest/logs/2026-11-27-ravager-view-and-pace.md`).
+
+**New: Wake of the Ravager, the creation screen's age and quicker screens; Fixed: "Out of arrows" after a
+chatkcha throw** (branch `claude/ravager-creation-age`). The sequel's creation screen shows the age the
+character will start at beside PSP, rolled with the die and kept by CON and RECALL, as Shattered Lands' does;
+the new member keeps it. Its inventory, View Character, USE and talk screens no longer wait for the screen's
+refresh at each page flip (the pointer stalls less as items are moved). In both games the arrows left float
+only over a weapon that shoots ammunition: a thrown chatkcha said "Out of arrows" after every throw. DSCLOG2's
+sites 235-237 (`playtest/logs/2026-11-28-ravager-creation-age.md`).
+
 Pull requests #146 to #268 (merged 2026-11-25 to 2026-11-27), by subject. Each entry names its
 pull request; [the features page](obsidian-edition/FEATURES.md) and [Wake of the Ravager's
 page](obsidian-edition/RAVAGER.md) have the detail.

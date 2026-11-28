@@ -156,6 +156,16 @@ def start_age(sheet: bytes, name: str) -> Optional[int]:
     return RACES[race].start + RACES[race].start_dice[0] + roll
 
 
+def screen_roll(race: int, kept: int) -> Optional[int]:
+    """The roll (Table 7's dice less their count) a new character's age byte KEPT (the sheet's SHEET_AGE)
+    came from: the sequel's creation screen puts only the age in the sheet (DSCLOG2's CR_AGE: the
+    creature follows its last byte, so the roll has no room), the age byte being the dice's count, their
+    roll less it, and 1. None if KEPT is outside what the dice give (an age given some other way)."""
+    count, sides = RACES[race].start_dice
+    roll = kept - 1 - count
+    return roll if 0 <= roll <= count * (sides - 1) else None
+
+
 def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[str]:
     """A starting age for each party member who has none, Table 7's dice rolled (the game's own
     party; one from before ages): lines for the dice log. One with an age but no roll kept (made
@@ -179,8 +189,12 @@ def give_ages(gd: "game.GameData", rng: Optional[random.Random] = None) -> List[
         count = RACES[race].start_dice[0]
         if age_of(sheet) is not None:
             if game.sheet_roll(sheet) is None:  # (kept: its age's start, the name's roll)
-                faces = natural_start(gd.creature_name(member), race)[1]
-                specs = game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), sum(faces) - count)
+                roll = screen_roll(race, game.sheet_age(sheet)) if game.AGE_PLAIN else None
+                if roll is None:
+                    roll = sum(natural_start(gd.creature_name(member), race)[1]) - count
+                else:
+                    out.append(f"{gd.creature_name(member)} is {age_of(sheet)} ({_a(race)}).")
+                specs = game.packed_specs(game.spec_kinds(sheet), game.sheet_age(sheet), roll)
                 gd.guest.write(sheet_address(gd, member) + game.SPEC_SLOTS, specs[:3] if game.AGE_PLAIN else specs)
             continue
         age, faces = roll_start(race, rng)
