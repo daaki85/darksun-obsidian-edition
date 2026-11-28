@@ -415,6 +415,12 @@ casts preserver spells by thief level (its slots: SHINOBI_MAGE, site 190, the ki
   one turn) isn't seen at all. To catch labels: grab the window every 0.3 s and watch the slots (number, width,
   thing at the tail's LBL_SLOTS) with the time; the label's ink is one palette colour (#9AE3FF for the charges'
   blue in Tyr's street), so `convert FRAME -format %c histogram:info:` finds the frames with it.
+- **The sequel's speech level** (2026-11-28, logs/2026-11-28-ravager-voice-volume.md): its speech is the CD's
+  `SPEECH\SPCHn.VOC` and the opening's `INTR\INTR49.VOC` (21,739 Hz 8-bit, about -20 dB RMS, as loud as the music
+  tracks). The sound driver turns the card's mixer down, which with `sbmixer=true` put it 16 dB (0.74) or 24 dB
+  (DOSBox-X) under its recording while the CD tracks played at full: the Loader runs the sequel with
+  `sbmixer=false` (`ravager.SOUND_LINES`, `dosboxx.conf_lines`). The narration and Kael's first line play with no
+  CD track under them.
 - **The sequel's music** is its CD's audio (README.TXT: "no MIDI music (just off the CD)"; SOUND.INI
   `[MidiNotEnabled]`; GOG's SOUND.CFG the SB Pro II's FM and digital drivers; 40 .ogg tracks): the Loader's
   music device is Shattered Lands' alone.

@@ -22,6 +22,10 @@ music device, and the figure prototypes in the game.
   descriptor's +0Ah (6Eh) is not a volume** (logs/2026-11-10-sounds-denser.md): set from 20 to 127
   the output peaked at 2,957 each time. DOSBox plays every clip at the same peak, so a quiet clip can
   only be made denser (make.py's soft-limiter drive): hide now -27.5, pick -30.5 dBFS.
+- **Recording DOSBox-X's sound**: `SDL_AUDIODRIVER=disk SDL_DISKAUDIOFILE=FILE` works for it too (SDL2), but
+  the raw file is 48,000 Hz (DOSBox-X's default `rate`), not 0.74's 44,100 (logs/2026-11-28-ravager-voice-volume.md).
+  **The card's mixer sets the ceiling**: with `sbmixer=true` a full-scale clip comes out at about -21 dB in
+  Shattered Lands in 0.74 (the 2,960 above), -24 dB in DOSBox-X; with `sbmixer=false` at full scale.
 - **The game's table of sounds**: at load segment + 3A98h, offset 08A2h, 6 bytes each: +1 the kind
   (5 a digital clip), +2 a far pointer to a 12-byte descriptor (+7 its BVOC). 0-130 are digital,
   131-180 another kind (4), past 180 other data: a BVOC numbered past 130 isn't played by its number

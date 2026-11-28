@@ -253,6 +253,7 @@ schedules and diffs a log made or used.
 | [2026-11-27](2026-11-27-ravager-forest-dining.md) | All eight Forest dining tables, the restored place settings and three rear seats checked in DOSBox |
 | [2026-11-27](2026-11-27-ravager-forest-plants-and-sickbeds.md) | Forest cup tables, both harvest prompts, Cleave’s cure and the empty bed shared with Snaggle |
 | [2026-11-28](2026-11-28-ravager-temple-prison-room.md) | Original and modded coiled fixture at the same camera in the El’s Temple prison room |
+| [2026-11-28](2026-11-28-ravager-voice-volume.md) | The sequel's quiet speech measured in DOSBox-X and GOG's DOSBox (the card's mixer let the game turn it 24 and 16 dB under the CD music): `sbmixer=false` puts it at its recorded level, level with the music; Shattered Lands' effects for comparison |
 | [2026-11-27](2026-11-27-ravager-volcano-furniture.md) | Both Volcano levels’ furniture and 21 shelves, both torn red beds in Tyr and Volcano 1, and the southern barrel stack |
 | [2026-11-27](2026-11-27-ravager-mine-worktables-and-forge.md) | Five Mines 3 worktables, the Inquisitor’s safe, Promere’s Hammer, the soup kettle and four statues |
 | [2026-11-27](2026-11-27-ravager-mosaic-mirror.md) | All museum offerings, eight shards and the repaired mirror back to Veiled Alliance headquarters |

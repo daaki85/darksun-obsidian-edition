@@ -743,6 +743,8 @@ class LaunchTests(unittest.TestCase):
         self.assertIn("scaler=scan3x", lines)
         self.assertIn("cycles=fixed 20000", lines)
         self.assertNotIn("[midi]", lines)
+        # (GOG's DOSBox reads GOG's settings first, sbmixer=true among them: this file's line wins)
+        self.assertIn("sbmixer=false", usual[usual.index("[sblaster]"):usual.index("[dos]")])
         self.assertFalse([line for line in lines if line.startswith("midiconfig")])
         self.assertEqual(conf({"midi_device": "128:0"}), usual)
 

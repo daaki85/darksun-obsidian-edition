@@ -253,6 +253,8 @@ class TableTests(unittest.TestCase):
         lines = ravager.conf_lines(r"C:\GOG\Ravager", r"C:\mod\dos", cd=r"C:\GOG\Ravager\game.ins",
                                    game_end="GAMEEND.COM")
         self.assertIn("ems=false", lines)
+        # (the speech at its recorded level beside the CD music: the card's mixer left out, after GOG's sbmixer=true)
+        self.assertEqual(lines[:2], ["[sblaster]", "sbmixer=false"])
         self.assertIn(r'mount c "C:\GOG\Ravager"', lines)
         self.assertIn(r'imgmount f "C:\GOG\Ravager\game.ins" -t iso', lines)
         self.assertIn(r'mount d "C:\mod\dos"', lines)

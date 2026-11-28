@@ -59,6 +59,14 @@ Releases, newest first (2.12.0 and older in the archive):
 
 ## Unreleased (branch `obsidian-edition`)
 
+**Fixed: Wake of the Ravager, quiet speech** (branch `claude/ravager-voice-volume`). The sequel's spoken lines
+came out 24 dB under their recording in DOSBox-X and 16 dB under in GOG's DOSBox, while its CD music played at full
+level: the game's sound driver turns the Sound Blaster's mixer down and both emulators let that reach their sound
+channel, but not the CD's. The Loader now starts the sequel with `sbmixer=false` in both, so the speech and sound
+effects play at their recorded level, as loud as the music ([the measurements](playtest/logs/2026-11-28-ravager-voice-volume.md)).
+The game menu's SOUND EFFECT VOLUME no longer changes anything; F5 still turns the effects off. Shattered Lands,
+whose music is MIDI, is unchanged.
+
 **New: Wake of the Ravager as Dark Sun Recompiled** (branch `claude/ravager-recompiled-launch`). **Play Wake
 of the Ravager** starts the recompiled program instead of DOSBox when the one found has the sequel's mod built in
 (`build/ds2o` beside it: darksun-recompiled's new fifth build), after the same copies and widened sheets as a

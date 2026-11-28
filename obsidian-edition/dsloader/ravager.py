@@ -2488,14 +2488,28 @@ def cd_sheet(game_dir: str, path: str) -> Optional[str]:
     return path
 
 
+# The sequel's speech and sound effects at the level they were recorded, as its CD music plays. Its
+# sound driver (SOUND.CFG: the SB Pro II's, SBPDIG.ADV) turns the card's mixer down, and both DOSBoxes
+# let that turn their Sound Blaster channel down (`sbmixer`, on by default and in GOG's settings) but
+# play the CD's tracks at full level, which the card's mixer never reaches there: the narrated opening
+# came out 16 dB under its recording in GOG's DOSBox and 24 dB under in DOSBox-X, the speech barely
+# heard over the music. With the mixer left out (sbmixer=false) it is the recording's level in both,
+# and the speech and the music, recorded about as loud (-18 dB RMS each), are heard alike
+# (playtest/logs/2026-11-28-ravager-voice-volume.md). The game menu's SOUND EFFECT VOLUME then
+# changes nothing; F5 still turns the sound effects off. DOSBox-X's configuration has the same line
+# (dosboxx.conf_lines, for the sequel).
+SBMIXER_OFF = "sbmixer=false"
+SOUND_LINES = ["[sblaster]", SBMIXER_OFF, ""]
+
+
 def conf_lines(game_dir: str, dos_dir: str, cd: Optional[str] = None, umb_plus: str = "UMBPLUS.COM",
                game_end: Optional[str] = None) -> List[str]:
-    """The [dos] section and the autoexec that start the patched sequel: EMS off (its memory layer
-    takes XMS), the game folder as C: (its saves and data, the copy reading them from there), its CD
-    as F: (CD, default its game.ins), the mod's dos folder as D:, UMBPLUS.COM, the helper (DSCLOG2.EXE)
-    loaded high, then the copy."""
+    """The Sound Blaster's mixer left out (SOUND_LINES), the [dos] section and the autoexec that
+    start the patched sequel: EMS off (its memory layer takes XMS), the game folder as C: (its saves
+    and data, the copy reading them from there), its CD as F: (CD, default its game.ins), the mod's
+    dos folder as D:, UMBPLUS.COM, the helper (DSCLOG2.EXE) loaded high, then the copy."""
     cd = cd or cd_image(game_dir)
-    lines = ["[dos]", "ems=false", "", "[autoexec]", "@echo off", "cls", f'mount c "{game_dir}"']
+    lines = SOUND_LINES + ["[dos]", "ems=false", "", "[autoexec]", "@echo off", "cls", f'mount c "{game_dir}"']
     if cd:
         lines.append(f'imgmount {CD_DRIVE} "{cd}" -t iso')
     lines += [f'mount d "{dos_dir}"', "d:\\" + umb_plus.lower(), f"lh d:\\{HELPER_EXE.lower()}", "cls", "c:",
