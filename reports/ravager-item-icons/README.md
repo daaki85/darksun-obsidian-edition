@@ -91,6 +91,26 @@ there only; the redrawing is Codex's work (brief: project files,
 - **Sandals (3)**: flat strips.
 - **Stalker Cloak**: a flat blue checkerboard.
 
+### Claude's redraws (first try, 2026-11-28)
+
+Daaki asked for a first try at the 11 by Claude before Codex. Before and after:
+[zoomed 5x](redraw-before-after-5x.png), [at game size, doubled](redraw-before-after-2x.png),
+[true size](redraw-before-after-1x.png).
+
+![Before and after, zoomed](redraw-before-after-5x.png)
+
+- **Life Stealer** is SL's obsidian Long Sword (2394), as SL makes its own magic swords: the blade
+  dark steel, the hilt the sequel's browns and orange from the old picture, four glints on the blade in
+  the cycled greens (so it shines, as the old one did), a black tassel at the pommel for the old one's.
+- **Stalker Cloak** is SL's Cloak (Koeatl's, 2089) in the water's cycled blues the old one used
+  (so it still shimmers), mottled with a dark blue-grey.
+- **Pants, hats and sandals** are drawn new: a dark outline, light from the top left, four or five
+  shades of each item's own colours. The violet hat is a pointed wizard's hat as before, the green and
+  red soft caps with a brim, the sandals a pair seen from the side.
+
+Every pixel is one of the colours the old picture had (or, for Life Stealer, the sequel's greys), so
+the colours stay the sequel's. Not imported: waiting for Daaki's word.
+
 ## Keep (355)
 
 By group: [weapons](keep-weapons-2x.png), [armour](keep-armour-2x.png),
